@@ -54,21 +54,13 @@ dim(dat) #272 62
 unlist(lapply(dat, function(x) sum(is.na(x)))) #how many NA per numerical column
 dat <- dplyr::select(dat, -c(X, X.1)) #get rid of rows with no data (last 2 columns)
 dat <- dplyr::filter(dat, !is.na(Better)) #get rid of rows with no data (last empty row)
-dat <- droplevels(dat)
-table(dat$DataSE) #6 SE imputed? check
+table(dat$DataSE) #6 SE were missing?
 dplyr::filter(dat, DataSE == "no") #Destrez2016, Hernandez2015 (3 rows each)
-dat <- dplyr::filter(dat, DataSE != "no") #get rid of rows with missing SE
+dat <- dplyr::filter(dat, DataSE != "no") #exclude rows with imputed SE
 dat <- droplevels(dat)
 table(dat$WithinBetween) # 168 "between", 97 "within"
 table(dat$StudyDesign, dat$WithinBetween) #good overlap
 dim(dat)  #265  61
-
-# ### SUBSETS by MeasureType
-# table(dat$MeasureType) # 138 "latency", 127 "proportion"
-# dat_lat <- dplyr::filter(dat, MeasureType == "latency") #subset latency data
-# dim(dat_lat) 
-# dat_prop <- dplyr::filter(dat, MeasureType == "proportion") #subset proportion data
-# dim(dat_prop) 
 ```
 
 
@@ -85,16 +77,20 @@ dat[which(dat$Worse == 0 & dat$DataScale == "natural"), ] #2 rows
 dat[which(dat$WorseSD == 0 & dat$DataScale == "natural"), ] #2 rows
 dat[which(dat$Worse < 0.5 & dat$DataScale == "natural"), ]$Worse #smallest value after 0 is 0.01
 dat$Worse[which(dat$Worse == 0 & dat$DataScale == "natural")] <- 0.01 #substitute the 0 values with 0.01
-dat[which(dat$WorseSD < 0.5 & dat$DataScale == "natural"), ]$WorseSD #smallest value after 0 is 0.014
+dat[which(dat$WorseSD < 0.5 & dat$DataScale == "natural"), ]$WorseSD #smallest value after 0 is 0.016
 dat$WorseSD[which(dat$WorseSD == 0 & dat$DataScale == "natural")] <- 0.01 #substitute the 0 values with 0.01
 
-#find rows with means / 100 > 1 (more than 100%) for the proportion data (per)
+#find rows with means / 100 > 1 (more than 100%) for the proportion data
 dat[which(dat$Better/100 >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ] #1 row
 dat[which(dat$Worse/100 >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ] #1 row
 dat[which(dat$Worse/100 > 0.9 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ]$Worse #largest value before 100 is 95.6
 dat$Worse[which(dat$Worse/100 >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion")] <- 96 #substitute the >100% value with 95.7
 dat[which(dat$Better/100 > 0.9 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ]$Better #largest value before 100 is 99.3
 dat$Better[which(dat$Better/100 >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion")] <- 99.4 #substitute the >100% value with 99.4
+
+#find rows with means < 1 (more than 100%) for the percent data
+dat[which(dat$Better < 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ] #0 rows
+dat[which(dat$Worse < 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ] #3 rows, checked
 
 # #plot
 # hist(dat$Worse[which(dat$DataScale == "natural")])
@@ -105,204 +101,74 @@ dat$Better[which(dat$Better/100 >= 1 & dat$DataScale == "natural" & dat$MeasureT
 ```
 
 
-```{r prepare dataframe, eval=TRUE}  
-#recalculate means and variance to the same scale using custom function
-dat2 <- dat %>% prepare_df(Worse, WorseSD, WorseN, Better, BetterSD, BetterN, MeasureType, DataScale, type="lnorm") 
-str(dat2)
-dat2$M1
-dat2$M2
+```{r calculate ES, eval=TRUE}  
+#subset dataframe and recalculate means and variances to the same scale using custom functions for specific data types and scales
+ table(dat$MeasureType, dat$DataScale) # 138 "latency", 127 "proportion", including 6 logit
 
-View(dplyr::filter(dat2, M1=="NaN")) #for proportion/logit data points!!!
+## latency data subset
+ dat_lat <- dplyr::filter(dat, MeasureType == "latency") #subset latency data
+ dim(dat_lat) 
+ table(dat_lat$WithinBetween) #by stydy design type
+ dat_lat2 <- dat_lat %>% calc_ES_latency(Worse, WorseSD, WorseN, Better, BetterSD, BetterN, WithinBetween, adjusted=TRUE, type="lnorm") 
 
-which(dat$MeasureType == "proportion" & dat$DataScale == "logit")       
-which(dat$Better < 0)
+## logit of proportion data subset
+ dat_prop_logit <- dplyr::filter(dat, MeasureType == "proportion" & DataScale == "logit") #subset proportion data (percentage) on logit scale
+ dim(dat_prop_logit)
+ table(dat_prop_logit$WithinBetween) #by stydy design type
+ dat_prop_logit2 <- dat_prop_logit %>% calc_ES_proportion(Worse, WorseSD, WorseN, Better, BetterSD, BetterN, WithinBetween, adjusted=TRUE, type="logit") 
+ 
+## percent data subset
+ dat_prop_pct <- dplyr::filter(dat, MeasureType == "proportion" & DataScale == "natural") #subset proportion data (percentage) on natural scale
+ dim(dat_prop_pct) 
+ table(dat_prop_pct$WithinBetween) #by stydy design type
+ dat_prop_pct2 <- dat_prop_pct %>% calc_ES_proportion(Worse, WorseSD, WorseN, Better, BetterSD, BetterN, WithinBetween, adjusted=TRUE, type="percent")  
+ 
 
+## merge back the subsets
+dat2 <- rbind(dat_lat2, dat_prop_logit2, dat_prop_pct2)
+names(dat2)
+dat2$d
+hist(dat2$d)
+hist(dat2$Vd)
 
-
+View(dplyr::filter(dat2, d > 4)) #look at effect sizes > 4 - checked agains papers
+View(dplyr::filter(dat2, d < (-4))) #look at effect sizes <  -4 - checked agains papers
 ```
 
 
-```{r prop calculate ES}
-#subset natural data and calculate Hd
-dat_prop_nat <- dat_prop[dat_prop$DataScale == "natural", ]
-dat_prop_nat$Hd <- Calc.d.propB(dat_prop_nat$Worse, dat_prop_nat$WorseSD, dat_prop_nat$WorseN, dat_prop_nat$Better, dat_prop_nat$BetterSD, dat_prop_nat$BetterN, DataType="natural")
-
-#subset logit data and calculate Hd
-dat_prop_logit <- dat_prop[dat_prop$DataScale == "logit", ]
-dat_prop_logit$Hd <- Calc.d.propB(dat_prop_logit$Worse, dat_prop_logit$WorseSD, dat_prop_logit$WorseN, dat_prop_logit$Better, dat_prop_logit$BetterSD, dat_prop_logit$BetterN, DataType="logit")
-
-#merge back the subsets
-dat_prop <- rbind(dat_prop_nat, dat_prop_logit)
-names(dat_prop)
-dat_prop$Hd
-hist(dat_prop$Hd)
-dat_prop[dat_prop$Hd > 4, ] #look at 2 effect sizes > 4 
-dat_prop[dat_prop$Hd == 0, ] #look at Hd = 0 
-
-### calculate variance of Hd (VHd) - need to take into account study design within vs. between
-dat_prop_B <- dat_prop[dat_prop$WithinBetween == "between", ] #subset between
-dat_prop_B$HdVar <- Calc.SE.d(dat_prop_B$WorseN, dat_prop_B$BetterN, dat_prop_B$Hd)
-#subset within
-dat_prop_W <- dat_prop[dat_prop$WithinBetween == "within", ]
-dat_prop_W$HdVar <- Calc.SE.d(dat_prop_W$WorseN, dat_prop_W$BetterN, dat_prop_W$Hd)
-#merge back the subsets
-dat_prop <- rbind(dat_prop_B, dat_prop_W)
-hist(dat_prop$HdVar)
-#dat_prop$HdVar
-dat_prop[dat_prop$HdVar == 0, ] #none
-
-# #remove odd ones
-# #dat_prop[dat_prop$ArticleID == "Doyle2011b", ]
-# dat_prop_ok <- dat_prop[dat_prop$ArticleID != "Doyle2011b", ] #sheep long terms stress. Tested 3 times ..habituation? Use day 1?
-# dim(dat_prop_ok)
-# hist(dat_prop_ok$Hd.B)
-# 
-# #unique(dat_prop$ArticleID)
-# #dat_prop_ok$comp_ID <- paste("comp", 1:nrow(dat_prop_ok), sep="_") #add column with comparison ID (unique ID for effect sizes within given dat_propa set)
-table(dat_prop$ScientificName)
-#Make new column in the data frame and adjust species names there:
-dat_prop$Species_Latin <- as.character(dat_prop$ScientificName)
-unique(dat_prop$Species_Latin)
-#dat_prop$Species_Latin[which(dat_prop$Species_Latin == "Cebus apella")] <- "Sapajus_apella"
-
-
-#write.csv(dat_prop, "data/data_proportions_with.csv", row.names = FALSE)
+```{r clean, eval=FALSE}  
+# #remove odd one
+# #dat2[dat2$ArticleID == "Doyle2011b", ]
+# dat2_ok <- dat2[dat2$ArticleID != "Doyle2011b", ] #sheep long terms stress. Tested 3 times ..habituation? Use day 1?
+# dim(dat2_ok)
 ```
 
-############## TREE prop
+############## TREE 
 
-Prepare phyogenetic tree for the species in this data subset  
+Prepare phyogenetic tree for the included species  
 
-```{r prop tree}
+```{r  tree, eval=TRUE}
 #The function tnrs_match_names returns a data frame that lists the Open Tree identifiers as
 #well as other information to help users ensure that the taxa matched are the correct ones
 
-species_list <- as.character(unique(dat_prop$Species_Latin))
+names(dat2)
+table(dat2$ScientificName)
+dat2$Species_Latin <- as.character(dat2$ScientificName) #Make new column in the data frame and adjust species names
+unique(dat2$Species_Latin)
+
+species_list <- as.character(unique(dat2$Species_Latin))
 taxa <- tnrs_match_names(names = species_list) #call rotl function to find these species on OTL
 #taxa
 tree <- tol_induced_subtree(ott_ids= taxa[["ott_id"]])
 tree
 plot(tree, cex=.8, label.offset =.1, no.margin = TRUE)
-str(tree)
-is.binary.tree(tree) #TRUE
-is.ultrametric(tree) #FALSE - Error: no branch lengths! (will simulate later)
+str(tree) # no branch lengths
+is.binary.tree(tree) #TRUE 
 tree$node.label <- "" # remove
-tree$tip.label #clean these up
-tree$tip.label <- gsub("_ott.*","", tree$tip.label)
+tree$tip.label <- gsub("_ott.*","", tree$tip.label) #clean up tip labels
 plot(tree, cex=.8, label.offset =.1, no.margin = TRUE)
 tree <- collapse.singles(tree)
-tree$tip.label # column "animal" in the dataset should match these names exactly! 
-intersect(unique(dat_prop$Species_Latin), tree$tip.label) #all are matching
-#setdiff(unique(dat_prop$ScientificName), tree$tip.label) #0 need to be changed from
-#setdiff(tree$tip.label, unique(dat_prop$ScientificName)) #2 need to be changed to
-tree$tip.label[tree$tip.label==""]
-### computing branch lengths
-tree_bl <- compute.brlen(tree)
-plot(tree_bl)
-is.binary.tree(tree_bl)
-is.ultrametric(tree_bl)
-str(tree_bl)
-write.tree(tree_bl,file="data/tree_branch_lengths_prop.tre")
-#tree_prop <- read.tree(file="data/tree_branch_lengths_prop.tre")
-#if you need to remove some species from the tree later (due to working on the subset of the data), use drop.tip function, for example:
-#tree_noInsect <- drop.tip(tree, "Bombus_terrestris_audax") # remove "Bombus_terrestris_audax" from the tree
-write.csv(dat_prop, "data/data_proportions_with_ES_tree.csv", row.names = FALSE)
-```
-
-
-############################################### latency data ########################################
-
-```{r lat calculate ES}  
-names(dat_lat)
-tail(dat_lat)
-dim(dat_lat)
-
-##### use modified functions to calculate Hedges d:
-#dat_lat$Hd <- Calc.d.lat(dat_lat$Worse, dat_lat$WorseSD, dat_lat$WorseN, dat_lat$Better, dat_lat$BetterSD, dat_lat$BetterN)
-
-# # using raw (untransformed) data
-# dat_lat$Hd_raw <- Calc.d.lat_raw(dat_lat$Worse, dat_lat$WorseSD, dat_lat$WorseN, dat_lat$Better, dat_lat$BetterSD, dat_lat$BetterN)
-# hist(dat_lat$Hd_raw)
-# range(dat_lat$Hd_raw)
-# 
-# # variance of Hedges d
-# #dat_lat$HdVar <- Calc.SE.d(dat_lat$WorseN, dat_lat$BetterN, dat_lat$Hd)
-# #for raw (untransformed) data
-# dat_lat_B <- dat_lat[dat_lat$WithinBetween == "between", ]
-# dat_lat_B$HdVar_raw <- Calc.SE.d(dat_lat_B$WorseN, dat_lat_B$BetterN, dat_lat_B$Hd_raw, WithinBetween="between")
-# #subset within
-# dat_lat_W <- dat_lat[dat_lat$WithinBetween == "within", ]
-# dat_lat_W$HdVar_raw <- Calc.SE.d(dat_lat_W$WorseN, dat_lat_W$BetterN, dat_lat_W$Hd_raw, WithinBetween="within")
-# #merge back the subsets
-# dat_lat_ES <- rbind(dat_lat_B, dat_lat_W)
-# hist(dat_lat_ES$HdVar_raw)
-# range(dat_lat_ES$HdVar_raw)
-
-
-#using log (transformed) data
-dat_lat$Hd <- Calc.d.lat_log(dat_lat$Worse, dat_lat$WorseSD, dat_lat$WorseN, dat_lat$Better, dat_lat$BetterSD, dat_lat$BetterN)
-hist(dat_lat$Hd)
-range(dat_lat$Hd)
-
-#variance of Hedges d
-#dat_lat_ES$HdVar <- Calc.SE.d(dat_lat_ES$WorseN, dat_lat_ES$BetterN, dat_lat_ES$Hd)
-#for log (transformed) data
-dat_lat_B <- dat_lat[dat_lat$WithinBetween == "between", ]
-dat_lat_B$HdVar <- Calc.SE.d(dat_lat_B$WorseN, dat_lat_B$BetterN, dat_lat_B$Hd)
-#subset within
-dat_lat_W <- dat_lat[dat_lat$WithinBetween == "within", ]
-dat_lat_W$HdVar <- Calc.SE.d(dat_lat_W$WorseN, dat_lat_W$BetterN, dat_lat_W$Hd)
-#merge back the subsets
-dat_lat_ES <- rbind(dat_lat_B, dat_lat_W)
-#hist(dat_lat_ES$HdVar)
-range(dat_lat_ES$HdVar)
-
-#plot(dat_lat_ES$Hd_raw, dat_lat_ES$Hd) #mostly very similar
-#plot(dat_lat_ES$HdVar_raw, dat_lat_ES$HdVar) #mostly very similar
-
-#raw data plot - difference Better-Worse
-# boxplot(dat_lat_ES$Better - dat_lat_ES$Worse)
-# boxplot(dat_lat_ES$Better - dat_lat_ES$Worse ~dat_lat_ES$Category, varwidth=TRUE)
-# boxplot(dat_lat_ES$Better - dat_lat_ES$Worse ~dat_lat_ES$ScalePoint, varwidth=TRUE)
-# plot(dat_lat_ES$Better - dat_lat_ES$Worse)
-# plot(dat_lat_ES$Better, dat_lat_ES$Better - dat_lat_ES$Worse )
-
-dat_lat <- droplevels(dat_lat_ES)
-
-table(dat_lat$ScientificName)
-dat_lat$Species_Latin <- as.character(dat_lat$ScientificName)
-unique(dat_lat$Species_Latin)
-
-write.csv(dat_lat, "data/data_latencies_with_ES.csv", row.names = FALSE)
-```
-
-############## TREE latencies
-
-Create phylogenetic tree for the species in this dataset   
-
-```{r lat tree} 
-#The function tnrs_match_names returns a data frame that lists the Open Tree identifiers as
-#well as other information to help users ensure that the taxa matched are the correct ones
-names(dat_lat)
-
-species_list <- as.character(unique(dat_lat$Species_Latin))
-taxa <- tnrs_match_names(names = species_list)
-taxa
-tree <- tol_induced_subtree(ott_ids= taxa[["ott_id"]])
-tree
-plot(tree, cex=.8, label.offset =.1, no.margin = TRUE)
-str(tree)
-is.binary.tree(tree) #TRUE
-is.ultrametric(tree) #FALSE - Error: no branch lengths! (will simulate later)
-tree$node.label <- "" # remove
-tree$tip.label #clean these up
-tree$tip.label <- gsub("_ott.*","", tree$tip.label)
-plot(tree, cex=.8, label.offset =.1, no.margin = TRUE)
-tree <- collapse.singles(tree)
-tree$tip.label # column "animal" in the dataset should match these names exactly! 
-intersect(unique(dat_lat$Species_Latin), tree$tip.label) #all are matching
-#setdiff(unique(dat_lat$Species_Latin), tree$tip.label) #0 need to be changed from
-#setdiff(tree$tip.label, unique(dat_lat$Species_Latin)) #0 need to be changed to
+intersect(unique(dat2$Species_Latin), tree$tip.label) #all are matching
 
 ### computing branch lengths
 tree_bl <- compute.brlen(tree)
@@ -310,69 +176,14 @@ plot(tree_bl)
 is.binary.tree(tree_bl)
 is.ultrametric(tree_bl)
 str(tree_bl)
-write.tree(tree_bl,file="data/tree_branch_lengths_lat.tre")
-#tree_bl <- read.tree(file="data/tree_branch_lengths_lat.tre")
 #if you need to remove some species from the tree later (due to working on the subset of the data), use drop.tip function, for example:
 #tree_noInsect <- drop.tip(tree, "Bombus_terrestris_audax") # remove "Bombus_terrestris_audax" from the tree
-write.csv(dat_lat, "data/data_latencies_with_ES2_tree.csv", row.names = FALSE)
+
+write.tree(tree_bl,file="tree_all.tre")
+#tree <- read.tree(file="tree_all.tre")
+write.csv(dat2, "data_with_ES.csv", row.names = FALSE)
 ```
 
-
-############################## Merging Proportion and latency data #############################
-
-```{r merge prop lat}
-#dat_prop <- read.csv("data/data_proportions_with_ES_tree.csv")
-#dat_lat <- read.csv("data/data_latencies_with_ES2_tree.csv")
-#dat_lat <- dplyr::select(dat_lat, -c(Hd_raw, HdVar_raw)) #get rid of _raw columns, if present
-
-####### Rbind latency and proportion data
-dat_lat_prop <- rbind(dat_lat, dat_prop) 
-
-dim(dat_lat_prop)
-str(dat_lat_prop)
-
-write.csv(dat_lat_prop, "data/data_merged.csv", row.names = FALSE)
-```
-
-############## TREE prop+lat
-
-```{r tree prop lat} 
-#The function tnrs_match_names returns a data frame that lists the Open Tree identifiers as
-#well as other information to help users ensure that the taxa matched are the correct ones
-
-#dat_lat_prop <- read.csv("data/data_merged.csv")
-names(dat_lat_prop)
-table(dat_lat_prop$Species_Latin)
-species_list <- as.character(unique(dat_lat_prop$Species_Latin))
-taxa <- tnrs_match_names(names = species_list)
-taxa
-tree <- tol_induced_subtree(ott_ids= taxa[["ott_id"]])
-tree
-plot(tree, cex=.8, label.offset =.1, no.margin = TRUE)
-str(tree)
-is.binary.tree(tree) #TRUE
-is.ultrametric(tree) #FALSE - no branch lengths! (will simulate later)
-tree$node.label <- "" # remove
-tree$tip.label #clean these up
-tree$tip.label <- gsub("_ott.*","", tree$tip.label)
-plot(tree, cex=.8, label.offset =.1, no.margin = TRUE)
-tree <- collapse.singles(tree)
-tree$tip.label # column "animal" in the dataset should match these names exactly! 
-intersect(unique(dat_lat_prop$Species_Latin), tree$tip.label) #these are matching
-setdiff(unique(dat_lat_prop$Species_Latin), tree$tip.label) #matching
-setdiff(tree$tip.label, unique(dat_lat_prop$Species_Latin)) #matching
-tree_bl <- compute.brlen(tree) ### computing branch lengths
-plot(tree_bl)
-is.binary.tree(tree_bl)
-is.ultrametric(tree_bl)
-str(tree_bl)
-write.tree(tree_bl,file="data/tree_branch_lengths_lat_prop.tre")
-#tree_bl <- read.tree(file="data/tree_branch_lengths_lat_prop.tre")
-
-#if you need to remove some species from the tree later (due to working on the subset of the data), use drop.tip function, for example:
-#tree_noInsect <- drop.tip(tree, "Bombus_terrestris_audax") # remove "Bombus_terrestris_audax" from the tree
-#write.csv(dat_lat_prop, "data/data_merged.csv", row.names = FALSE)
-```
 
 
 ###############################################################################
