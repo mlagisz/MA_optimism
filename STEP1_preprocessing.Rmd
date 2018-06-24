@@ -9,9 +9,7 @@ output: html_document
 
 ## STEP1 - preprocessing data
 
-The outcome measures are either letencies or proportions.
-In this version of code we create two separate data frames to hold proportion and latency datasets 
-(originally script: "Preparation and cleaning of proportion and latency data V2.R")
+The outcome measures are either letencies or proportions (percent or logit). Need to use different functions for calculating effect sizes.
 
 ```{r setup}
 
