@@ -1,0 +1,199 @@
+---
+title: "summary"
+author: "ML"
+date: "11/29/2017"
+output: html_document
+---
+
+# MA of cognitive bias (optimism) in animal studies.
+
+## STEP2 - summarising data
+
+```{r setup}
+rm(list=ls())
+sessionInfo()
+options(scipen=100)
+
+library(car)
+#library(meta) 
+#library(rmeta) # not used for this but check it out
+#library(compute.es)
+library(metafor)
+#install.packages("devtools","fulltxt")
+#library(readxl)
+#update.packages("fulltxt")
+library(fulltext)
+#devtools::install_github("ropensci/rotl", dependencies = TRUE, build_vignette=TRUE)
+#install.packages("rotl")
+library(rotl)
+library(ape)
+#library(phytools)
+library(dplyr)
+library(tidyr)
+```
+
+```{r load data} 
+######## load merged (latency+proportion) data
+dat_lat_prop <- read.csv("data/data_merged.csv")
+dim(dat_lat_prop) #265 63
+str(dat_lat_prop)
+names(dat_lat_prop)
+
+### SUBSETS by MeasureType
+table(dat_lat_prop$MeasureType) # 138 "latency", 127 "proportion"
+dat_lat <- dplyr::filter(dat_lat_prop, MeasureType == "latency") #subset latency data
+dim(dat_lat) 
+dat_prop <- dplyr::filter(dat_lat_prop, MeasureType == "proportion") #subset proportion data
+dim(dat_prop) 
+```
+
+```{r check continuous} 
+names(dat_lat_prop)
+str(dat_lat_prop)
+hist(as.numeric(dat_lat_prop$Year))
+hist(dat_lat_prop$BetterN)  
+hist(dat_lat_prop$WorseN)
+hist(dat_lat_prop$Hd) 
+dplyr::filter(dat_lat_prop, Hd > 2)
+hist(dat_lat_prop$HdVar)
+plot(dat_lat_prop$Hd, 1/sqrt(dat_lat_prop$HdVar))
+```
+
+
+###check categorical variables
+
+```{r check categorical} 
+#one-way tables
+table(dat_lat_prop$Species_Latin)
+table(dat_lat_prop$Taxa)
+table(dat_lat_prop$Sex) #mosty females
+table(dat_lat_prop$Age) #mosty adults
+table(dat_lat_prop$AffectManipCat) #mostly stress
+table(dat_lat_prop$AffectManipTiming) #mostly long-term, then before
+table(dat_lat_prop$StudyDesign) #mostly between
+table(dat_lat_prop$CrossoverDesign)
+table(dat_lat_prop$Automated) #usually no (or no info)
+#table(table(dat_lat_prop$Automated, dat_lat_prop$ArticleID)[2,]>0) #number of papers with automation 6
+table(dat_lat_prop$Blind) #usually no (or no info)
+#table(table(dat_lat_prop$Blind, dat_lat_prop$ArticleID)[2,]>0) #number of papers with blinding 12
+table(dat_lat_prop$FoodDeprived) #usually no
+table(dat_lat_prop$CueTypeCat) #mostly spatial or visual
+table(dat_lat_prop$ComparisonCategory) #mostly Benign-Worse
+table(dat_lat_prop$ReinforcementCat) # mostly R-P, then R-Null
+table(dat_lat_prop$AmbigReinforced) #mostly no
+table(dat_lat_prop$TaskType) # 202 go/no-go, 63 active choice
+table(dat_lat_prop$MeasureType)
+
+#two-way tables
+addmargins(table(dat_lat_prop$ArticleID, dat_lat_prop$MeasureType)) #a few studies with both latency and proportion
+addmargins(table(dat_lat_prop$ArticleID, dat_lat_prop$Sex)) #a few studies with both sexes separated
+addmargins(table(dat_lat_prop$ArticleID, dat_lat_prop$AffectManipCat)) #a few studies with two types of manipulation
+addmargins(table(dat_lat_prop$ArticleID, dat_lat_prop$StudyDesign)) #one study with both within and between subject data
+addmargins(table(dat_lat_prop$ArticleID, dat_lat_prop$ComparisonCategory)) #one study with more than one comparison type
+addmargins(table(dat_lat_prop$Measure, dat_lat_prop$Sex)) #a few studies with both sexes separated
+
+sapply(tapply(dat_lat_prop$ExperimentID, dat_lat_prop$ArticleID, unique), paste) #a few studies with more than one experiment
+sapply(tapply(dat_lat_prop$GroupID, dat_lat_prop$ArticleID, unique), paste) #a few studies with more than one group of animals
+
+table(dat_lat_prop$Blind, dat_lat_prop$StudyDesign) #good overlap
+table(dat_lat_prop$StudyDesign, dat_lat_prop$Blind) #no much overlap
+table(dat_lat_prop$Blind, dat_lat_prop$ComparisonCategory) #no much overlap
+table(dat_lat_prop$StudyDesign, dat_lat_prop$ReinforcementCat) #no much overlap
+table(dat_lat_prop$Blind, dat_lat_prop$ReinforcementCat) #no much overlap
+table(dat_lat_prop$FoodDeprived, dat_lat_prop$ReinforcementCat) #no much overlap
+#write.csv(dat_lat_prop, "data/data_merged.csv", row.names = FALSE)
+```
+
+
+### simple boxplots
+
+```{r boxplots} 
+par(mar=c(12,4,2,0))
+boxplot(dat_lat_prop$Hd ~ dat_lat_prop$Species_Latin, las=2, ylab="Hd", varwidth=TRUE)
+par(mar=c(4,4,2,0))
+boxplot(dat_lat_prop$Hd ~ dat_lat_prop$Taxa, ylab="Hd", varwidth=TRUE)
+boxplot(dat_lat_prop$Hd ~ dat_lat_prop$Sex, ylab="Hd", varwidth=TRUE)
+boxplot(dat_lat_prop$Hd ~ dat_lat_prop$MeasureType, ylab="Hd", varwidth=TRUE)
+boxplot(dat_lat_prop$Hd ~ dat_lat_prop$AffectManipCat, ylab="Hd", varwidth=TRUE)
+boxplot(dat_lat_prop$Hd ~ dat_lat_prop$StudyDesign, ylab="Hd", varwidth=TRUE)
+boxplot(dat_lat_prop$Hd ~ dat_lat_prop$CrossoverDesign, ylab="Hd", varwidth=TRUE)
+boxplot(dat_lat_prop$Hd ~ dat_lat_prop$Blind, ylab="Hd", varwidth=TRUE)
+boxplot(dat_lat_prop$Hd ~ dat_lat_prop$Automated, ylab="Hd", varwidth=TRUE)
+boxplot(dat_lat_prop$Hd ~ dat_lat_prop$FoodDeprived, ylab="Hd", varwidth=TRUE)
+boxplot(dat_lat_prop$Hd ~ dat_lat_prop$AmbigReinforced, ylab="Hd", varwidth=TRUE)
+boxplot(dat_lat_prop$Hd ~ dat_lat_prop$CueTypeCat, ylab="Hd", varwidth=TRUE)
+boxplot(dat_lat_prop$Hd ~ dat_lat_prop$ComparisonCategory, ylab="Hd", varwidth=TRUE)
+boxplot(dat_lat_prop$Hd ~ dat_lat_prop$AffectManipTiming, ylab="Hd", varwidth=TRUE)
+boxplot(dat_lat_prop$Hd ~ dat_lat_prop$Stress, ylab="Hd", varwidth=TRUE)
+boxplot(dat_lat_prop$Hd ~ dat_lat_prop$ReinforcementCat, ylab="Hd", varwidth=TRUE)
+
+```
+
+
+### TABLE OF INCLUDED PUBLICATIONS
+
+```{r table inculded papers} 
+dim(dat_lat_prop) #265 64
+names(dat_lat_prop)
+#str(dat_lat_prop)
+
+dat_lat_prop_gr <-  group_by(dat_lat_prop, ArticleID)
+countES <- dplyr::summarise(dat_lat_prop_gr, k=n())
+pastecols <- dplyr::summarise(dat_lat_prop_gr, first(Species_Latin), toString(unique(Taxa)), toString(unique(Captive_Wild.caught)), toString(unique(Sex)), toString(unique(Age)), toString(unique(AffectManipCat)), toString(unique(Stress)), toString(unique(AffectManipTiming)), toString(unique(FoodDeprived)), toString(unique(TaskType)),toString(unique(CueTypeCat)),toString(unique(AmbigReinforced)), toString(unique(StudyDesign)), toString(unique(Blind)), toString(unique(Automated)), toString(unique(ComparisonCategory)), toString(unique(ReinforcementCat)), toString(unique(MeasureType)))
+
+tab <- data.frame(pastecols, countES$k)
+names(tab) <- c("Reference", "Species", "Taxon", "Origin", "Sex", "Age", "Manipulation", "Stress", "Manipulation timing", "Food deprivation", "Task type","Cue", "Ambiguous reinforced", "Design", "Blinding", "Automation", "Comparison", "Reinforcement", "Measure", "k")
+tab <- dplyr::arrange(tab, Reference)
+write.csv(tab,"tables/papers_table_v2.csv")
+
+#for Systematic Review summary diagram:
+table(tab$Species)
+table(tab$Taxon)
+table(tab$Sex)
+table(tab$Origin)
+table(tab$Age)
+table(tab$Design)
+table(tab$Stress)
+table(tab$Manipulation)
+table(tab$Comparison)
+table(tab$`Food deprivation`)
+table(tab$`Task type`)
+table(tab$Cue)
+table(tab$Reinforcement)
+table(tab$Automation)
+table(tab$Measure)
+table(tab$`Ambiguous reinforced`)
+table(tab$`Manipulation timing`)
+```
+
+
+####################################### EXTRA
+
+Is there correlation between  measurements from the same experiment reported as latency and proportion?
+
+```{r prop lat within study} 
+#### look for studies that have both prop and lat
+names(dat_lat_prop)
+#table(dat_lat_prop$MeasureType, dat_lat_prop$ArticleID) # Looks correct
+#table(dat_lat_prop$MeasureType, dat_lat_prop$ExperimentID) 
+dat_horiz <- merge(dat_lat, dplyr::select(dat_prop, ExperimentID, ScalePoint, Hd, HdVar), by = c("ExperimentID", "ScalePoint"))
+dat_horiz <- droplevels(dat_horiz)
+str(dat_horiz)
+
+length(unique(dat_horiz$ExperimentID)) #11 experimentswhere both latency and proportion reported
+length(unique(dat_horiz$ArticleID)) #9 studies where both latency and proportion reported
+#table(dat_horiz$ExperimentID, dat_horiz$ScalePoint)
+#table(dat_horiz$ExperimentID, dat_horiz$ArticleID)
+plot(dat_horiz$Hd.x, dat_horiz$Hd.y) #make it pretty
+plot(dat_horiz$Hd.x, dat_horiz$Hd.y, col=dat_horiz$ExperimentID) #make it prettier
+cor.test(dat_horiz$Hd.x, dat_horiz$Hd.y) # Pearson's product-moment correlation = 0.2803012 t = 1.5452, df = 28, p-value = 0.1335 CI -0.08895056  0.581816379
+#we did not need more complex model to account for non-independence and to weight by variance, after adding these cor could be even weaker
+names(dat_horiz)
+
+```
+
+
+
+###############################################################################
+
+NEXT: "STEP3_models.Rmd"

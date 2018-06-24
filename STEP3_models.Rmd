@@ -1,0 +1,569 @@
+---
+title: "meta-analysis"
+author: "ML"
+date: "6/12/2017"
+output: html_document
+---
+
+# MA of cognitive bias (optimism) in animal studies.
+
+## STEP3 - MA modelling
+
+(originally script: "Meta-Analaysis_merged_ML2.R")
+
+
+```{r setup}
+rm(list=ls())
+sessionInfo()
+options(scipen=100)
+
+library(car)
+library(meta) 
+#library(rmeta) # not used for this but check it out
+#library(compute.es)
+library(metafor)
+#install.packages("devtools","fulltxt")
+#library(readxl)
+#update.packages("fulltxt")
+#library(fulltext)
+#devtools::install_github("ropensci/rotl", dependencies = TRUE, build_vignette=TRUE)
+#install.packages("rotl")
+#library(rotl)
+library(ape)
+library(phytools)
+library(dplyr)
+library(tidyr)
+```
+
+```{r load data} 
+######## using merged (latency+proportion) data
+dat_lat_prop <- read.csv("data/data_merged.csv")
+str(dat_lat_prop)
+names(dat_lat_prop)
+### SUBSETS by MeasureType
+#dat_lat <- dplyr::filter(dat_lat_prop, MeasureType == "latency") #subset latency data
+#dim(dat_lat) 
+#dat_prop <- dplyr::filter(dat_lat_prop, MeasureType == "proportion") #subset proportion data
+#dim(dat_prop) 
+
+#dplyr::filter(dat_lat_prop, is.na(Hd)) 
+#dplyr::filter(dat_lat_prop, is.na(HdVar))
+#dat_lat_prop$Hd
+#dat_lat_prop$HdVar
+```
+
+## Meta-analytical models
+
+```{r MA all data} 
+
+######## random-effect model with ArticleID, ExperimentID, GroupID, EffectID as random effects - only ArticleID contributes to the variance, other random factors can be omitted
+res_lat_prop_random <- rma.mv(yi=Hd, V=HdVar, random=list(~1|ArticleID, ~1|ExperimentID, ~1|GroupID), dat=dat_lat_prop, method="REML") 
+summary(res_lat_prop_random) ### estimate   0.1760 CI  0.0642  0.2878  **, ExperimentID and GroupID do not contribute (drop these)
+
+######## random-effect model with ArticleID and as random effect:
+res_lat_prop_random <- rma.mv(yi=Hd, V=HdVar, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_lat_prop_random) ### estimate  0.1760 CI 0.0642  0.2878  **
+res <- data.frame(Model="Meta-analytic mean (Study)", M= res_lat_prop_random$b, CI.lb= res_lat_prop_random$ci.lb, CI.ub= res_lat_prop_random$ci.ub, pch=18, k.Var1=NA, k.Freq=232, cld=NA) 
+#caluclating I2 values
+# sum(res_lat_prop_random$sigma2)/(sum(res_lat_prop_random$sigma2)+(sum(1/dat_lat_prop$HdVar)*(res_lat_prop_random$k-1)/(sum(1/dat_lat_prop$HdVar)^2-sum((1/dat_lat_prop$HdVar)^2))))*100 # total heterogeneity 12.98 %
+# s2t <- sum(res_lat_prop_random$sigma2) + sum(1/res_lat_prop_random$vi) * (res_lat_prop_random$k-1) / (sum(1/res_lat_prop_random$vi)^2 - sum((1/res_lat_prop_random$vi)^2))
+# res_lat_prop_random$sigma2[1]/s2t*100 # I^2 between-study 12.98 %
+
+######## random-effect model with ArticleID and species as random:
+res_random_species <- rma.mv(yi=Hd, V=HdVar, random=list(~1|ArticleID, ~1|Species_Latin), data=dat_lat_prop, method="REML")  
+summary(res_random_species) ### estimate   0.1673  CI 0.0441  0.2905  ** mostly article contributing
+res <- rbind(res, data.frame(Model=c("Meta-analytic mean (Study, Species)"), M=res_random_species$b, CI.lb=res_random_species$ci.lb, CI.ub=res_random_species$ci.ub, pch=18, k.Var1=NA, k.Freq=265 , cld=NA))
+#caluclating I2 values
+# sum(res_random_species$sigma2)/(sum(res_random_species$sigma2)+(sum(1/dat_lat_prop$HdVar)*(res_random_species$k-1)/(sum(1/dat_lat_prop$HdVar)^2-sum((1/dat_lat_prop$HdVar)^2))))*100 # total heterogeneity 13.02 %
+# s2t <- sum(res_random_species$sigma2) + sum(1/res_random_species$vi) * (res_random_species$k-1) / (sum(1/res_random_species$vi)^2 - sum((1/res_random_species$vi)^2))
+# res_random_species$sigma2[1]/s2t*100 # I^2 between-study 10.17 %
+# res_random_species$sigma2[2]/s2t*100 # I^2 species  close to 2.86 %
+
+######## random-effect model with ArticleID and species phylogeny as random efects:
+tree_lat_prop <- read.tree(file="data/tree_branch_lengths_lat_prop.tre")
+is.binary.tree(tree_lat_prop) #TRUE
+is.ultrametric(tree_lat_prop) #TRUE
+# plot(tree_lat_prop, cex=0.8) #plot with branch lengths
+
+CorMatrix_lat_prop <- vcv(tree_lat_prop, corr=TRUE)
+setdiff(colnames(CorMatrix_lat_prop), unique(dat_lat_prop$Species_Latin)) #ok
+
+#res_lat_prop_phylo <- rma.mv(yi=Hd, V=HdVar, random=list(~1|ArticleID, ~1|Species_Latin), R=list(Species_Latin=CorMatrix_lat_prop), dat=dat_lat_prop, method="REML") 
+#summary(res_lat_prop_phylo) ### estimate  0.1678  CI  0.0616  0.2740  **   
+#caluclating I2 values
+# sum(res_lat_prop_phylo$sigma2)/(sum(res_lat_prop_phylo$sigma2)+(sum(1/dat_lat_prop$HdVar)*(res_lat_prop_phylo$k-1)/(sum(1/dat_lat_prop$HdVar)^2-sum((1/dat_lat_prop$HdVar)^2))))*100 # total heterogeneity 12.9772 %
+# s2t <- sum(res_lat_prop_phylo$sigma2) + sum(1/res_lat_prop_phylo$vi) * (res_lat_prop_phylo$k-1) / (sum(1/res_lat_prop_phylo$vi)^2 - sum((1/res_lat_prop_phylo$vi)^2))
+# res_lat_prop_phylo$sigma2[1]/s2t*100 # I^2 between study 12.9772 %
+# res_lat_prop_phylo$sigma2[2]/s2t*100 # I^2 phylogeny  close to 0 %
+#res <- rbind(res, data.frame(Model=c("Meta-analytic mean, intercept-only phylogenetic Model 3"), M=res_lat_prop_phylo$b, CI.lb=res_lat_prop_phylo$ci.lb, CI.ub=res_lat_prop_phylo$ci.ub, pch=18))
+#forest(res_lat_prop_phylo)
+
+######## random-effect model with ArticleID, species and species phylogeny as random efects:
+dat_lat_prop$Species_Latin_ID <- dat_lat_prop$Species_Latin
+
+res_lat_prop_phylo2 <- rma.mv(yi=Hd, V=HdVar, random=list(~1|ArticleID, ~1|Species_Latin_ID, ~1|Species_Latin), R=list(Species_Latin=CorMatrix_lat_prop), dat=dat_lat_prop, method="REML") 
+summary(res_lat_prop_phylo2) ### estimate  0.1676  CI  0.0349  0.3003  * #no contribution from phylogeny #caluclating I2 values
+# sum(res_lat_prop_phylo2$sigma2)/(sum(res_lat_prop_phylo2$sigma2)+(sum(1/dat_lat_prop$HdVar)*(res_lat_prop_phylo2$k-1)/(sum(1/dat_lat_prop$HdVar)^2-sum((1/dat_lat_prop$HdVar)^2))))*100 # total heterogeneity 13.02287%
+# s2t <- sum(res_lat_prop_phylo2$sigma2) + sum(1/res_lat_prop_phylo2$vi) * (res_lat_prop_phylo2$k-1) / (sum(1/res_lat_prop_phylo2$vi)^2 - sum((1/res_lat_prop_phylo2$vi)^2))
+# res_lat_prop_phylo2$sigma2[1]/s2t*100 # I^2 between study 10.1664 %
+# res_lat_prop_phylo2$sigma2[2]/s2t*100 # I^2 species ID 2.856462 %
+# res_lat_prop_phylo2$sigma2[3]/s2t*100 # I^2 phylogeny  close to 0 %
+res <- rbind(res, data.frame(Model=c("Meta-analytic mean (Study, Species, Phylo)"), M=res_lat_prop_phylo2$b, CI.lb=res_lat_prop_phylo2$ci.lb, CI.ub=res_lat_prop_phylo2$ci.ub, pch=18, k.Var1=NA, k.Freq=232, cld=NA))
+res <- rbind(res, data.frame(Model=NA, M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add empty line to results table
+```
+
+## Meta-regression models    
+
+Univariate models for:    
+- Species_Latin (Species model)   
+- Sex   
+- Age   
+- Source of Animals
+- AffectManipCat   
+- AffectManipTiming   
+- ComparisonCategory   
+- CueTypeCat   
+- FoodDeprived   
+- TaskType   
+- Randomized_WithinBetween   
+- Automated   
+- Blind   
+- MeasureType 
+- ReinforcementCat
+- AmbigReinforced
+- ScalePoint
+
+Models and extracting results into a data frame:
+
+- Species_Latin (Species model) 
+```{r MR all data species model}
+res_species <- rma.mv(yi=Hd, V=HdVar, mod = ~Species_Latin -1, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_species) ##a few species with clear effect
+s2m <- sum(1/res_species$vi) * (res_species$k-1) / (sum(1/res_species$vi)^2 - sum((1/res_species$vi)^2)); s2m #s^2_m: variation within study = random error
+s2t <- sum(res_species$sigma2) + s2m; s2t #s^2_t
+total_I2_res_species <- sum(res_species$sigma2)/s2t; total_I2_res_species*100 # the "total" variation 
+ssp <- summary(res_species)
+res_species_df <- data.frame(Model = substr(attr(ssp$b,"dimnames")[[1]], 14, 50), M = ssp$b, CI.lb = ssp$ci.lb, CI.ub = ssp$ci.ub, I2=NA, pch=20)
+res_species_df <- res_species_df[match(tree_lat_prop$tip.label, res_species_df$Model),] #reorder dataframe to match order of the tip labels on the tree
+
+# tidy up extracted results table
+res_species_df$M <- round(res_species_df$M,3)
+res_species_df$CI.lb <- round(res_species_df$CI.lb,3)
+res_species_df$CI.ub <- round(res_species_df$CI.ub,3)
+res_species_df$Signif <- ifelse(res_species_df$CI.lb>0 | res_species_df$CI.ub<0, "*", "") #add column with stars for estimates that significantly differ from zero
+count_animals <- data.frame(Model=names(table(dat_lat_prop$Species_Latin)), k=table(dat_lat_prop$Species_Latin)) #count how many ES per species
+merged_res_species_df <- merge(res_species_df, count_animals, all=FALSE, sort=FALSE)
+
+tab <- read.csv("tables/papers_table_v2.csv")
+table(tab$Species)
+count_papers <- data.frame(Model=names(table(tab$Species)), K=table(tab$Species)) #count how many papers per species
+merged_res_species_df2 <- merge(merged_res_species_df, count_papers, all=FALSE, sort=FALSE)
+merged_res_species_df2 <- rbind(merged_res_species_df2, data.frame(Model=c("Meta-analytic mean "), M=res$M[1], CI.lb=res$CI.lb[1], CI.ub=res$CI.ub[1], I2=NA, pch=18, Signif="*", k.Var1 = NA, k.Freq=sum(merged_res_species_df2$k.Freq), K.Var1=NA, K.Freq=sum(merged_res_species_df2$K.Freq)))
+
+write.csv(merged_res_species_df2,"tables/MR_species_res.csv")
+
+### PLOT - species phylogeny and forest plot 1
+
+pdf(file="plots/Fig_species_v1.pdf",width=8,height=6,pointsize=10)
+layout(matrix(c(1,2),1), c(1.5,3), c(1.2,3))
+par(mar=c(5.2,2,3.1,0))
+plot(tree_lat_prop, font=1, cex=0.8, x.lim=1, show.tip.label = FALSE)
+par(mar=c(4,7,1,0))
+plot(merged_res_species_df2$M, 1:length(merged_res_species_df2$M), ylab=NA, yaxt="n", bty="n", xlim=c(-5,5), ylim=c(0.25, length(merged_res_species_df2$M)+.5), xlab="effect size [Hd]", pch=merged_res_species_df2$pch, cex=1.5, cex.axis=.9)
+abline(v=0,lty=3)
+mtext(merged_res_species_df2$Model[1:length(merged_res_species_df2$Model)], 2, -1, at=1:length(merged_res_species_df2$Model), las=2, cex=.8, font=3)
+#mtext(merged_res_species_df2$Model[1:2], 2, -1, at=1:2, las=2, cex=.8, font=1)
+segments(merged_res_species_df2$CI.lb, 1:length(merged_res_species_df2$M), merged_res_species_df2$CI.ub, 1:length(merged_res_species_df2$M), lwd=1.25)
+for (i in 1:length(rownames(merged_res_species_df2))) mtext(merged_res_species_df2$Signif[i], 2, -1.5, at=i, las=2, cex=.7) #add stars
+mtext(merged_res_species_df2$k.Freq, 4, -2.8, at=1:(length(merged_res_species_df2$k.Freq)), las=2, cex=.8, font=1, adj=1) #add k values
+mtext(merged_res_species_df2$K.Freq, 4, -1.4, at=1:(length(merged_res_species_df2$K.Freq)), las=2, cex=.8, font=1, adj=1) #add K values
+mtext("k", 4, -2.8, at=length(merged_res_species_df2$k.Freq)+1, las=2, cex=.8, font=1, adj=1)
+mtext("K", 4, -1.4, at=length(merged_res_species_df2$K.Freq)+1, las=2, cex=.8, font=1, adj=1)
+dev.off()
+
+### PLOT - species phylogeny and forest plot v2 (narrower)
+
+pdf(file="plots/Fig_species_v2.pdf",width=6.5,height=6.5,pointsize=11)
+layout(matrix(c(1,2),1), c(1,3), c(1,3))
+par(mar=c(5.2,1,3.1,0))
+plot(tree_lat_prop, font=1, cex=0.8, x.lim=1, show.tip.label = FALSE)
+par(mar=c(4,7,1,0))
+plot(merged_res_species_df2$M, 1:length(merged_res_species_df2$M), ylab=NA, yaxt="n", bty="n", xlim=c(-2,2), ylim=c(0.25, length(merged_res_species_df2$M)+.5), xlab="effect size [Hd]", pch=merged_res_species_df2$pch, cex=1.5, cex.axis=.9, xaxp=c(-1, 1, 4) )
+abline(v=0,lty=3)
+mtext(merged_res_species_df2$Model[1:length(merged_res_species_df2$Model)], 2, -1, at=1:length(merged_res_species_df2$Model), las=2, cex=.8, font=3)
+#mtext(merged_res_species_df2$Model[1:2], 2, -1, at=1:2, las=2, cex=.8, font=1)
+segments(merged_res_species_df2$CI.lb, 1:length(merged_res_species_df2$M), merged_res_species_df2$CI.ub, 1:length(merged_res_species_df2$M), lwd=1.25)
+for (i in 1:length(rownames(merged_res_species_df2))) mtext(merged_res_species_df2$Signif[i], 2, -1.5, at=i, las=2, cex=.7) #add stars
+mtext(merged_res_species_df2$k.Freq, 4, -2.8, at=1:(length(merged_res_species_df2$k.Freq)), las=2, cex=.8, font=1, adj=1) #add k values
+mtext(merged_res_species_df2$K.Freq, 4, -1.4, at=1:(length(merged_res_species_df2$K.Freq)), las=2, cex=.8, font=1, adj=1) #add K values
+mtext("k", 4, -2.8, at=length(merged_res_species_df2$k.Freq)+1, las=2, cex=.8, font=1, adj=1)
+mtext("K", 4, -1.4, at=length(merged_res_species_df2$K.Freq)+1, las=2, cex=.8, font=1, adj=1)
+dev.off()
+
+#NOTE: fine edit plot formatting in AdobeIllustrator
+```
+
+
+- Sex   
+```{r MR all data univariate: Sex} 
+######## random-effect model with Sex as a moderator, differences:
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$Sex, ref="male"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") #male-female Signif
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$Sex, ref="female"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") #male-female Signif
+######## random-effect model with Sex as a moderator, intercepts:
+res_lat_prop <- rma.mv(yi=Hd, V=HdVar, mod = ~Sex -1, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_lat_prop) #only males Signif
+res <- rbind(res, data.frame(Model=c("Univariate Meta-Regression models:"), M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add caption line to results table
+res <- rbind(res, data.frame(Model=NA, M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add empty line line to results table
+res <- rbind(res, data.frame(Model=c("Sex:"), M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add caption line to results table
+res <- rbind(res, cbind(data.frame(Model=c("  Females","  Males","  Mixed-sex"), M=res_lat_prop$b, CI.lb=res_lat_prop$ci.lb, CI.ub=res_lat_prop$ci.ub, pch=c(20,20,20), cld=c("a","b","ab")), data.frame(k=table(dat_lat_prop$Sex))))
+```
+
+- Age   
+```{r MR all data univariate: Age} 
+######## random-effect model with Age as a moderator, differences:
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$Age, ref="adult"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") #no diff
+######## random-effect model with Age as a moderator, intercepts:
+res_lat_prop <- rma.mv(yi=Hd, V=HdVar, mod = ~Age -1, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_lat_prop) #adult only Signif
+res <- rbind(res, data.frame(Model=NA, M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add empty line to results table
+res <- rbind(res, data.frame(Model=c("Age:"), M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add caption line to results table
+res <- rbind(res, cbind(data.frame(Model=c("  Adults","  Juveniles"), M=res_lat_prop$b, CI.lb=res_lat_prop$ci.lb, CI.ub=res_lat_prop$ci.ub, pch=c(20,20), cld=c("a","a")), data.frame(k=table(dat_lat_prop$Age))))
+```
+
+- Animal source
+```{r MR all data univariate: Captive_Wild.caught} 
+table(dat_lat_prop$Captive_Wild.caught)
+######## random-effect model with Captive_Wild.caught as a moderator, differences:
+rma.mv(yi=Hd, V=HdVar, mod = ~Captive_Wild.caught, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML")  #no diff
+######## random-effect model with Captive_Wild.caught as a moderator, intercepts:
+res_lat_prop <- rma.mv(yi=Hd, V=HdVar, mod = ~Captive_Wild.caught -1, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_lat_prop) #captive Signif
+res <- rbind(res, data.frame(Model=NA, M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add empty line to results table
+res <- rbind(res, data.frame(Model=c("Source of animals:"), M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add caption line to results table
+res <- rbind(res, cbind(data.frame(Model=c("  Captive", "  Wild-caugh"), M=res_lat_prop$b, CI.lb=res_lat_prop$ci.lb, CI.ub=res_lat_prop$ci.ub, pch=c(20,20), cld=c("a","a")), data.frame(k=table(dat_lat_prop$Captive_Wild.caught))))
+```
+
+- AffectManipCat   
+```{r MR all data univariate: AffectManipCat} 
+######## random-effect model with AffectManipCat as a moderator, differences:
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$AffectManipCat, ref="stress"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML")  #no diff
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$AffectManipCat, ref="enrichment"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML")  #no diff
+######## random-effect model with AffectManipCat as a moderator, intercepts:
+res_lat_prop <- rma.mv(yi=Hd, V=HdVar, mod = ~AffectManipCat -1, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_lat_prop) #stress only Signif
+res <- rbind(res, data.frame(Model=NA, M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add empty line to results table
+res <- rbind(res, data.frame(Model=c("Affect manipulation:"), M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add caption line to results table
+res <- rbind(res, cbind(data.frame(Model=c("  Enrichment","  Other","  Stress"), M=res_lat_prop$b, CI.lb=res_lat_prop$ci.lb, CI.ub=res_lat_prop$ci.ub, pch=c(20,20,20), cld=c("a","a","a")), data.frame(k=table(dat_lat_prop$AffectManipCat))))
+```
+
+- ComparisonCategory   
+```{r MR all data univariate: ComparisonCategory} 
+######## random-effect model with ComparisonCategory as a moderator, differences:
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$ComparisonCategory, ref="Benign-Worse"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML")  #no diff
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$ComparisonCategory, ref="Better-Benign"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML")  #no diff
+######## random-effect model with ComparisonCategory as a moderator, intercepts:
+res_lat_prop <- rma.mv(yi=Hd, V=HdVar, mod = ~ComparisonCategory -1, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_lat_prop) #Benign-Worse - Signif
+res <- rbind(res, data.frame(Model=NA, M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add empty line to results table
+res <- rbind(res, data.frame(Model=c("Comparison type:"), M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add caption line to results table
+res <- rbind(res, cbind(data.frame(Model=c("  Benign-Worse","  Better-Benign","  Better-Worse"), M=res_lat_prop$b, CI.lb=res_lat_prop$ci.lb, CI.ub=res_lat_prop$ci.ub, pch=c(20,20,20), cld=c("a","a","a")), data.frame(k=table(dat_lat_prop$ComparisonCategory))))
+```
+
+- AffectManipTiming 
+```{r MR all data univariate: AffectManipTiming} 
+######## random-effect model with AffectManipTiming as a moderator, differences:
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$AffectManipTiming, ref="before"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML")  #no diff
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$AffectManipTiming, ref="during"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML")  #no diff
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$AffectManipTiming, ref="long-term"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML")  #no diff
+######## random-effect model with AffectManipTiming as a moderator, intercepts:
+res_lat_prop <- rma.mv(yi=Hd, V=HdVar, mod = ~AffectManipTiming -1, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_lat_prop) #before - Signif
+res <- rbind(res, data.frame(Model=NA, M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add empty line to results table
+res <- rbind(res, data.frame(Model=c("Affect manipulation timing:"), M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add caption line to results table
+res <- rbind(res, cbind(data.frame(Model=c("  Before","  Before/during","  During","  Long-term"), M=res_lat_prop$b, CI.lb=res_lat_prop$ci.lb, CI.ub=res_lat_prop$ci.ub, pch=c(20,20,20,20), cld=c("a","a","a","a")), data.frame(k=table(dat_lat_prop$AffectManipTiming))))
+```
+
+- CueTypeCat   
+```{r MR all data univariate: CueTypeCat} 
+######## random-effect model with CueTypeCat as a moderator, differences:
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$CueTypeCat, ref="auditory"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML")  #auditory diff from spatial, visual
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$CueTypeCat, ref="olfactory"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML")  #no diff
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$CueTypeCat, ref="spatial"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML")  #spatial-auditory diff
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$CueTypeCat, ref="tactile"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML")  #no diff
+######## random-effect model with CueTypeCat as a moderator, intercepts:
+res_lat_prop <- rma.mv(yi=Hd, V=HdVar, mod = ~CueTypeCat -1, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_lat_prop) #Auditory - Signif
+res <- rbind(res, data.frame(Model=NA, M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add empty line to results table
+res <- rbind(res, data.frame(Model=c("Cue type:"), M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add caption line to results table
+res <- rbind(res, cbind(data.frame(Model=c("  Auditory","  Olfactory","  Spatial","  Tactile","  Visual"), M=res_lat_prop$b, CI.lb=res_lat_prop$ci.lb, CI.ub=res_lat_prop$ci.ub, pch=c(20,20,20,20,20), cld=c("a","ab","b","ba","b")), data.frame(k=table(dat_lat_prop$CueTypeCat))))
+```
+
+- FoodDeprived   
+```{r MR all data univariate: FoodDeprived} 
+######## random-effect model with FoodDeprived as a moderator, differences:
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$FoodDeprived, ref="yes"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") #no diff
+######## random-effect model with FoodDeprived as a moderator, intercepts:
+res_lat_prop <- rma.mv(yi=Hd, V=HdVar, mod = ~FoodDeprived -1, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_lat_prop) #both Signif
+res <- rbind(res, data.frame(Model=NA, M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add empty line to results table
+res <- rbind(res, data.frame(Model=c("Food deprived:"), M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add caption line to results table
+res <- rbind(res, cbind(data.frame(Model=c("  No","  Yes"), M=res_lat_prop$b, CI.lb=res_lat_prop$ci.lb, CI.ub=res_lat_prop$ci.ub, pch=c(20,20), cld=c("a","a")), data.frame(k=table(dat_lat_prop$FoodDeprived))))
+```
+
+- TaskType   
+```{r MR all data univariate: TaskType} 
+######## random-effect model with TaskType as a moderator, differences:
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$TaskType, ref="active choice"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML")  # diff
+######## random-effect model with TaskType as a moderator, intercepts:
+res_lat_prop <- rma.mv(yi=Hd, V=HdVar, mod = ~TaskType -1, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_lat_prop) #active choice Signif
+res <- rbind(res, data.frame(Model=NA, M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add empty line to results table
+res <- rbind(res, data.frame(Model=c("Task type:"), M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add caption line to results table
+res <- rbind(res, cbind(data.frame(Model=c("  Active choice","  Go/No-go"), M=res_lat_prop$b, CI.lb=res_lat_prop$ci.lb, CI.ub=res_lat_prop$ci.ub, pch=c(20,20), cld=c("a","b")), data.frame(k=table(dat_lat_prop$TaskType))))
+```
+
+- StudyDesign   
+```{r MR all data univariate: StudyDesign} 
+######## random-effect model with StudyDesign as a moderator, differences:
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$StudyDesign, ref="within (before-after)"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") #all diff from within (before-after)
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$StudyDesign, ref="within (crossover)"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") #crossover diff from before-after
+######## random-effect model with Randomized_WithinBetween as a moderator, intercepts:
+res_lat_prop <- rma.mv(yi=Hd, V=HdVar, mod = ~StudyDesign -1, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_lat_prop) #within-subject before-and-after - Signif
+res <- rbind(res, data.frame(Model=NA, M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add empty line to results table
+res <- rbind(res, data.frame(Model=c("Study design:"), M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add caption line to results table
+res <- rbind(res, cbind(data.frame(Model=c("  Between-subject", "  Within-subject before-and-after", "  Within-subject crossover "), M=res_lat_prop$b, CI.lb=res_lat_prop$ci.lb, CI.ub=res_lat_prop$ci.ub, pch=c(20,20,20), cld=c("a","b","a")), data.frame(k=table(dat_lat_prop$StudyDesign))))
+```
+
+- Automated   
+```{r MR all data univariate: Automated} 
+######## random-effect model with Automated as a moderator, differences:
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$Automated, ref="no"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML")  #no diff
+######## random-effect model with Automated as a moderator, intercepts:
+res_lat_prop <- rma.mv(yi=Hd, V=HdVar, mod = ~Automated -1, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_lat_prop) #no - Signif
+res <- rbind(res, data.frame(Model=NA, M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add empty line to results table
+res <- rbind(res, data.frame(Model=c("Automated testing:"), M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add caption line to results table
+res <- rbind(res, cbind(data.frame(Model=c("  No", "  Yes"), M=res_lat_prop$b, CI.lb=res_lat_prop$ci.lb, CI.ub=res_lat_prop$ci.ub, pch=c(20,20), cld=c("a","a")), data.frame(k=table(dat_lat_prop$Automated))))
+```
+
+- Blind   
+```{r MR all data univariate: Blind} 
+######## random-effect model with Blind as a moderator, differences:
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$Blind, ref="no"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML")  #no diff
+######## random-effect model with Blind as a moderator, intercepts:
+res_lat_prop <- rma.mv(yi=Hd, V=HdVar, mod = ~Blind -1, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_lat_prop) #no - Signif
+res <- rbind(res, data.frame(Model=NA, M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add empty line to results table
+res <- rbind(res, data.frame(Model=c("Blind testing:"), M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add caption line to results table
+res <- rbind(res, cbind(data.frame(Model=c("  No", "  Yes"), M=res_lat_prop$b, CI.lb=res_lat_prop$ci.lb, CI.ub=res_lat_prop$ci.ub, pch=c(20,20), cld=c("a","a")), data.frame(k=table(dat_lat_prop$Blind))))
+```
+
+- MeasureType 
+```{r MR all data univariate: MeasureType} 
+######## random-effect model with MeasureType as a moderator, differences:
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$MeasureType, ref="latency"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML")  #latency - prop diff
+######## random-effect model with MeasureType as a moderator, intercepts:
+res_lat_prop <- rma.mv(yi=Hd, V=HdVar, mod = ~MeasureType -1, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_lat_prop) #proportion - Signif
+res <- rbind(res, data.frame(Model=NA, M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add empty line to results table
+res <- rbind(res, data.frame(Model=c("Outcome measure type reported:"), M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add caption line to results table
+res <- rbind(res, cbind(data.frame(Model=c("  Latency", "  Proportion "), M=res_lat_prop$b, CI.lb=res_lat_prop$ci.lb, CI.ub=res_lat_prop$ci.ub, pch=c(20,20), cld=c("a","b")), data.frame(k=table(dat_lat_prop$MeasureType))))
+```
+
+- ReinforcementCat
+```{r MR all data univariate: ReinforcementCat} 
+######## random-effect model with ReinforcementCat as a moderator, differences:
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$ReinforcementCat, ref="R-Null"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") #R-Null diff from R-P and R-R
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$ReinforcementCat, ref="R-P"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") #R-P diff from R-Null 
+######## random-effect model with ReinforcementCat as a moderator, intercepts:
+res_lat_prop <- rma.mv(yi=Hd, V=HdVar, mod = ~ReinforcementCat -1, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_lat_prop) #R-P and R-R - Signif
+res <- rbind(res, data.frame(Model=NA, M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add empty line to results table
+res <- rbind(res, data.frame(Model=c("Reinformcement for training cues:"), M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add caption line to results table
+res <- rbind(res, cbind(data.frame(Model=c("  Reward-Null", "  Reward-Punishement", "  Reward-Reward"), M=res_lat_prop$b, CI.lb=res_lat_prop$ci.lb, CI.ub=res_lat_prop$ci.ub, pch=c(20,20,20), cld=c("a","b","b")), data.frame(k=table(dat_lat_prop$ReinforcementCat))))
+```
+
+- AmbigReinforced
+```{r MR all data univariate: AmbigReinforced} 
+######## random-effect model with AmbigReinforced as a moderator, differences:
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$AmbigReinforced, ref="yes"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML")  #no diff
+######## random-effect model with AmbigReinforced as a moderator, intercepts:
+res_lat_prop <- rma.mv(yi=Hd, V=HdVar, mod = ~AmbigReinforced -1, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_lat_prop) #no = Signif
+res <- rbind(res, data.frame(Model=NA, M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add empty line to results table
+res <- rbind(res, data.frame(Model=c("Ambiguous cues reinforced:"), M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add caption line to results table
+res <- rbind(res, cbind(data.frame(Model=c("  No", "  Yes"), M=res_lat_prop$b, CI.lb=res_lat_prop$ci.lb, CI.ub=res_lat_prop$ci.ub, pch=c(20,20), cld=c("a","a")), data.frame(k=table(dat_lat_prop$AmbigReinforced))))
+```
+
+- ScalePoint
+```{r MR all data univariate: ScalePoint} 
+######## random-effect model with ScalePoint as a moderator, differences:
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$ScalePoint, ref="A"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") #no diff
+rma.mv(yi=Hd, V=HdVar, mod = ~relevel(dat_lat_prop$ScalePoint, ref="B"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") #no diff
+######## random-effect model with ScalePoint as a moderator, intercepts:
+res_lat_prop <- rma.mv(yi=Hd, V=HdVar, mod = ~ScalePoint -1, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_lat_prop) #A, B - Signif
+res <- rbind(res, data.frame(Model=NA, M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add empty line to results table
+res <- rbind(res, data.frame(Model=c("Data point position for ambiguous cues:"), M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add caption line to results table
+res <- rbind(res, cbind(data.frame(Model=c("  Near positive", "  Midpoint", "  Near negative"), M=res_lat_prop$b, CI.lb=res_lat_prop$ci.lb, CI.ub=res_lat_prop$ci.ub, pch=c(20,20,20), cld=c("a","a","a")), data.frame(k=table(dat_lat_prop$ScalePoint))))
+```
+
+
+```{r tidy results} 
+#names(dat_lat_prop)
+#res[,1]
+# tidy up extracted results table
+res$M <- round(res$M,3)
+res$CI.lb <- round(res$CI.lb,3)
+res$CI.ub <- round(res$CI.ub,3)
+res$Signif <- ifelse(res$CI.lb>0 | res$CI.ub<0, "*", "") #add column with stars for estimates that significantly differ from zero
+write.csv(res,"tables/MR_univariate_res.csv")
+```
+
+### PLOT - univariate forest plot
+
+```{r MR all data univariate plot} 
+res$Model
+revres <- res[rev(rownames(res)),] #reverse for plotting (from bottom to top)
+#res[c(1,10,2),]
+pdf(file="plots/Fig_univariate_v0.pdf",width=6,height=12,pointsize=10)
+layout(matrix(1,1), c(1,1), c(1,1))
+par(mar=c(4,12,1,1))
+plot(revres$M, 1:length(revres$M), ylab=NA, yaxt="n", bty="n", xlim=c(-1.4, 1.4), ylim=c(0.25, length(revres$M)+.5), xlab="effect size [Hd]", pch=revres$pch, cex=1.5, cex.axis=.9)
+abline(v=0,lty=3)
+mtext(revres$Model[1:length(revres$Model)], 2, 10, at=1:length(revres$Model), las=2, cex=.8, font=3, adj=0)
+#mtext(revres$Model[1:2], 2, -1, at=1:2, las=2, cex=.8, font=1)
+segments(revres$CI.lb, 1:length(revres$M), revres$CI.ub, 1:length(revres$M), lwd=1.25) #add whiskers
+mtext("k", 4, -1.7, at=nrow(revres)+3, las=2, cex=.8, font=1) #add k-letter
+mtext(revres$k.Freq, 4, -1, at=1:(length(revres$k.Freq)), las=2, cex=.8, font=1, adj=0.5) #add k-values
+mtext(revres$cld, 4, -2.5, at=1:(length(revres$cld)), las=2, cex=.8, font=1, adj=0.5) #add letters
+for (i in 1:length(rownames(revres))) mtext(revres$Signif[i], 4, -3.2, at=i, las=2, cex=1.2) #add stars
+dev.off()
+```
+
+
+#### MULTIVARIATE MR MODELS
+
+```{r multivariate MR models}
+########### Multivariate models:
+
+######## full random-effect model with selected moderator (only ones where levels diff):
+res_MV <- rma.mv(yi=Hd, V=HdVar, mod = ~ Sex + Captive_Wild.caught + CueTypeCat + StudyDesign + Automated + MeasureType + ReinforcementCat, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML")
+summary(res_MV)
+
+#res_MV <- rma.mv(yi=Hd, V=HdVar, mod = ~ relevel(dat_lat_prop$Sex, ref="male") + Captive_Wild.caught + CueTypeCat + relevel(dat_lat_prop$StudyDesign, ref="within (before-after)") + Automated + relevel(dat_lat_prop$MeasureType, ref="proportion") + ReinforcementCat, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML")
+#summary(res_MV)
+
+s2m <- sum(1/res_MV$vi) * (res_MV$k-1) / (sum(1/res_MV$vi)^2 - sum((1/res_MV$vi)^2)); s2m #s^2_m: variation within study = random error
+s2t <- sum(res_MV$sigma2) + s2m; s2t #s^2_t
+total_I2_res_MV <- sum(res_MV$sigma2)/s2t; total_I2_res_MV*100 # the "total" variation 6.65%
+ssp <- summary(res_MV)
+res_MV_df <- data.frame(Model = "Multivariate Meta-Regression", M = ssp$b, CI.lb = ssp$ci.lb, CI.ub = ssp$ci.ub, I2=total_I2_res_MV*100, pch=20)
+
+# tidy up extracted results table
+res_MV_df$M <- round(res_MV_df$M,3)
+res_MV_df$CI.lb <- round(res_MV_df$CI.lb,3)
+res_MV_df$CI.ub <- round(res_MV_df$CI.ub,3)
+res_MV_df$Signif <- ifelse(res_MV_df$CI.lb>0 | res_MV_df$CI.ub<0, "*", "") #add column with stars for estimates that significantly differ from zero
+write.csv(res_MV_df,"tables/MR_MV_res.csv")
+
+#res_full_1 <- rma.mv(yi=Hd, V=HdVar, mod = ~ Sex + relevel(dat_lat_prop$CueTypeCat, ref="spatial") + #relevel(dat_lat_prop$Randomized_WithinBetween, ref="between-subject randomized? (no info)") + Automated +relevel(dat_lat_prop$MeasureType, ref="proportion"), random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+#summary(res_full_1)
+
+
+######## random-effect model with 2 moderators:
+res_MR_int <- rma.mv(yi=Hd, V=HdVar, mod = ~ TaskType + MeasureType, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_MR_int)
+
+######## random-effect model with 2 moderators and interaction:
+res_MR_int <- rma.mv(yi=Hd, V=HdVar, mod = ~ TaskType * MeasureType -1, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_MR_int)
+
+res_MR_int <- rma.mv(yi=Hd, V=HdVar, mod = ~ TaskType * relevel(dat_lat_prop$MeasureType, ref="latency") -1, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_MR_int)
+
+res_MR_int <- rma.mv(yi=Hd, V=HdVar, mod = ~ TaskType * relevel(dat_lat_prop$MeasureType, ref="proportion") -1, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_MR_int)
+
+boxplot(Hd ~ TaskType * MeasureType, dat=dat_lat_prop, varwidth=TRUE)
+boxplot(Hd ~ TaskType, dat=dat_lat_prop)
+boxplot(Hd ~ MeasureType, dat=dat_lat_prop)
+```
+
+
+
+#### PUBLICATION BIAS
+
+```{r preliminary funnel plot}
+### PLOT - funnel plot
+pdf(file="Fig_funnel_alldata.pdf",width=6,height=4,pointsize=10)
+par(mfcol=c(1,1)) 
+par(mar=c(4,4,2,1))
+plot(dat_lat_prop$Hd, sqrt(1/dat_lat_prop$HdVar), xlim=c(-6.5,6.5), xlab = "Effect size [Hd]", ylab="Precision [1/SE]", main="")
+abline(v=0,lty=3)
+dev.off()
+```
+
+```{r publ bias tests}
+######## random-effect model with ArticleID as random effect:
+res_MA <- rma.mv(yi=Hd, V=HdVar, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_MA) ### estimate  0.1679 CI  0.0550  0.2808  **
+
+Residuals <- residuals(res_MA)
+Precision <- sqrt(1/res_MA$vi)
+PB_model <- rma(yi=Residuals, sei=1/Precision) 
+summary(PB_model)
+funnel(PB_model, yaxi="seinv")
+# Trim and fill
+TF <- trimfill(PB_model)
+TF #Estimated number of missing studies on the left side: 32 (SE = 9.8892)
+funnel(TF)
+# Egger's regression test
+regtest(PB_model, model="lm") #test for funnel plot asymmetry: t = 2.9146, df = 230, p = 0.0039
+ranktest(PB_model) #does not work - value out of range
+
+##################### PLOT - funnel plots ##################### 
+pdf(file="plots/Fig_funnels_20171212.pdf",width=7,height=3,pointsize=14)
+par(mfrow=c(1,3))
+par(mar=c(4,4,4,1))
+plot(dat_lat_prop$Hd, sqrt(1/dat_lat_prop$HdVar), xlim=c(-3,3), ylim=c(0,3), xlab = "effect size [Hd]", ylab="Precision [1/SE]", frame.plot=FALSE, main="A")
+abline(v=0,lty=3)
+abline(v=0.168,lty=1)
+funnel(TF, xlim=c(-3,3), xlab = "effect size [Hd]", ylab="Standard Error [SE]",
+       back="white", shade="lightgray", bg="red", main="B")
+abline(v=0,lty=3)
+plot(Residuals, Precision, xlim=c(-3,3), ylim=c(0,3), xlab = "Residuals", ylab="Precision [1/SE]", frame.plot=FALSE, main="C")
+abline(v=0,lty=3)
+dev.off()
+```
+
+
+
+#### SENSITIVITY ANALYSIS
+
+```{r robust model}
+#MA model - using a marix or vector to W which is equivalent to 'weights' in rma
+#should bemore robust to publication bias (Henmi and Copas 2010)
+robustml_m <- rma.mv(yi = Hd, V = HdVar, W = 1/dat_lat_prop$HdVar, random = list(~1|ArticleID, ~1|EffectID), method = "REML", data = dat_lat_prop)
+summary(robustml_m) #M 0.1622 SE 0.0600  CI  0.0446  0.2798  **
+
+```
+
+#### OTHER
+```{r test contrasts}
+library(multcomp)
+res_lat_prop <- rma.mv(yi=Hd, V=HdVar, mod = ~Sex-1, random=list(~1|ArticleID), dat=dat_lat_prop, method="REML") 
+summary(res_lat_prop) #latency - prop diff
+
+glht(res_lat_prop, linfct = mcp(Sex = "Tukey")) #does not work
+test1 <- glht(res_lat_prop, linfct=rbind(c(1,-1,0), c(1,0,-1), c(0,01,-1)), test=adjusted("none"))
+summary(test1)
+str(test1)
+confint(test1)
+plot(test1)
+
+#The cld function = compact letter display (CLD) 
+cld(test1) #does not work (because test1 is not Tukey?)
+cld(summary(test1))
+```
