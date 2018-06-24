@@ -266,6 +266,23 @@ make_VCV_matrix <- function(data, V, cluster, obs, type=c("vcv", "cor"), rho=0.5
 
 
 
+########################
+
+## function to claculate total heterogeneity I-squared, 
+# followng http://www.metafor-project.org/doku.php/tips:i2_multilevel_multivariate
+# r - ; res - 
+calc.I2 <- function (vi, res) 
+{
+  W <- diag(1/vi)
+  X <- model.matrix(res)
+  P <- W - W %*% X %*% solve(t(X) %*% W %*% X) %*% t(X) %*% W
+  Th <- 100 * sum(res$sigma2) / (sum(res$sigma2) + (res$k-res$p)/sum(diag(P)))
+  Rh <- 100 * res$sigma2 / (sum(res$sigma2) + (res$k-res$p)/sum(diag(P)))
+  return(c(Th,Rh))
+}
+
+#you can also estimate how much of the total variance can be attributed to between- and within-cluster heterogeneity separately:
+#100 * res$sigma2 / (sum(res$sigma2) + (res$k-res$p)/sum(diag(P)))
 
 
 #' ########################################################################################## SUNDAY MESS
@@ -508,20 +525,6 @@ make_VCV_matrix <- function(data, V, cluster, obs, type=c("vcv", "cor"), rho=0.5
 #   return(SE)
 # }
 
-
-## function to claculate total heterogeneity I-squared, 
-# followng http://www.metafor-project.org/doku.php/tips:i2_multilevel_multivariate
-# r - ; res - 
-calc.I2 <- function (vi, res) 
-{
-  W <- diag(1/vi)
-  X <- model.matrix(res)
-  P <- W - W %*% X %*% solve(t(X) %*% W %*% X) %*% t(X) %*% W
-  return(100 * sum(res$sigma2) / (sum(res$sigma2) + (res$k-res$p)/sum(diag(P))))
-}
-
-#you can also estimate how much of the total variance can be attributed to between- and within-cluster heterogeneity separately:
-#100 * res$sigma2 / (sum(res$sigma2) + (res$k-res$p)/sum(diag(P)))
 
 
  
