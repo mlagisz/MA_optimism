@@ -27,13 +27,6 @@ dat <- read.csv("data_with_ES.csv")
 dim(dat) #265 70
 str(dat)
 names(dat)
-
-### SUBSETS by MeasureType
-table(dat$MeasureType) # 138 "latency", 127 "proportion"
-dat_lat <- dplyr::filter(dat, MeasureType == "latency") #subset latency data
-dim(dat_lat) 
-dat_prop <- dplyr::filter(dat, MeasureType == "proportion") #subset proportion data
-dim(dat_prop) 
 ```
 
 ```{r check continuous variables, eval=TRUE} 
