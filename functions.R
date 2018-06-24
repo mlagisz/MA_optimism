@@ -7,19 +7,8 @@ library(purrr)
 
 ##########################################################################################
 ##########################################################################################
-# use vectorization to switch between calcualting standard error for d with within or between-subject study design option
-# se_choose <- function(WorseN, BetterN, WithinBetween, d) {
-#   if (WithinBetween == "between") {
-#     SEd <- sqrt(((WorseN + BetterN) / (WorseN * BetterN) ) + ( (d^2) / (2 * (WorseN + BetterN - 2))))
-#   } #for between-subject study design
-#   else {
-#     SEd <- sqrt(1/WorseN + ((d^2) / (2 * (WorseN  - 1))))
-#   } #for within-subject study design
-# }
-# SEd <- pmap_dbl(list(WorseN, BetterN, WithinBetween, d), se_choose)
 
-
-### PREARE DATA
+### PREPARE DATA
 prepare_df <- function(data, Worse, WorseSD, WorseN, Better, BetterSD, BetterN, MeasureType, DataScale, type=c("lnorm", "delta")){
   # turning parameters that are column names into strings
   Worse <- data[[deparse(substitute(Worse))]]
@@ -31,25 +20,25 @@ prepare_df <- function(data, Worse, WorseSD, WorseN, Better, BetterSD, BetterN, 
   MeasureType <- data[[deparse(substitute(MeasureType))]]
   DataScale <- data[[deparse(substitute(DataScale))]]
   
-  choose <- function(Worse, WorseSD, WorseN, Better, BetterSD, BetterN, MeasureType, DataScale, type=c("lnorm", "delta")){
-    
+  type <- match.arg(type)
+  
+  
   ##for latency
-  if(MeasureType == "latency" & type == "lnorm"){  
+  if(MeasureType == "latency" && type == "lnorm") {  
     M1 <- log(Better) - (BetterSD^2)/(2*Better^2)
     V1 <- (BetterSD^2)/(Better^2)
     M2 <- log(Worse) - (WorseSD^2)/(2*Worse^2)
     V2 <- (WorseSD^2)/(Worse^2)    
-  }
-  
-  if(MeasureType == "latency" & type == "delta"){  
+  } else {
+    if(MeasureType == "latency" && type == "delta") {  
     M1 <- log(Better) - log( sqrt(1 + (BetterSD^2)/(Better^2) ) )
     V1 <- log( 1 + (BetterSD^2)/(Better^2) )
     M2 <- log(Worse) - log( sqrt(1 + (WorseSD^2)/(Worse^2) ) )
     V2 <- log( 1 + (WorseSD^2)/(Worse^2) )
-  }
+  } else {
 
     #for proportion
-  if(MeasureType == "proportion" & DataScale == "natural"){
+  if(MeasureType == "proportion" && DataScale == "natural"){
     Better <- Better/100 #convert form percentage to proportion
     BetterSD <- BetterSD/100 #convert form percentage to proportion
     Worse <- Worse/100 #convert form percentage to proportion
@@ -58,34 +47,46 @@ prepare_df <- function(data, Worse, WorseSD, WorseN, Better, BetterSD, BetterN, 
     V1 <- (BetterSD^2) * ( 1/Better + 1/(1-Better)^2 )
     M2 <- qlogis(Worse) + (WorseSD^2)/2 * (1/((1-Worse)^2) -1/(Worse^2))
     V2 <- (WorseSD^2) * ( 1/Worse + 1/(1-Worse)^2 )
-  }
+  } else {
 
-  if(MeasureType == "proportion" & DataScale == "logit"){
     M1 <- Better
     V1 <- BetterSD^2
     M2 <- Worse
-    V2 <- WorseSD^2
+    V2 <- WorseSD^2}
   }
+}
+
   
   N1 <- BetterN
   N2 <- WorseN
   # putting all together in a tibble and combine
-  MV <- cbind(M1, V1, N1, M2, V2, N2)
-  return(MV)
-  } #choose
-  
-  ok <- pmap_dfr(list(Worse, WorseSD, WorseN, Better, BetterSD, BetterN, MeasureType, DataScale, type), choose)
-  return(ok)
+  MVN <- as_tibble(cbind(data, M1, V1, N1, M2, V2, N2))
+  return(MVN)
 } 
 
 
 ###TESTS
-str(dat) 
-prepare_df(dat, Worse, WorseSD, WorseN, Better, BetterSD, BetterN, MeasureType, DataScale, type="lnorm")
+#dat2 <- dat %>% prepare_df(Worse, WorseSD, WorseN, Better, BetterSD, BetterN, MeasureType, DataScale, type="lnorm") 
 
-test <- choose(dat$Worse, dat$WorseSD, dat$WorseN, dat$Better, dat$BetterSD, dat$BetterN, dat$MeasureType, dat$DataScale, type="lnorm")
+test <- tibble(Worse = c(1,2), 
+               WorseSD = c(2,2), 
+               WorseN = c(20, 20), 
+               Better = c(2, 4), 
+               BetterSD = c(2, 2), 
+               BetterN = c(20, 20), 
+               MeasureType = c("latency", "proportion"), 
+               DataScale = c("natural", "logit")
+  
+)
 
-str(test)
+prepare_df(test, Worse, WorseSD, WorseN, Better, BetterSD, BetterN, MeasureType, DataScale, type="lnorm") 
+
+
+# test <- tibble(
+#   Wores = 1,
+#   ....
+# )
+
 
 ##########################################################################################
 ##########################################################################################
@@ -416,4 +417,105 @@ es_cal <- function(data, m1, m2, sd1, sd2, n1, n2) {
 # USE
 pacman::p_load(tidyverse, gridExtra, purrr, magrittr, metafor, cowplot, moments)
 dat %<>% es_cal(mean1_r, mean2_r, sd1_r, sd2_r, n1_r, n2_r)
+
+
+
+#### ORIGINAL custom functions
+#### Functions for calculating effect size for proportion data modified by ML&SN from the function (originally by A M Senior): we use qlogis(meanproportion) and SD=sqrt(pi^2/3)
+#### Calc.d calculates Hedges'd (sometimes g), which is 'unbiased for small sample size'. Cohen's d can be returned using adjusted = F.
+#### Calc.SE.d calculates d values given the necessery n's
+
+## Calc.d.percA calculates the effect size d for proportion data with fixed SD:
+# Calc.d.propA <- function(Worse, WorseSD, WorseN, Better, BetterSD, BetterN, adjusted=T){
+#   #logit SD, divide by 100 to get proportions from procentage data
+#   logitBetter <- qlogis(Better/100)
+#   logitWorse <- qlogis(Worse/100)
+#   #variance from SD
+#   VarianceBetter <- pi^2/3
+#   VarianceWorse <- pi^2/3
+#   #sPooled 
+#   sPooled <- sqrt(((BetterN-1)*VarianceBetter + (WorseN-1)*VarianceWorse)/(BetterN + WorseN - 2))
+#   #d and Hedges d
+#   d <- (logitBetter-logitWorse)/sPooled
+#   H.d <- d * (1-(3/ (4 * (BetterN + WorseN -2) -1)))
+#   if(adjusted==T){return(H.d)}
+#   if(adjusted==F){return(d)}
+# }
+
+
+## Calc.d.propB calculates the effect size d for proportion data with non-fixed SD:
+Calc.d.propB <- function(Worse, WorseSD, WorseN, Better, BetterSD, BetterN, adjusted=T, DataType="natural"){
+  #if natural data then logit means and SDs, divide by 100 to get proportions from procentage data
+  if (DataType == "natural")
+  {
+    logitBetter <- qlogis(Better/100)
+    logitWorse <- qlogis(Worse/100)
+    SDlogitBetter <- (BetterSD/100) * ( 1/(Better/100) + 1/(1-(Better/100)) )
+    SDlogitWorse <- (WorseSD/100) * ( 1/(Worse/100) + 1/(1-(Worse/100)) )
+  }
+  #if logit data then no need to transform
+  if (DataType == "logit")
+  {
+    logitBetter <- Better
+    logitWorse <- Worse
+    SDlogitBetter <- BetterSD
+    SDlogitWorse <- WorseSD
+  }
+  #variance
+  VarianceBetter <- SDlogitBetter^2
+  VarianceWorse <- SDlogitWorse^2
+  #sPooled 
+  sPooled <- sqrt(((BetterN-1)*VarianceBetter + (WorseN-1)*VarianceWorse)/(BetterN + WorseN - 2))
+  #d and Hedges d
+  d <- (logitBetter-logitWorse)/sPooled
+  H.d <- d * (1- (3/ (4 * (BetterN + WorseN -2) -1)))
+  if(adjusted==T){return(H.d)}  
+  if(adjusted==F){return(d)}
+}
+
+
+## Calc.d.lat calculates the effect size d for latency data:
+Calc.d.lat_raw <- function(Worse, WorseSD, WorseN, Better, BetterSD, BetterN, adjusted=T){
+  VarianceBetter <- BetterSD^2
+  VarianceWorse <- WorseSD^2
+  #sPooled is calculated with the logged variables
+  sPooled <- sqrt(((BetterN-1)*VarianceBetter + (WorseN-1)*VarianceWorse)/(BetterN + WorseN -2))
+  #d and Hedges d
+  d <- (Better-Worse)/sPooled
+  H.d <- d * (1-(3/ (4 * (BetterN + WorseN -2) -1)))
+  if(adjusted==T){return(-H.d)} #Reversing sign on latency data to match proportion data. #Now positive values means optimistic for both lat and prop data.
+  if(adjusted==F){return(-d)} #Reversing sign on latency data to match proportion data. #Now positive values means optimistic for both lat and prop data.
+}
+
+## Calc.d.lat calculates the effect size d for latency data (after log-transformation):
+Calc.d.lat_log <- function(Worse, WorseSD, WorseN, Better, BetterSD, BetterN, adjusted=T){
+  #log mean and SDn
+  logBetter <- log(Better)
+  logWorse <- log(Worse)
+  #variance
+  VarianceBetter <- (BetterSD/Better)^2
+  VarianceWorse <- (WorseSD/Worse)^2
+  #sPooled is calculated with the logged variables
+  sPooled <- sqrt(((BetterN-1)*VarianceBetter + (WorseN-1)*VarianceWorse)/(BetterN + WorseN -2))
+  #d and Hedges d
+  d <- (logBetter-logWorse)/sPooled
+  H.d <- d * (1-(3/ (4 * (BetterN + WorseN -2) -1)))
+  if(adjusted==T){return(-H.d)} #Reversing sign on latency data to match proportion data. #Now positive values means optimistic for both lat and prop data.
+  if(adjusted==F){return(-d)} #Reversing sign on latency data to match proportion data. #Now positive values means optimistic for both lat and prop data.
+}
+
+# #Standard error for d
+# Calc.SE.d <- function(WorseN, BetterN, d){
+#   SE <- sqrt(((WorseN + BetterN) / (WorseN * BetterN) ) + ( (d^2) / (2 * (WorseN + BetterN - 2)))) #between study design
+#   SE <- sqrt(( (d^2) / (2 * (WorseN  - 1)))) #within study design - assuming the perfect correlation (conservative estimate)
+#   return(SE)
+# }
+
+
+#Standard error for d with within - between subject study design option
+Calc.SE.d <- function(WorseN, BetterN, d, WithinBetween="between"){
+  if (WithinBetween == "between") {SE <- sqrt(((WorseN + BetterN) / (WorseN * BetterN) ) + ( (d^2) / (2 * (WorseN + BetterN - 2))))} #for between-subject study design
+  if (WithinBetween == "within") {SE <- sqrt(1/WorseN + ((d^2) / (2 * (WorseN  - 1))))} #for within-subject study design - assuming 0.5 correlation (conservative estimate)
+  return(SE)
+}
 
