@@ -39,7 +39,7 @@ dim(dat_prop)
 
 ######## random-effect model with ArticleID, ExperimentID, GroupID, EffectID as random effects - only ArticleID contributes to the variance, other random factors can be omitted
 MA_random0 <- rma.mv(yi=d, V=Vd, 
-                     random=list(~1|ArticleID, ~1|ExperimentID, ~1|GroupID), 
+                     random=list(~1|ArticleID, ~1|ExperimentID, ~1|GroupID, ~1|EffectID), 
                      dat=dat, method="REML") 
 summary(MA_random0) ### estimate   0.26
 calc.I2(dat$Vd, MA_random0) #83.5% total
@@ -55,10 +55,10 @@ calc.I2(dat$Vd, MA_random0_VCV) #89.2% total
 
 
 ######## random-effect model with ArticleID and species as random:
-MA_random_species <- rma.mv(yi=d, V=Vd, random=list(~1|ArticleID, ~1|ExperimentID, ~1|Species_Latin), data=dat, method="REML")  
+MA_random_species <- rma.mv(yi=d, V=Vd, random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID), data=dat, method="REML")  
 summary(MA_random_species) ### species not contributing
 #res <- rbind(res, data.frame(Model=c("Meta-analytic mean (Study, Species)"), M=res_random_species$b, CI.lb=res_random_species$ci.lb, CI.ub=res_random_species$ci.ub, pch=18, k.Var1=NA, k.Freq=265 , cld=NA))
-calc.I2(dat$Vd, MA_random_species) #81% total
+calc.I2(dat$Vd, MA_random_species) #89% total
 
 ######## random-effect model with ArticleID and species phylogeny as random efects:
 tree <- read.tree(file="tree_all.tre")
@@ -68,8 +68,8 @@ is.ultrametric(tree) #TRUE
 CorMatrix_lat_prop <- vcv(tree, corr=TRUE)
 setdiff(colnames(CorMatrix_lat_prop), unique(dat$Species_Latin)) #ok
 
-res_lat_prop_phylo <- rma.mv(yi=d, V=Vd, random=list(~1|ArticleID, ~1|ExperimentID, ~1|Species_Latin), R=list(Species_Latin=CorMatrix_lat_prop), dat=dat, method="REML") 
-summary(res_lat_prop_phylo) ### estimate  0.1678  CI  0.0616  0.2740  **   
+res_lat_prop_phylo <- rma.mv(yi=d, V=VCV, random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID), R=list(Species_Latin=CorMatrix_lat_prop), dat=dat, method="REML") 
+summary(res_lat_prop_phylo) ### estimate  0.2187  CI  -0.0623  0.4997   
 calc.I2(dat$Vd, res_lat_prop_phylo) #4% phylogeny
 
 #res <- rbind(res, data.frame(Model=c("Meta-analytic mean, intercept-only phylogenetic Model 3"), M=res_lat_prop_phylo$b, CI.lb=res_lat_prop_phylo$ci.lb, CI.ub=res_lat_prop_phylo$ci.ub, pch=18))
@@ -229,7 +229,7 @@ res <- rbind(res, cbind(data.frame(Model=c("  Enrichment","  Other","  Stress"),
 rma.mv(yi=d, V=Vd, mod = ~relevel(dat$ComparisonCategory, ref="Benign-Worse"), random=list(~1|ArticleID), dat=dat, method="REML")  #no diff
 rma.mv(yi=d, V=Vd, mod = ~relevel(dat$ComparisonCategory, ref="Better-Benign"), random=list(~1|ArticleID), dat=dat, method="REML")  #no diff
 ######## random-effect model with ComparisonCategory as a moderator, intercepts:
-res_lat_prop <- rma.mv(yi=d, V=Vd, mod = ~ComparisonCategory -1, random=list(~1|ArticleID), dat=dat, method="REML") 
+res_lat_prop <- rma.mv(yi=d, V=Vd, mod = ~ComparisonCategory, random=list(~1|ArticleID), dat=dat, method="REML") 
 summary(res_lat_prop) #Benign-Worse - Signif
 res <- rbind(res, data.frame(Model=NA, M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add empty line to results table
 res <- rbind(res, data.frame(Model=c("Comparison type:"), M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add caption line to results table
@@ -336,6 +336,11 @@ summary(res_lat_prop) #proportion - Signif
 res <- rbind(res, data.frame(Model=NA, M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add empty line to results table
 res <- rbind(res, data.frame(Model=c("Outcome measure type reported:"), M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add caption line to results table
 res <- rbind(res, cbind(data.frame(Model=c("  Latency", "  Proportion "), M=res_lat_prop$b, CI.lb=res_lat_prop$ci.lb, CI.ub=res_lat_prop$ci.ub, pch=c(20,20), cld=c("a","b")), data.frame(k=table(dat$MeasureType))))
+
+res_lat_prop_phylo_MT <- rma.mv(yi=d, V=VCV, mod = ~MeasureType-1, random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID), R=list(Species_Latin=CorMatrix_lat_prop), dat=dat, method="REML") 
+summary(res_lat_prop_phylo_MT) #  
+#calc.I2(dat$Vd, res_lat_prop_phylo_MT) #89%; CALUCALTE R^2 INSTEAD!!!
+#
 ```
 
 - ReinforcementCat
