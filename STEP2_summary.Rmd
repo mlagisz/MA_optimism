@@ -29,6 +29,13 @@ str(dat)
 names(dat)
 ```
 
+
+```{r plot d vs Vd all data, eval=TRUE} 
+######## load merged (latency+proportion) data
+plot(dat$d, dat$Vd, col=dat$MeasureType)
+```
+
+
 ```{r check continuous variables, eval=TRUE} 
 names(dat)
 hist(as.numeric(dat$Year)) #some "Unpublished" messing this up
@@ -77,6 +84,7 @@ table(dat$Blind, dat$ComparisonCategory)
 table(dat$StudyDesign, dat$ReinforcementCat) 
 table(dat$Blind, dat$ReinforcementCat) 
 table(dat$FoodDeprived, dat$ReinforcementCat) 
+table(dat$MeasureType, dat$Sex) 
 ```
 
 
@@ -101,6 +109,11 @@ boxplot(dat$d ~ dat$ComparisonCategory, ylab="Hg", varwidth=TRUE)
 boxplot(dat$d ~ dat$AffectManipTiming, ylab="Hg", varwidth=TRUE)
 boxplot(dat$d ~ dat$Stress, ylab="Hg", varwidth=TRUE)
 boxplot(dat$d ~ dat$ReinforcementCat, ylab="Hg", varwidth=TRUE)
+
+pdf(file="plots/Fig_boxplot_raw_SeX_MeasureType.pdf",width=10,height=6,pointsize=10)
+boxplot(dat$d ~ dat$Sex + dat$MeasureType, ylab="Hg", varwidth=TRUE)
+abline(h=0, lty=3)
+dev.off()
 ```
 
 
