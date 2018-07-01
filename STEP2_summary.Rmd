@@ -44,7 +44,7 @@ dat$Year2 <- as.numeric(levels(dat$Year))[dat$Year]
 hist(dat$Year2)
 hist(dat$BetterN)  
 hist(dat$WorseN)
-plot(dat$d, 1/sqrt(dat$Vd))
+plot(dat$Year2, dat$d)
 ```
 
 ```{r check categorical variables, eval=TRUE} 
@@ -110,10 +110,6 @@ boxplot(dat$d ~ dat$AffectManipTiming, ylab="Hg", varwidth=TRUE)
 boxplot(dat$d ~ dat$Stress, ylab="Hg", varwidth=TRUE)
 boxplot(dat$d ~ dat$ReinforcementCat, ylab="Hg", varwidth=TRUE)
 
-pdf(file="plots/Fig_boxplot_raw_SeX_MeasureType.pdf",width=10,height=6,pointsize=10)
-boxplot(dat$d ~ dat$Sex + dat$MeasureType, ylab="Hg", varwidth=TRUE)
-abline(h=0, lty=3)
-dev.off()
 ```
 
 
@@ -147,30 +143,6 @@ table(tab$Automation)
 table(tab$Measure)
 table(tab$`Ambiguous reinforced`)
 table(tab$`Manipulation timing`)
-```
-
-
-####################################### EXTRA
-
-Is there correlation between  measurements from the same experiment reported as latency and proportion?
-
-```{r prop lat within study} 
-#### look for studies that have both prop and lat
-names(dat)
-#table(dat$MeasureType, dat$ArticleID) # Looks correct
-#table(dat$MeasureType, dat$ExperimentID) 
-dat_horiz <- merge(dat_lat, dplyr::select(dat_prop, ExperimentID, ScalePoint, d, Vd), by = c("ExperimentID", "ScalePoint"))
-dat_horiz <- droplevels(dat_horiz)
-str(dat_horiz)
-
-length(unique(dat_horiz$ExperimentID)) #11 experimentswhere both latency and proportion reported
-length(unique(dat_horiz$ArticleID)) #9 studies where both latency and proportion reported
-#table(dat_horiz$ExperimentID, dat_horiz$ScalePoint)
-#table(dat_horiz$ExperimentID, dat_horiz$ArticleID)
-plot(dat_horiz$d.x, dat_horiz$d.y) #make it pretty
-plot(dat_horiz$d.x, dat_horiz$d.y, col=dat_horiz$ExperimentID) #make it prettier
-cor.test(dat_horiz$d.x, dat_horiz$d.y) # Pearson's product-moment correlation = 0.2972285 t = 1.6472, df = 28, p-value = 0.1107 CI -0.07060081  0.59390141
-#we did not need more complex model to account for non-independence and to weight by variance, after adding these cor could be even weaker
 ```
 
 
