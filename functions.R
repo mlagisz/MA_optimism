@@ -1,5 +1,5 @@
 
-pacman::p_load(purrr, dplyr, tidyverse, magrittr)
+pacman::p_load(purrr, dplyr, tidyverse, magrittr) #fmsb
 
 ### Support functions for# "MA of cognitive bias (optimism) in animal studies"
 
@@ -142,9 +142,9 @@ calc_ES_proportion <- function(data, Worse, WorseSD, WorseN, Better, BetterSD, B
       Worse <- Worse/100 #convert form percentage to proportion
       WorseSD <- WorseSD/100 #convert form percentage to proportion
       M1 <- qlogis(Better) + (BetterSD^2)/2 * (1/((1-Better)^2) -1/(Better^2))
-      V1 <- (BetterSD^2) * ( 1/Better + 1/(1-Better)^2 )
+      V1 <- (BetterSD^2) * ( 1/Better + 1/(1-Better))^2 
       M2 <- qlogis(Worse) + (WorseSD^2)/2 * (1/((1-Worse)^2) -1/(Worse^2))
-      V2 <- (WorseSD^2) * ( 1/Worse + 1/(1-Worse)^2 )
+      V2 <- (WorseSD^2) * ( 1/Worse + 1/(1-Worse))^2 
   }
   
   if(type == "logit"){  
@@ -266,23 +266,102 @@ make_VCV_matrix <- function(data, V, cluster, obs, type=c("vcv", "cor"), rho=0.5
 
 
 
-########################
+
+
+######################## I-SQUARED 
 
 ## function to claculate total heterogeneity I-squared, 
 # followng http://www.metafor-project.org/doku.php/tips:i2_multilevel_multivariate
 # r - ; res - 
+
 calc.I2 <- function (vi, res) 
 {
   W <- diag(1/vi)
   X <- model.matrix(res)
   P <- W - W %*% X %*% solve(t(X) %*% W %*% X) %*% t(X) %*% W
-  Th <- 100 * sum(res$sigma2) / (sum(res$sigma2) + (res$k-res$p)/sum(diag(P)))
-  Rh <- 100 * res$sigma2 / (sum(res$sigma2) + (res$k-res$p)/sum(diag(P)))
+  Th <- 100 * sum(res$sigma2) / (sum(res$sigma2) + (res$k-res$p)/sum(diag(P))) #total heterogeneity
+  Rh <- 100 * res$sigma2 / (sum(res$sigma2) + (res$k-res$p)/sum(diag(P))) #estimate how much of the total variance can be attributed to random effects and units heterogeneity separately
   return(c(Th,Rh))
 }
 
-#you can also estimate how much of the total variance can be attributed to between- and within-cluster heterogeneity separately:
-#100 * res$sigma2 / (sum(res$sigma2) + (res$k-res$p)/sum(diag(P)))
+
+
+
+# ############################ SEQUENTIAL VIF
+# 
+# ## function for sequentially building the model that accounts for collinearity among the explanatory variables
+# # followng https://www.r-bloggers.com/collinearity-and-stepwise-vif-selection/
+# 
+# vif_func<-function(in_frame,thresh=10,trace=T,...){
+#   
+#   library(fmsb)
+#   
+#   if(any(!'data.frame' %in% class(in_frame))) in_frame<-data.frame(in_frame)
+#   
+#   #get initial vif value for all comparisons of variables
+#   vif_init<-NULL
+#   var_names <- names(in_frame)
+#   for(val in var_names){
+#     regressors <- var_names[-which(var_names == val)]
+#     form <- paste(regressors, collapse = '+')
+#     form_in <- formula(paste(val, '~', form))
+#     vif_init<-rbind(vif_init, c(val, VIF(lm(form_in, data = in_frame, ...))))
+#   }
+#   vif_max<-max(as.numeric(vif_init[,2]), na.rm = TRUE)
+#   
+#   if(vif_max < thresh){
+#     if(trace==T){ #print output of each iteration
+#       prmatrix(vif_init,collab=c('var','vif'),rowlab=rep('',nrow(vif_init)),quote=F)
+#       cat('\n')
+#       cat(paste('All variables have VIF < ', thresh,', max VIF ',round(vif_max,2), sep=''),'\n\n')
+#     }
+#     return(var_names)
+#   }
+#   else{
+#     
+#     in_dat<-in_frame
+#     
+#     #backwards selection of explanatory variables, stops when all VIF values are below 'thresh'
+#     while(vif_max >= thresh){
+#       
+#       vif_vals<-NULL
+#       var_names <- names(in_dat)
+#       
+#       for(val in var_names){
+#         regressors <- var_names[-which(var_names == val)]
+#         form <- paste(regressors, collapse = '+')
+#         form_in <- formula(paste(val, '~', form))
+#         vif_add<-VIF(lm(form_in, data = in_dat, ...))
+#         vif_vals<-rbind(vif_vals,c(val,vif_add))
+#       }
+#       max_row<-which(vif_vals[,2] == max(as.numeric(vif_vals[,2]), na.rm = TRUE))[1]
+#       
+#       vif_max<-as.numeric(vif_vals[max_row,2])
+#       
+#       if(vif_max<thresh) break
+#       
+#       if(trace==T){ #print output of each iteration
+#         prmatrix(vif_vals,collab=c('var','vif'),rowlab=rep('',nrow(vif_vals)),quote=F)
+#         cat('\n')
+#         cat('removed: ',vif_vals[max_row,1],vif_max,'\n\n')
+#         flush.console()
+#       }
+#       
+#       in_dat<-in_dat[,!names(in_dat) %in% vif_vals[max_row,1]]
+#       
+#     }
+#     
+#     return(names(in_dat))
+#     
+#   }
+#   
+# }
+# 
+# #TEST
+# #rand.vars <- dplyr::select(dat, Captive_Wild.caught, Sex, Age, WithinBetween, Blind, Automated, FoodDeprived, TaskType, CueTypeCat, ReinforcementCat, AffectManipCat, AffectManipTiming, AmbigReinforced, MeasureType, ScalePoint)
+# #vif_func(in_frame=rand.vars,thresh=5,trace=T) #does not work for factors!
+
+
 
 
 #' ########################################################################################## SUNDAY MESS
