@@ -129,16 +129,16 @@ dat2$d
 hist(dat2$d)
 hist(dat2$Vd)
 
-View(dplyr::filter(dat2, d > 4)) #look at effect sizes > 4 - checked agains papers
-View(dplyr::filter(dat2, d < (-4))) #look at effect sizes <  -4 - checked agains papers
+#View(dplyr::filter(dat2, d > 4)) #look at effect sizes > 4  checked against the original papers
+#View(dplyr::filter(dat2, d < (-2))) #look at effect sizes <  -4  checked agains the original papers
 ```
 
 
 ```{r clean, eval=FALSE}  
-# #remove odd one
+# #remove odd one?
 # #dat2[dat2$ArticleID == "Doyle2011b", ]
-# dat2_ok <- dat2[dat2$ArticleID != "Doyle2011b", ] #sheep long terms stress. Tested 3 times ..habituation? Use day 1?
-# dim(dat2_ok)
+# dat2 <- dat2[dat2$ArticleID != "Doyle2011b", ] #sheep long terms stress. Tested 3 times ..habituation? Use day 1?
+# dim(dat2)
 ```
 
 ############## TREE 
