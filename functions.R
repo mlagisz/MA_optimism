@@ -36,14 +36,14 @@ calc_ES_latency <- function(data, Worse, WorseSD, WorseN, Better, BetterSD, Bett
   BetterN <- data[[deparse(substitute(BetterN))]]
   WithinBetween <- data[[deparse(substitute(WithinBetween))]]
   
-  if(type == "lnorm"){  
+  if(type == "delta"){  
     M1 <- log(Better) - (BetterSD^2)/(2*Better^2)
     V1 <- (BetterSD^2)/(Better^2)
     M2 <- log(Worse) - (WorseSD^2)/(2*Worse^2)
     V2 <- (WorseSD^2)/(Worse^2)    
   }
   
-  if(type == "delta"){  
+  if(type == "lnorm"){  
     M1 <- log(Better) - log( sqrt(1 + (BetterSD^2)/(Better^2) ) )
     V1 <- log( 1 + (BetterSD^2)/(Better^2) )
     M2 <- log(Worse) - log( sqrt(1 + (WorseSD^2)/(Worse^2) ) )
@@ -141,10 +141,10 @@ calc_ES_proportion <- function(data, Worse, WorseSD, WorseN, Better, BetterSD, B
       BetterSD <- BetterSD/100 #convert form percentage to proportion
       Worse <- Worse/100 #convert form percentage to proportion
       WorseSD <- WorseSD/100 #convert form percentage to proportion
-      M1 <- qlogis(Better) + (BetterSD^2)/2 * (1/((1-Better)^2) -1/(Better^2))
-      V1 <- (BetterSD^2) * ( 1/Better + 1/(1-Better))^2 
-      M2 <- qlogis(Worse) + (WorseSD^2)/2 * (1/((1-Worse)^2) -1/(Worse^2))
-      V2 <- (WorseSD^2) * ( 1/Worse + 1/(1-Worse))^2 
+      M1 <- qlogis(Better) + (BetterSD^2)/2 * (1/((1-Better)^2) -1/(Better^2) )
+      V1 <- (BetterSD^2) * ( 1/Better + 1/(1-Better) )^2 
+      M2 <- qlogis(Worse) + (WorseSD^2)/2 * (1/((1-Worse)^2) -1/(Worse^2) )
+      V2 <- (WorseSD^2) * ( 1/Worse + 1/(1-Worse) )^2 
   }
   
   if(type == "logit"){  
