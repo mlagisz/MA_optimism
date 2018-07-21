@@ -22,7 +22,6 @@ pacman::p_load(tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr, rotl, ful
 ```
 
 ```{r load data, eval=TRUE} 
-######## load merged (latency+proportion) data
 dat <- read.csv("data_with_ES.csv")
 dim(dat) #265 70
 str(dat)
@@ -53,6 +52,7 @@ table(dat$Species_Latin)
 table(dat$Taxa) #mostly mammals and birds
 table(dat$Sex) #mosty females
 table(dat$Age) #mosty adults
+table(dat$Captive_Wild.caught) #mosty captive
 table(dat$AffectManipCat) #mostly stress
 table(dat$AffectManipTiming) #mostly long-term, then before
 table(dat$StudyDesign) #mostly between
@@ -109,7 +109,6 @@ boxplot(dat$d ~ dat$ComparisonCategory, ylab="Hg", varwidth=TRUE)
 boxplot(dat$d ~ dat$AffectManipTiming, ylab="Hg", varwidth=TRUE)
 boxplot(dat$d ~ dat$Stress, ylab="Hg", varwidth=TRUE)
 boxplot(dat$d ~ dat$ReinforcementCat, ylab="Hg", varwidth=TRUE)
-
 ```
 
 
@@ -143,6 +142,7 @@ table(tab$Automation)
 table(tab$Measure)
 table(tab$`Ambiguous reinforced`)
 table(tab$`Manipulation timing`)
+
 ```
 
 
