@@ -47,7 +47,7 @@ dat <- read.csv("MA_dataset_2017.csv")
 names(dat)
 tail(dat)
 str(dat) 
-dim(dat) #272 62
+dim(dat)
 
 unlist(lapply(dat, function(x) sum(is.na(x)))) #how many NA per numerical column
 dat <- dplyr::select(dat, -c(X, X.1)) #get rid of rows with no data (last 2 columns)
@@ -58,7 +58,12 @@ dat <- dplyr::filter(dat, DataSE != "no") #exclude rows with imputed SE
 dat <- droplevels(dat)
 table(dat$WithinBetween) # 168 "between", 97 "within"
 table(dat$StudyDesign, dat$WithinBetween) #good overlap
-dim(dat)  #265  61
+dat$EffectID #263 levels for 265 rows, needs fixing
+#add comparison ID column
+dat$EffectID <- paste("Effect", 1:nrow(dat), sep="_") #add column with comparison ID (unique ID for effect sizes)
+dat[,"EffectID"] <- as.factor(dat$EffectID)
+
+dim(dat)
 ```
 
 
@@ -129,6 +134,9 @@ dat2$d
 hist(dat2$d)
 hist(dat2$Vd)
 
+dat2$Species_Latin <- as.character(dat2$ScientificName) #Make new column in the data frame and adjust species names
+write.csv(dat2, "data_with_ES.csv", row.names = FALSE)
+
 #View(dplyr::filter(dat2, d > 4)) #look at effect sizes > 4  checked against the original papers
 #View(dplyr::filter(dat2, d < (-2))) #look at effect sizes <  -4  checked agains the original papers
 ```
@@ -151,7 +159,6 @@ Prepare phyogenetic tree for the included species
 
 names(dat2)
 table(dat2$ScientificName)
-dat2$Species_Latin <- as.character(dat2$ScientificName) #Make new column in the data frame and adjust species names
 unique(dat2$Species_Latin)
 
 species_list <- as.character(unique(dat2$Species_Latin))
@@ -179,7 +186,6 @@ str(tree_bl)
 
 write.tree(tree_bl,file="tree_all.tre")
 #tree <- read.tree(file="tree_all.tre")
-write.csv(dat2, "data_with_ES.csv", row.names = FALSE)
 ```
 
 
