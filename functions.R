@@ -89,15 +89,15 @@ calc_ES_latency <- function(data, Worse, WorseSD, WorseN, Better, BetterSD, Bett
 
 
 ###TESTS
-test <- tibble(Worse = c(1,1), 
-               WorseSD = c(2,2), 
-               WorseN = c(20, 20), 
-               Better = c(1.1,1.1), 
-               BetterSD = c(2, 2), 
-               BetterN = c(20, 20), 
-               WithinBetween = c("within", "between"))
-
-calc_ES_latency(test, Worse, WorseSD, WorseN, Better, BetterSD, BetterN, WithinBetween, adjusted=TRUE, type="lnorm") 
+# test <- tibble(Worse = c(1,1), 
+#                WorseSD = c(2,2), 
+#                WorseN = c(20, 20), 
+#                Better = c(1.1,1.1), 
+#                BetterSD = c(2, 2), 
+#                BetterN = c(20, 20), 
+#                WithinBetween = c("within", "between"))
+# 
+# calc_ES_latency(test, Worse, WorseSD, WorseN, Better, BetterSD, BetterN, WithinBetween, adjusted=TRUE, type="lnorm") 
 #test %<>% calc_ES_latency(Worse, WorseSD, WorseN, Better, BetterSD, BetterN, WithinBetween, adjusted=TRUE, type="lnorm")
 #test2 <- test %>% calc_ES_latency(Worse, WorseSD, WorseN, Better, BetterSD, BetterN, WithinBetween, adjusted=TRUE, type="lnorm") 
 
