@@ -15,7 +15,7 @@ output: html_document
 ```{r setup}
 sessionInfo()
 options(scipen=100)
-pacman::p_load(tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr, rotl, fulltext, metafor, car)
+pacman::p_load(tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr, rotl, fulltext, metafor, car, robumeta)
 source("functions.R")
 ```
 
@@ -30,11 +30,11 @@ table(dat$MeasureType) # 138 "latency", 127 "proportion"
 dat_lat <- dplyr::filter(dat, MeasureType == "latency") #subset latency data
 dim(dat_lat) 
 dat_lat <- droplevels(dat_lat) 
-str(dat_lat) #only 14 species
+str(dat_lat) #only 13 species
 dat_prop <- dplyr::filter(dat, MeasureType == "proportion") #subset proportion data
 dim(dat_prop)
 dat_prop <- droplevels(dat_prop) 
-str(dat_prop) #only 16 species
+str(dat_prop) #only 15 species
 ```
 
 ```{r VCV matrices} 
@@ -49,12 +49,11 @@ VCV_lat <- make_VCV_matrix(data = dat_lat, V = "Vd", cluster = "GroupID", obs = 
 ```
 
 ```{r phylo matrices} 
-
 ## prepare species correlation matrix - all data
 tree <- read.tree(file="tree_all.tre")
 is.binary.tree(tree) #TRUE
 is.ultrametric(tree) #TRUE
-# plot(tree_lat_prop, cex=0.8) #plot with branch lengths
+# plot(tree, cex=0.8) #plot with branch lengths
 CorMatrix_all <- vcv(tree, corr=TRUE)
 #setdiff(colnames(CorMatrix_all), unique(dat$Species_Latin)) #all ok
 
@@ -91,16 +90,16 @@ MA_all_random <- rma.mv(yi=d, V=Vd,
                      random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|GroupID, ~1|EffectID), 
                      dat=dat, method="REML") 
 summary(MA_all_random) 
-calc.I2(dat$Vd, MA_all_random) #80.6% total
+calc.I2(dat$Vd, MA_all_random) 
 save(MA_all_random, file = "Rdata/MA_all_random.Rdata")
 
 
 ######## random-effect model as above with VCV matrix (no phylogeny)
 MA_all_random_VCV <- rma.mv(yi = d, V = VCV, 
-                         random = list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|GroupID, ~1|EffectID), 
+                         random = list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID), 
                          data = dat, method = "REML")
 summary(MA_all_random_VCV)
-calc.I2(dat$Vd, MA_all_random_VCV) #80.1% Htotal
+calc.I2(dat$Vd, MA_all_random_VCV)
 save(MA_all_random_VCV, file = "Rdata/MA_all_random_VCV.Rdata")
 
 
@@ -109,24 +108,34 @@ MA_all_random_VCV_phylo <- rma.mv(yi=d, V=VCV,
                              random=list(~1|Species_Latin, ~1|ScientificName, ~1|ArticleID, ~1|ExperimentID, ~1|GroupID, ~1|EffectID),
                              R = list(Species_Latin = CorMatrix_all),
                              data = dat, method = "REML") 
-summary(MA_all_random_VCV_phylo) ### estimate  ns 0.2187  CI  -0.0623  0.4997   
-calc.I2(dat$Vd, MA_all_random_VCV_phylo) #80.9% Htotal, 3.2% phylogeny, 0% species ID
+summary(MA_all_random_VCV_phylo)   
+calc.I2(dat$Vd, MA_all_random_VCV_phylo) #77.3% Htotal, 5.1% phylogeny, 0% speciesID
 save(MA_all_random_VCV_phylo, file = "Rdata/MA_all_random_VCV_phylo.Rdata")
 
 
-######## random-effect model with VCV and phylogeny (Species_Latin), removed non-contibuting random
+######## random-effect model with VCV and phylogeny (Species_Latin), removed non-contibuting random effects
 MA_all <- rma.mv(yi=d, V=VCV, 
                              random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
                              R = list(Species_Latin = CorMatrix_all),
                              data = dat, method = "REML") 
-summary(MA_all) ### much lower ns estimate     
-calc.I2(dat$Vd, MA_all) #80.9% Htotal
+summary(MA_all)    
+calc.I2(dat$Vd, MA_all) #77.3% Htotal, 5.1% phylogeny
 save(MA_all, file = "Rdata/MA_all.Rdata")
+```
 
-#res <- rbind(res, data.frame(Model=c("Meta-analytic mean, intercept-only phylogenetic Model 3"), M=res_lat_prop_phylo$b, CI.lb=res_lat_prop_phylo$ci.lb, CI.ub=res_lat_prop_phylo$ci.ub, pch=18))
-#forest(res_lat_prop_phylo)
-#res <- rbind(res, data.frame(Model=c("Meta-analytic mean (Study, Species, Phylo)"), M=res_lat_prop_phylo2$b, CI.lb=res_lat_prop_phylo2$ci.lb, CI.ub=res_lat_prop_phylo2$ci.ub, pch=18, k.Var1=NA, k.Freq=232, cld=NA))
-#res <- rbind(res, data.frame(Model=NA, M=NA, CI.lb=NA, CI.ub=NA, pch=NA, k.Var1=NA, k.Freq=NA, cld=NA)) #add empty line to results table
+
+## Sensitivity analysis for meta-analytic models
+
+```{r Ma all data - sensitivity tests}
+#robumeta (without phylogeny and VCV)
+MA_all_robu <- robu(formula = d ~ 1, var.eff.size = Vd, studynum = ExperimentID,  modelweights = "HIER", small = TRUE, data = dat)
+print(MA_all_robu) #0.191  0.0739    0.308
+#save(MA_all_robu,file="Rdata/MA_all_robu.Rdata")
+
+#robust metafor
+MA_all_robust <- robust(MA_all, cluster  =  dat$ExperimentID)
+summary(MA_all_robust) #0.1744  0.0522  0.2967
+save(MA_all_robust,file = "Rdata/MA_all_robust.Rdata")
 ```
 
 ## Meta-regression models    
@@ -162,6 +171,13 @@ MR_all_species <- rma.mv(yi=d, V=VCV,
                      dat=dat, method="REML") 
 summary(MR_all_species) # no species with clear effect
 save(MR_all_species, file = "Rdata/MR_all_species.Rdata")
+
+MR_all_species <- rma.mv(yi=d, V=VCV, 
+                     mod = ~ScientificName -1, 
+                     random=list(~1|ArticleID, ~1|ExperimentID, ~1|EffectID), 
+                     dat=dat, method="REML") 
+summary(MR_all_species) # some species with clear effect, when phylogeny not taken into account
+save(MR_all_species, file = "Rdata/MR_all_species2.Rdata")
 ```
 
 
@@ -176,12 +192,20 @@ summary(MR_all_sex1) # signif intc for males only
 save(MR_all_sex1, file = "Rdata/MR_all_sex1.Rdata")
 
 MR_all_sex <- rma.mv(yi=d, V=VCV, 
-                     mod = ~relevel(dat$Sex, ref="male"), 
+                     mod = ~relevel(dat$Sex, ref="female"), 
                      random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
                      R = list(Species_Latin = CorMatrix_all), 
                      dat=dat, method="REML") 
 summary(MR_all_sex) # signif intc for males, signif diff female-male
 save(MR_all_sex, file = "Rdata/MR_all_sex.Rdata")
+
+MR_all_sex2 <- rma.mv(yi=d, V=VCV, 
+                     mod = ~relevel(dat$Sex, ref="male"), 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     dat=dat, method="REML") 
+summary(MR_all_sex2) # signif intc for males, signif diff female-male
+save(MR_all_sex2, file = "Rdata/MR_all_sex2.Rdata")
 ```
 
 - Age
@@ -280,6 +304,14 @@ MR_all_ComparisonCategory <- rma.mv(yi=d, V=VCV,
                      dat=dat, method="REML") 
 summary(MR_all_ComparisonCategory) # no signif diff Benign-Worse / Better-Benign / Better-Benign
 save(MR_all_ComparisonCategory, file = "Rdata/MR_all_ComparisonCategory.Rdata")
+
+MR_all_ComparisonCategory2 <- rma.mv(yi=d, V=VCV, 
+                     mod = ~relevel(dat$ComparisonCategory, ref="Better-Benign"), 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     dat=dat, method="REML") 
+summary(MR_all_ComparisonCategory2) # no signif diff Benign-Worse / Better-Benign / Better-Benign
+save(MR_all_ComparisonCategory2, file = "Rdata/MR_all_ComparisonCategory2.Rdata")
 ```
 
 
@@ -300,6 +332,30 @@ MR_all_CueTypeCat <- rma.mv(yi=d, V=VCV,
                      dat=dat, method="REML") 
 summary(MR_all_CueTypeCat) # no signif diff to auditory
 save(MR_all_CueTypeCat, file = "Rdata/MR_all_CueTypeCat.Rdata")
+
+MR_all_CueTypeCat2 <- rma.mv(yi=d, V=VCV, 
+                     mod = ~relevel(dat$CueTypeCat, ref="olfactory"), 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     dat=dat, method="REML") 
+summary(MR_all_CueTypeCat2) # no signif diff to visual
+save(MR_all_CueTypeCat2, file = "Rdata/MR_all_CueTypeCat2.Rdata")
+
+MR_all_CueTypeCat3 <- rma.mv(yi=d, V=VCV, 
+                     mod = ~relevel(dat$CueTypeCat, ref="spatial"), 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     dat=dat, method="REML") 
+summary(MR_all_CueTypeCat3) # no signif diff to visual
+save(MR_all_CueTypeCat3, file = "Rdata/MR_all_CueTypeCat3.Rdata")
+
+MR_all_CueTypeCat4 <- rma.mv(yi=d, V=VCV, 
+                     mod = ~relevel(dat$CueTypeCat, ref="tactile"), 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     dat=dat, method="REML") 
+summary(MR_all_CueTypeCat4) # no signif diff to visual
+save(MR_all_CueTypeCat4, file = "Rdata/MR_all_CueTypeCat4.Rdata")
 ```
 
 
@@ -343,7 +399,7 @@ save(MR_all_TaskType, file = "Rdata/MR_all_TaskType.Rdata")
 ```
 
 
-- Randomized_WithinBetween
+- WithinBetween
 ```{r MR all data - WithinBetween}
 MR_all_WithinBetween1 <- rma.mv(yi=d, V=VCV, 
                      mod = ~WithinBetween -1, 
@@ -351,7 +407,7 @@ MR_all_WithinBetween1 <- rma.mv(yi=d, V=VCV,
                      R = list(Species_Latin = CorMatrix_all), 
                      dat=dat, method="REML") 
 summary(MR_all_WithinBetween1) # signif intc within, not between
-save(MR_all_WithinBetween1, file = "Rdata/MR_all_MR_all_WithinBetween1.Rdata")
+save(MR_all_WithinBetween1, file = "Rdata/MR_all_WithinBetween1.Rdata")
 
 MR_all_WithinBetween <- rma.mv(yi=d, V=VCV, 
                      mod = ~relevel(dat$WithinBetween, ref="within"), 
@@ -440,6 +496,14 @@ MR_all_ReinforcementCat <- rma.mv(yi=d, V=VCV,
                      dat=dat, method="REML") 
 summary(MR_all_ReinforcementCat) # no signif diff R-Null /  R-R / R-P
 save(MR_all_ReinforcementCat, file = "Rdata/MR_all_ReinforcementCat.Rdata")
+
+MR_all_ReinforcementCat2 <- rma.mv(yi=d, V=VCV, 
+                     mod = ~relevel(dat$ReinforcementCat, ref="R-P"), 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     dat=dat, method="REML") 
+summary(MR_all_ReinforcementCat2) # no signif diff R-Null /  R-R / R-P
+save(MR_all_ReinforcementCat2, file = "Rdata/MR_all_ReinforcementCat2.Rdata")
 ```
 
 
@@ -474,12 +538,20 @@ summary(MR_all_ScalePoint1) # no signif intc A / B / C
 save(MR_all_ScalePoint1, file = "Rdata/MR_all_ScalePoint1.Rdata")
 
 MR_all_ScalePoint <- rma.mv(yi=d, V=VCV, 
-                     mod = ~relevel(dat$ScalePoint, ref="B"), 
+                     mod = ~relevel(dat$ScalePoint, ref="A"), 
                      random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
                      R = list(Species_Latin = CorMatrix_all), 
                      dat=dat, method="REML") 
 summary(MR_all_ScalePoint) # no signif diff A / B / C
 save(MR_all_ScalePoint, file = "Rdata/MR_all_ScalePoint.Rdata")
+
+MR_all_ScalePoint2 <- rma.mv(yi=d, V=VCV, 
+                     mod = ~relevel(dat$ScalePoint, ref="B"), 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     dat=dat, method="REML") 
+summary(MR_all_ScalePoint2) # no signif diff A / B / C
+save(MR_all_ScalePoint2, file = "Rdata/MR_all_ScalePoint2.Rdata")
 ```
 
 
@@ -492,43 +564,101 @@ MR_all_Full_0 <- rma.mv(yi=d, V=VCV,
                      random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
                      R = list(Species_Latin = CorMatrix_all), 
                      dat=dat, method="REML") 
-summary(MR_all_Full_0) # all ns
-save(MR_all_Full_0, file = "Rdata/RdataMR_all_Full_0.Rdata")
+summary(MR_all_Full_0) # sex males signif for latency, tenedency for latency-proportion diff
+save(MR_all_Full_0, file = "Rdata/MR_all_Full_0.Rdata")
+
+MR_all_Full_0p <- rma.mv(yi=d, V=VCV, 
+                     mod = ~Sex + Age + Captive_Wild.caught + AffectManipCat + AffectManipTiming + ComparisonCategory + CueTypeCat + FoodDeprived + TaskType + WithinBetween + Automated + Blind + relevel(dat$MeasureType, ref="proportion") + ReinforcementCat + AmbigReinforced + ScalePoint, 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     dat=dat, method="REML") 
+summary(MR_all_Full_0p) # sex males signif for proportion, tenedency for latency-proportion diff
+save(MR_all_Full_0p, file = "Rdata/MR_all_Full_0p.Rdata")
 
 #only using significant (diff levels) from univariate models
+#without interaction (models using different reference levels):
 MR_all_Full_1 <- rma.mv(yi=d, V=VCV, 
                      mod = ~Sex + MeasureType -1, 
                      random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
                      R = list(Species_Latin = CorMatrix_all), 
                      dat=dat, method="REML") 
-summary(MR_all_Full_1) # signif itc for male at latency and diff from proportion
-save(MR_all_Full_1, file = "Rdata/RdataMR_all_Full_1.Rdata")
+summary(MR_all_Full_1) # signif itc for male at latency and tendency diff from proportion
+save(MR_all_Full_1, file = "Rdata/MR_all_Full_1.Rdata")
 
 MR_all_Full_2 <- rma.mv(yi=d, V=VCV, 
                      mod = ~Sex + MeasureType, 
                      random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
                      R = list(Species_Latin = CorMatrix_all), 
                      dat=dat, method="REML") 
-summary(MR_all_Full_2) # sex female and latency diff from male and proportion
-save(MR_all_Full_2, file = "Rdata/RdataMR_all_Full_2.Rdata")
+summary(MR_all_Full_2) # sex female and latency diff from male and tendency from proportion
+save(MR_all_Full_2, file = "Rdata/MR_all_Full_2.Rdata")
 
-#with intercation
-MR_all_Full_2i <- rma.mv(yi=d, V=VCV, 
-                     mod = ~Sex * MeasureType, 
-                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
-                     R = list(Species_Latin = CorMatrix_all), 
-                     dat=dat, method="REML") 
-summary(MR_all_Full_2i) # ns interaction
-save(MR_all_Full_2i, file = "Rdata/RdataMR_all_Full_2i.Rdata")
-     
-#ref level male and proportion
 MR_all_Full_3 <- rma.mv(yi=d, V=VCV, 
                      mod = ~relevel(dat$Sex, ref="male") + relevel(dat$MeasureType, ref="proportion"), 
                      random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
                      R = list(Species_Latin = CorMatrix_all), 
                      dat=dat, method="REML") 
-summary(MR_all_Full_3) # 
-save(MR_all_Full_3, file = "Rdata/RdataMR_all_Full_3.Rdata")
+summary(MR_all_Full_3) # male signif intc and diff from female
+save(MR_all_Full_3, file = "Rdata/MR_all_Full_3.Rdata")
+
+MR_all_Full_4 <- rma.mv(yi=d, V=VCV, 
+                     mod = ~Sex + relevel(dat$MeasureType, ref="proportion") - 1, 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     dat=dat, method="REML") 
+summary(MR_all_Full_4) # sex female and latency diff from male and tendency from proportion
+save(MR_all_Full_4, file = "Rdata/MR_all_Full_4.Rdata")
+
+#with interaction
+MR_all_Full_2i <- rma.mv(yi=d, V=VCV, 
+                     mod = ~Sex * MeasureType, 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     dat=dat, method="REML") 
+summary(MR_all_Full_2i) # ns interaction, signif male-female diff, proportion-latency for female
+save(MR_all_Full_2i, file = "Rdata/MR_all_Full_2i.Rdata")
+     
+
+#only using significant (diff levels) from univariate models no phylo
+MR_all_Full_1x <- rma.mv(yi=d, V=VCV, 
+                     mod = ~Sex + MeasureType, 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID), 
+                     dat=dat, method="REML") 
+summary(MR_all_Full_1x) # signif itc for male at latency and tendency diff from proportion
+```
+
+
+
+- Full Model robust meatafor
+```{r MR all data - Full model robust metafor}
+#only using significant (diff levels) from univariate models
+
+#without interaction (models using different reference levels):
+MR_all_Full_1_robust <- robust(MR_all_Full_1, cluster  =  dat$ExperimentID)
+summary(MR_all_Full_1_robust) #same patter as in the original model
+save(MR_all_Full_1_robust,file = "Rdata/MR_all_Full_1_robust.Rdata")
+
+MR_all_Full_2_robust <- robust(MR_all_Full_2, cluster  =  dat$ExperimentID)
+summary(MR_all_Full_2_robust) #same patter as in the original model
+save(MR_all_Full_2_robust,file = "Rdata/MR_all_Full_2_robust.Rdata")
+
+MR_all_Full_3_robust <- robust(MR_all_Full_3, cluster  =  dat$ExperimentID)
+summary(MR_all_Full_3_robust) #same patter as in the original model
+save(MR_all_Full_3_robust,file = "Rdata/MR_all_Full_3_robust.Rdata")
+
+MR_all_Full_4_robust <- robust(MR_all_Full_4, cluster  =  dat$ExperimentID)
+summary(MR_all_Full_4_robust) #same patter as in the original model
+save(MR_all_Full_4_robust,file = "Rdata/MR_all_Full_4_robust.Rdata")
+
+#with interaction
+MR_all_Full_2i_robust <- robust(MR_all_Full_2i, cluster  =  dat$ExperimentID)
+summary(MR_all_Full_2i_robust) #same patter as in the original model
+save(MR_all_Full_2i_robust,file = "Rdata/MR_all_Full_2i_robust.Rdata")
+
+#only using significant (diff levels) from univariate models no phylo
+MR_all_Full_1x_robust <- robust(MR_all_Full_1x, cluster  =  dat$ExperimentID)
+summary(MR_all_Full_1x_robust) #same patter as in the original model
+save(MR_all_Full_1x_robust,file = "Rdata/MR_all_Full_1x_robust.Rdata")
 ```
 
 
@@ -572,7 +702,7 @@ save(MA_prop_random_VCV_phylo, file = "Rdata/MA_prop_random_VCV_phylo.Rdata")
 
 ######## random-effect model with VCV and phylogeny (Species_Latin), removed non-contibuting random
 MA_prop <- rma.mv(yi=d, V=VCV_prop, 
-                             random=list(~1|Species_Latin, ~1|ScientificName, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                             random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
                              R = list(Species_Latin = CorMatrix_prop),
                              data = dat_prop, method = "REML") 
 summary(MA_prop) ### much lower ns estimate     
@@ -922,16 +1052,16 @@ MA_lat_random <- rma.mv(yi=d, V=Vd,
                      random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|GroupID, ~1|EffectID), 
                      data = dat_lat, method="REML") 
 summary(MA_lat_random) 
-calc.I2(dat_lat$Vd, MA_lat_random) #76.1% total
+calc.I2(dat_lat$Vd, MA_lat_random) 
 save(MA_lat_random, file = "Rdata/MA_lat_random.Rdata")
 
 
 ######## random-effect model as above with VCV matrix (no phylogeny)
 MA_lat_random_VCV <- rma.mv(yi = d, V = VCV_lat, 
                          random = list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|GroupID, ~1|EffectID), 
-                         data = dat_lat, method = "REML") #NO CONVERGENCE
+                         data = dat_lat, method = "REML") 
 summary(MA_lat_random_VCV)
-calc.I2(dat_lat$Vd, MA_lat_random_VCV) #84.8% Htotal
+calc.I2(dat_lat$Vd, MA_lat_random_VCV) 
 save(MA_lat_random_VCV, file = "Rdata/MA_lat_random_VCV.Rdata")
 
 
@@ -939,21 +1069,23 @@ save(MA_lat_random_VCV, file = "Rdata/MA_lat_random_VCV.Rdata")
 MA_lat_random_VCV_phylo <- rma.mv(yi=d, V=VCV_lat, 
                              random=list(~1|Species_Latin, ~1|ScientificName, ~1|ArticleID, ~1|ExperimentID, ~1|GroupID, ~1|EffectID),
                              R = list(Species_Latin = CorMatrix_lat),
-                             data = dat_lat, method = "REML")  #NO CONVERGENCE
-summary(MA_lat_random_VCV_phylo) ### estimate  ns 0.2187  CI  -0.0623  0.4997   
-calc.I2(dat_lat$Vd, MA_lat_random_VCV_phylo) #85.0% Htotal, 3.2% phylogeny, 0% species ID
+                             data = dat_lat, method = "REML") 
+summary(MA_lat_random_VCV_phylo) ### estimate  ns 0.1306  CI  -0.0047  0.2658   
+calc.I2(dat_lat$Vd, MA_lat_random_VCV_phylo) #78.1% Htotal, 0% phylogeny, 0% species ID
 save(MA_lat_random_VCV_phylo, file = "Rdata/MA_lat_random_VCV_phylo.Rdata")
 
 
 ######## random-effect model with VCV and phylogeny (Species_Latin), removed non-contibuting random
 MA_lat <- rma.mv(yi=d, V=VCV_lat, 
-                             random=list(~1|Species_Latin, ~1|ScientificName, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                             random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
                              R = list(Species_Latin = CorMatrix_lat),
                              data = dat_lat, method = "REML")  
-summary(MA_lat) ### much lower ns estimate     
-calc.I2(dat_lat$Vd, MA_lat) #76.2% Htotal
+summary(MA_lat) ###     
+calc.I2(dat_lat$Vd, MA_lat) #67.5% Htotal
 save(MA_lat, file = "Rdata/MA_lat.Rdata")
 ```
+
+
 
 ## Meta-regression models:    
 
@@ -976,7 +1108,7 @@ MR_lat_sex1 <- rma.mv(yi=d, V=VCV_lat,
                      random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
                      R = list(Species_Latin = CorMatrix_lat), 
                      data = dat_lat, method="REML") 
-summary(MR_lat_sex1) # ns intc 
+summary(MR_lat_sex1) # males signif intc 
 save(MR_lat_sex1, file = "Rdata/MR_lat_sex1.Rdata")
 
 MR_lat_sex <- rma.mv(yi=d, V=VCV_lat, 
@@ -984,7 +1116,7 @@ MR_lat_sex <- rma.mv(yi=d, V=VCV_lat,
                      random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
                      R = list(Species_Latin = CorMatrix_lat), 
                      data = dat_lat, method="REML") 
-summary(MR_lat_sex) # ns
+summary(MR_lat_sex) # ns diff
 save(MR_lat_sex, file = "Rdata/MR_lat_sex.Rdata")
 ```
 
@@ -1283,17 +1415,19 @@ MR_lat_Full_0 <- rma.mv(yi=d, V=VCV_lat,
                      random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
                      R = list(Species_Latin = CorMatrix_lat), 
                      data = dat_lat, method="REML") 
-summary(MR_lat_Full_0) # all ns
+summary(MR_lat_Full_0) # short-term diff from long-term in femalesa at A?
 save(MR_lat_Full_0, file = "RdataMR_lat_Full_0.Rdata")
 
 MR_lat_Full_1 <- rma.mv(yi=d, V=VCV_lat, 
-                     mod = ~Sex + CueTypeCat, 
+                     mod = ~Sex + AffectManipTiming, 
                      random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
                      R = list(Species_Latin = CorMatrix_lat), 
                      data = dat_lat, method="REML") 
 summary(MR_lat_Full_1) # all ns
 save(MR_lat_Full_1, file = "RdataMR_lat_Full_1.Rdata")
 ```
+
+
 
 
 
@@ -1829,3 +1963,104 @@ plot(test1)
 cld(test1) #does not work (because test1 is not Tukey?)
 cld(summary(test1))
 ```
+
+
+
+
+####################################### EXTRA
+
+Is there correlation between  measurements from the same experiment reported as latency and proportion?
+
+```{r prop lat within study} 
+#### look for studies that have both prop and lat
+names(dat)
+#table(dat$MeasureType, dat$ArticleID) # Looks correct
+#table(dat$MeasureType, dat$ExperimentID) 
+dat_horiz <- merge(dat_lat, dplyr::select(dat_prop, ExperimentID, ScalePoint, d, Vd), by = c("ExperimentID", "ScalePoint"))
+dat_horiz <- droplevels(dat_horiz)
+str(dat_horiz)
+
+length(unique(dat_horiz$ExperimentID)) #11 experimentswhere both latency and proportion reported
+length(unique(dat_horiz$ArticleID)) #9 studies where both latency and proportion reported
+#table(dat_horiz$ExperimentID, dat_horiz$ScalePoint)
+#table(dat_horiz$ExperimentID, dat_horiz$ArticleID)
+plot(dat_horiz$d.x, dat_horiz$d.y) 
+plot(dat_horiz$d.x, dat_horiz$d.y, col=dat_horiz$ExperimentID) #make it prettier
+cor.test(dat_horiz$d.x, dat_horiz$d.y) # Pearson's product-moment correlation = 0.3292155 t = 1.8449, df = 28, p-value = 0.07566, 95 percent confidence interval: -0.03523248  0.61637844
+#we did not need more complex model to account for non-independence and to weight by variance, after adding these cor could be even weaker
+library(nlme)
+res_cor <- lme(d.y ~ d.x, random=list(~1|ArticleID), correlation=corGaus(form=~1|ArticleID), data=dat_horiz)
+res_cor
+
+#using metafor multivariate model
+dat_horiz.y <- subset(dat_horiz, select=-c(d.x,Vd.x))
+dat_horiz.y$MeasureType <- "y"
+dat_horiz.x <- subset(dat_horiz, select=-c(d.y,Vd.y))
+dat_horiz.x$MeasureType <- "x"
+library(data.table)
+setnames(dat_horiz.y, old = c('d.y','Vd.y'), new = c('d','Vd'))
+setnames(dat_horiz.x, old = c('d.x','Vd.x'), new = c('d','Vd'))
+dat_horiz.xy <- rbind(dat_horiz.x, dat_horiz.y)
+str(dat_horiz.xy)
+
+#dat_horiz.xy$MeasureType <- factor(datallfm$sex, levels=c("female","male"))
+VCV.xy <- make_VCV_matrix(data = dat_horiz.xy, V = "Vd", cluster = "ExperimentID", obs = "EffectID")
+dim(VCV.xy)
+res.xy <- rma.mv(d, VCV.xy, mods = ~ MeasureType - 1, data = dat_horiz.xy, random = ~ MeasureType | ExperimentID, struct = "UN")
+res.xy
+### contrast for differences by MeasureType
+anova(res.xy, L=c(1,-1))
+```
+
+
+********************************************************************************************
+
+# Publication bias analysis
+
+PUBLICATION BIAS TESTS (Egger's test) and calculating RESIDUALS for the final funnel plot
+--------------------------------------------------------------------------------
+Checking the intercepts of Egger’s regressions performed on the model residuals and measurement errors.
+Evidence for publication bias if the intercept is significantly different from 0.
+Following Moreno et al. 2009 (BMC Medical Research Methodology) - Eggar regression can be reconfigured into a meta-regression model. However, following Nakagawa & Santos (2012), this meta-regression still assumes non-independence, so in our model we put SE into other model together with other significant moderators
+
+```{r Egger's publication bias tests, eval=FALSE, echo=FALSE, message=FALSE}
+
+#load("./Rdata/MR_all_Full_1.Rdata") #with sex and measure type only as moderators
+#summary(MR_all_Full_1)
+
+prior1 <- list(R=list(V=1,nu=.002), G=list(G1=list(V=1,nu=1, alpha.mu=0, alpha.V=1000), G2=list(V=1,nu=1, alpha.mu=0, alpha.V=1000), G3=list(V=1,fix=1))) #expanded parameter prior
+ES <- dat$d
+VES <- dat$Vd
+invVC <- as(solve(VCV), "dgCMatrix")
+
+#bayesian models
+set.seed(111)
+bayesian_full1.1 <- MCMCglmm(ES ~ Sex + MeasureType -1, random=~ArticleID+ExperimentID+EffectID, family="gaussian", ginverse = list(EffectID=invVC), data=dat, verbose=T, nitt=110000, thin=100, burnin=10000, pr=T, prior=prior1)
+set.seed(112)
+bayesian_full1.2 <- MCMCglmm(ES ~ Sex + MeasureType -1, random=~ArticleID+ExperimentID+EffectID, family="gaussian", ginverse = list(EffectID=invVC), data=dat, verbose=T, nitt=110000, thin=100, burnin=10000, pr=T, prior=prior1)
+set.seed(113)
+bayesian_full1.3 <- MCMCglmm(ES ~ Sex + MeasureType -1, random=~ArticleID+ExperimentID+EffectID, family="gaussian", ginverse = list(EffectID=invVC), data=dat, verbose=T, nitt=110000, thin=100, burnin=10000, pr=T, prior=prior1)
+save(bayesian_full1.1,bayesian_full1.2, bayesian_full1.3,file="Rdata/bayesian_runs_full1.RData") 
+
+summary(bayesian_full1.1)
+model <- bayesian_full1.1
+Pred <- predict(model, marginal=~EffectID)
+ES <- dat$d
+VES <- dat$Vd
+Prec <- 1/sqrt(VES) # Precision = 1/sqrt(V)
+es <- ES-Pred
+zes <- es*Prec
+save(es,Prec,file="Rdata/residuals_Prec.RData")
+set.seed(112)
+Egger <- MCMCglmm(zes~Prec,family="gaussian", data=data.frame(ES=es,Prec=Prec), verbose=TRUE, nitt=50000, thin=25, burnin=25000)
+summary(Egger) #no PB
+plot(es, Prec, xlab="Egger regressed effect sizes", ylab=expression("Precision  "(1/sqrt(Variance))))
+mean(zes)
+mean(es)
+
+round(summary(Egger)$solutions[1,],3)
+
+save(Egger,file="Rdata/Egger_regr.RData")
+#load("Rdata/Egger_regr.RData")
+```
+
