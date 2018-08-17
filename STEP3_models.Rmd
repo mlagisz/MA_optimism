@@ -172,12 +172,12 @@ MR_all_species <- rma.mv(yi=d, V=VCV,
 summary(MR_all_species) # no species with clear effect
 save(MR_all_species, file = "Rdata/MR_all_species.Rdata")
 
-MR_all_species <- rma.mv(yi=d, V=VCV, 
+MR_all_species_nophylo <- rma.mv(yi=d, V=VCV, 
                      mod = ~ScientificName -1, 
                      random=list(~1|ArticleID, ~1|ExperimentID, ~1|EffectID), 
                      data = dat, method="REML") 
-summary(MR_all_species) # some species with clear effect, when phylogeny not taken into account
-save(MR_all_species, file = "Rdata/MR_all_species2.Rdata")
+summary(MR_all_species_nophylo) # some species with clear effect, when phylogeny not taken into account
+save(MR_all_species_nophylo, file = "Rdata/MR_all_species_nophylo.Rdata")
 ```
 
 
@@ -1470,7 +1470,7 @@ ranktest(PB_model) #does not work - value out of range
 
 ```{r funnel plot}
 ##################### PLOT - funnel plots ##################### 
-pdf(file="plots/Fig_funnels_20180701.pdf",width=7,height=3,pointsize=14)
+#pdf(file="plots/Fig_funnels_prelim.pdf",width=7,height=3,pointsize=14)
 par(mfrow=c(1,3))
 par(mar=c(4,4,4,1))
 plot(dat$Hd, sqrt(1/dat$HdVar), xlim=c(-3,3), ylim=c(0,3), xlab = "effect size [Hd]", ylab="Precision [1/SE]", frame.plot=FALSE, main="A")
@@ -1906,7 +1906,7 @@ regtest(PB_model, model="lm") #test for funnel plot asymmetry: t = 2.9146, df = 
 ranktest(PB_model) #does not work - value out of range
 
 ##################### PLOT - funnel plots ##################### 
-pdf(file="plots/Fig_funnels_20171212.pdf",width=7,height=3,pointsize=14)
+pdf(file="plots/Fig_funnels_prelim2.pdf",width=7,height=3,pointsize=14)
 par(mfrow=c(1,3))
 par(mar=c(4,4,4,1))
 plot(dat$d, sqrt(1/dat$Vd), xlim=c(-8,8), ylim=c(0,10), xlab = "effect size [Hg]", ylab="Precision [1/SE]", frame.plot=FALSE, main="A")
@@ -2174,12 +2174,12 @@ MR_all_max_species <- rma.mv(yi=d, V=VCV_max,
 summary(MR_all_max_species) # no species with clear effect
 save(MR_all_max_species, file = "Rdata/MR_all_max_species.Rdata")
 
-MR_all_max_species2 <- rma.mv(yi=d, V=VCV_max, 
+MR_all_max_species_nophylo <- rma.mv(yi=d, V=VCV_max, 
                      mod = ~ScientificName -1, 
                      random=list(~1|ArticleID, ~1|ExperimentID, ~1|EffectID), 
                      data = dat_max, method="REML") 
-summary(MR_all_max_species2) # some species with clear effect, when phylogeny not taken into account
-save(MR_all_max_species2, file = "Rdata/MR_all_max_species2.Rdata")
+summary(MR_all_max_species_nophylo) # some species with clear effect, when phylogeny not taken into account
+save(MR_all_max_species_nophylo, file = "Rdata/MR_all_max_species_nophylo.Rdata")
 ```
 
 
