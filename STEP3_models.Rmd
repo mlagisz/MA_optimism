@@ -2083,6 +2083,31 @@ str(dat_max)
 VCV_max <- make_VCV_matrix(data = dat_max, V = "Vd", cluster = "GroupID", obs = "EffectID")
 ```
 
+```{r subset data max2 ES} 
+dim(dat) #265 70
+names(dat)
+
+# View(tbl_df(dat) %>% group_by(ExperimentID, MeasureType, GroupID, ComparisonCategory, Sex) %>% summarise_at("d", funs(n())) ) #how many rows within each group 105, 121 129
+
+dat_max2 <- tbl_df(dat) %>% group_by(ExperimentID, MeasureType, GroupID, ComparisonCategory, Sex) %>% summarise_at("d", funs(max(abs(.), na.rm = TRUE))) #which d value is max within each group
+dat_max2$d
+#hist(dat_max$d)
+dim(dat_max2) #107
+unique(dat_max2$d) #all 107 - can use to merge back
+
+dat_max2_merged <- dplyr::inner_join(dat, dat_max2, by = c("ExperimentID","MeasureType","GroupID","ComparisonCategory", "Sex","d"))
+
+dim(dat_max2_merged)
+names(dat_max2_merged)
+#View(dat_max_merged)
+
+dat_max2 <- dat_max2_merged
+str(dat_max2)
+
+## prepare VCV matrix - all data
+VCV_max <- make_VCV_matrix(data = dat_max2, V = "Vd", cluster = "GroupID", obs = "EffectID")
+```
+
 ## Meta-analytical models
 
 ```{r MA all data max} 
