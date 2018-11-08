@@ -23,7 +23,7 @@ pacman::p_load(tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr, rotl, ful
 
 ```{r load data, eval=TRUE} 
 dat <- read.csv("data_with_ES.csv")
-dim(dat) #265 70
+dim(dat) #264
 str(dat)
 names(dat)
 ```
@@ -47,6 +47,7 @@ plot(dat$Year2, dat$d)
 ```
 
 ```{r check categorical variables, eval=TRUE} 
+unique(dat$ArticleID) #66 studies
 #one-way tables
 table(dat$Species_Latin)
 table(dat$Taxa) #mostly mammals and birds
@@ -66,8 +67,8 @@ table(dat$CueTypeCat) #mostly spatial or visual
 table(dat$ComparisonCategory) #mostly Benign-Worse
 table(dat$ReinforcementCat) # mostly R-P, then R-Null
 table(dat$AmbigReinforced) #mostly no
-table(dat$TaskType) # 202 go/no-go, 63 active choice
-table(dat$MeasureType) #approx. half latency
+table(dat$TaskType) # 205 go/no-go, 59 active choice
+table(dat$MeasureType) #138 latency, 126 proportion
 
 #two-way tables
 addmargins(table(dat$ArticleID, dat$MeasureType)) #a few studies with both latency and proportion
@@ -85,6 +86,7 @@ table(dat$StudyDesign, dat$ReinforcementCat)
 table(dat$Blind, dat$ReinforcementCat) 
 table(dat$FoodDeprived, dat$ReinforcementCat) 
 table(dat$MeasureType, dat$Sex) 
+table(dat$TaskType, dat$MeasureType)
 ```
 
 
@@ -97,6 +99,7 @@ par(mar=c(4,4,2,0))
 boxplot(dat$d ~ dat$Taxa, ylab="Hg", varwidth=TRUE)
 boxplot(dat$d ~ dat$Sex, ylab="Hg", varwidth=TRUE)
 boxplot(dat$d ~ dat$MeasureType, ylab="Hg", varwidth=TRUE)
+boxplot(dat$d ~ dat$TaskType, ylab="Hg", varwidth=TRUE)
 boxplot(dat$d ~ dat$AffectManipCat, ylab="Hg", varwidth=TRUE)
 boxplot(dat$d ~ dat$StudyDesign, ylab="Hg", varwidth=TRUE)
 boxplot(dat$d ~ dat$CrossoverDesign, ylab="Hg", varwidth=TRUE)
@@ -109,6 +112,8 @@ boxplot(dat$d ~ dat$ComparisonCategory, ylab="Hg", varwidth=TRUE)
 boxplot(dat$d ~ dat$AffectManipTiming, ylab="Hg", varwidth=TRUE)
 boxplot(dat$d ~ dat$Stress, ylab="Hg", varwidth=TRUE)
 boxplot(dat$d ~ dat$ReinforcementCat, ylab="Hg", varwidth=TRUE)
+
+boxplot(dat$d ~ dat$MeasureType + dat$TaskType, ylab="Hg", varwidth=TRUE)
 ```
 
 
@@ -117,32 +122,34 @@ boxplot(dat$d ~ dat$ReinforcementCat, ylab="Hg", varwidth=TRUE)
 ```{r table inculded papers} 
 dat_gr <-  group_by(dat, ArticleID)
 countES <- dplyr::summarise(dat_gr, k=n())
-pastecols <- dplyr::summarise(dat_gr, first(Species_Latin), toString(unique(Taxa)), toString(unique(Captive_Wild.caught)), toString(unique(Sex)), toString(unique(Age)), toString(unique(AffectManipCat)), toString(unique(Stress)), toString(unique(AffectManipTiming)), toString(unique(FoodDeprived)), toString(unique(TaskType)),toString(unique(CueTypeCat)),toString(unique(AmbigReinforced)), toString(unique(StudyDesign)), toString(unique(Blind)), toString(unique(Automated)), toString(unique(ComparisonCategory)), toString(unique(ReinforcementCat)), toString(unique(MeasureType)))
+pastecols <- dplyr::summarise(dat_gr, first(Species_Latin), toString(unique(Taxa)), toString(unique(Captive_Wild.caught)), toString(unique(Sex)), toString(unique(Age)), toString(unique(AffectManipCat)), toString(unique(AffectManipTiming)), toString(unique(FoodDeprived)), toString(unique(TaskType)),toString(unique(CueTypeCat)),toString(unique(AmbigReinforced)), toString(unique(StudyDesign)), toString(unique(Blind)), toString(unique(Automated)), toString(unique(ComparisonCategory)), toString(unique(ReinforcementCat)), toString(unique(MeasureType)))
 
 tab <- data.frame(pastecols, countES$k)
-names(tab) <- c("Reference", "Species", "Taxon", "Origin", "Sex", "Age", "Manipulation", "Stress", "Manipulation timing", "Food deprivation", "Task type","Cue", "Ambiguous reinforced", "Design", "Blinding", "Automation", "Comparison", "Reinforcement", "Measure", "k")
+names(tab) <- c("Reference", "Species", "Taxon", "Origin", "Sex", "Age", "Manipulation", "Manipulation timing", "Food deprivation", "Task type","Cue", "Ambiguous reinforced", "Design", "Blinding", "Automation", "Comparison", "Reinforcement", "Measure", "k")
 tab <- dplyr::arrange(tab, Reference)
 write.csv(tab,"tables/papers_table.csv")
 
 #for Systematic Review summary diagram:
-table(tab$Species)
+
 table(tab$Taxon)
-table(tab$Sex)
 table(tab$Origin)
+table(tab$Sex)
 table(tab$Age)
-table(tab$Design)
-table(tab$Stress)
 table(tab$Manipulation)
 table(tab$Comparison)
-table(tab$`Food deprivation`)
+table(tab$`Manipulation timing`)
+table(tab$Design)
+
 table(tab$`Task type`)
 table(tab$Cue)
 table(tab$Reinforcement)
-table(tab$Automation)
-table(tab$Measure)
 table(tab$`Ambiguous reinforced`)
-table(tab$`Manipulation timing`)
+table(tab$`Food deprivation`)
+table(tab$Measure)
+table(tab$Automation)
+table(tab$Blind)
 
+table(tab$Species)
 ```
 
 
