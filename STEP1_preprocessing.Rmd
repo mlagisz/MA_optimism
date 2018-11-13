@@ -36,7 +36,7 @@ options(scipen=100)
 #library(cowplot)
 
 pacman::p_load(tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr)
-source("functions2.R")
+source("functions.R")
 ```
 
 ################################################# Load MA dataset #############################
@@ -90,7 +90,7 @@ dat$Better[which(dat$Better >= 1 & dat$DataScale == "natural" & dat$MeasureType 
 
 #check again for rows with mean proportion > 1 (more than 100%) for the proportion data
 dat[which(dat$Better >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ] #0 rows
-dat[which(dat$Worse >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ] #0 checked
+dat[which(dat$Worse >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ]  #0 rows
 ```
 
 
@@ -217,7 +217,7 @@ for (i in 1:length(uni)){
     
   max_es <- max(abs(tempdat$d)) #max absolute value of ES
   max_es_row <- which(tempdat$abs_d == max_es)[1]
-  max_es_ScalePoint = tempdat$ScalePoint[max_es_row]
+  max_es_ScalePoint <- tempdat$ScalePoint[max_es_row]
   tempdat$biggest_ES[tempdat$ScalePoint == max_es_ScalePoint[1]] <- '1'
   tempdat$biggest_ES[tempdat$ScalePoint != max_es_ScalePoint[1]] <- '0'
   tempdat$ScalePoint1 <- max_es_ScalePoint[1]
@@ -232,7 +232,7 @@ for (i in 1:length(uni)){
   }
   
   max_es_md_row <- which(tempdat$abs_d == max_es_md)[1]
-  max_es_md_ScalePoint = tempdat$ScalePoint[max_es_md_row]
+  max_es_md_ScalePoint <- tempdat$ScalePoint[max_es_md_row]
   
   tempdat$biggest_meandir[tempdat$ScalePoint == max_es_md_ScalePoint[1]] <- '1'
   tempdat$biggest_meandir[tempdat$ScalePoint != max_es_md_ScalePoint[1]] <- '0'
@@ -240,62 +240,16 @@ for (i in 1:length(uni)){
 
 
   if (i == 1){
-    newdat=tempdat
+    newdat <- tempdat
   }
   else {
-    newdat=rbind(newdat,tempdat)
+    newdat <- rbind(newdat,tempdat)
   }
   
 }
 
-View(newdat)
-write.csv(newdat, "data_with_ES3.csv", row.names = FALSE)
-
-
-
-
-#VIkkis:
-ambig$unique<-as.factor(paste(paste0(ambig$articleID,ambig$drug_fav)))
-uni<-levels(ambig$unique)
-
-ambig$biggest_ES<-NA
-ambig$biggest_meandir<-NA
-ambig$abshd<-abs(ambig$Hd)
-
-ref$unique=NA
-ref$biggest_ES<-NA
-ref$biggest_meandir<-NA
-ref$abshd<-NA
-
-  
-for (i in 1:length(uni)){
-  tempdat<-ambig[ambig$unique==uni[i],]
-  
-  max_es<-max(abs(tempdat$Hd))
-  max_es_row<-which(tempdat$abshd==max_es)[1]
-  max_es_cue=tempdat$cue[max_es_row]
-  tempdat$biggest_ES[tempdat$cue==max_es_cue[1]] <- '1'
-  tempdat$biggest_ES[tempdat$cue!=max_es_cue[1]] <- '0'
-  tempdat$cue1<-max_es_cue[1]
-  
-  mean_es<-mean(tempdat$Hd)
-  if (mean_es<0){max_es_md<-max(abs(tempdat[tempdat$Hd<0,]$Hd))
-  }else{max_es_md<-max(abs(tempdat[tempdat$Hd>0,]$Hd))}
-  max_es_md_row<-which(tempdat$abshd==max_es_md)[1]
-  max_es_md_cue=tempdat$cue[max_es_md_row]
-  
-  tempdat$biggest_meandir[tempdat$cue==max_es_md_cue[1]] <- '1'
-  tempdat$biggest_meandir[tempdat$cue!=max_es_md_cue[1]] <- '0'
-  tempdat$cue2<-max_es_md_cue[1]
-  
-  if (i==1){
-    newdat=tempdat
-  }else{newdat=rbind(newdat,tempdat)}
-
-}
-
-newdat=rbind(newdat,ref)
-write.csv(newdat,'data_MA_ES_v3.csv')
+#View(newdat)
+write.csv(newdat, "data_with_ES_subsets.csv", row.names = FALSE)
 ```
 
 
