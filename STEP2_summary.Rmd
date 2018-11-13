@@ -22,7 +22,7 @@ pacman::p_load(tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr, rotl, ful
 ```
 
 ```{r load data, eval=TRUE} 
-dat <- read.csv("data_with_ES.csv")
+dat <- read.csv("data_with_ES_subsets.csv")
 dim(dat) #264
 str(dat)
 names(dat)
@@ -152,6 +152,23 @@ table(tab$Blind)
 table(tab$Species)
 ```
 
+
+```{r check subsets, eval=TRUE} 
+str(dat)
+names(dat)
+table(dat$ScalePoint)
+table(dat$max_ES)
+table(dat$biggest_ES)
+table(dat$biggest_meandir)
+
+table(dat$max_ES, dat$biggest_ES) #different for 28 studies
+table(dat$max_ES, dat$biggest_meandir) #different for 29 studies
+table(dat$biggest_ES, dat$biggest_meandir) #different for 3 studies
+
+table(dat$max_ES == dat$biggest_ES) #different for 28 studies
+table(dat$max_ES == dat$biggest_meandir) #different for 29 studies
+table(dat$biggest_ES == dat$biggest_meandir) #different for 3 studies
+```
 
 
 ###############################################################################
