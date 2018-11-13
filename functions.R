@@ -27,6 +27,7 @@ calc_ES_latency <- function(data, Worse, WorseSD, WorseN, Better, BetterSD, Bett
   if (missing(type)) 
     type <- "lnorm" 
   
+  
   # turning parameters that are column names into strings
   Worse <- data[[deparse(substitute(Worse))]]
   WorseSD <- data[[ deparse(substitute(WorseSD))]]
