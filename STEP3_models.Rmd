@@ -16,7 +16,7 @@ output: html_document
 sessionInfo()
 options(scipen=100)
 pacman::p_load(tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr, rotl, fulltext, metafor, car, robumeta)
-source("functions.R")
+#source("functions.R")
 ```
 
 ```{r load data} 
@@ -44,6 +44,8 @@ dat_max_absES <- dplyr::filter(dat, biggest_ES == 1) #subset by picking ES with 
 dim(dat_max_absES) 
 dat_max_meanES <- dplyr::filter(dat, biggest_meandir == 1) #subset by picking ES from each triplet which has the biggest absolute value in the direction of the mean value of all 3 ES from the triplet (i.e. biggest in the overall direction of the response)
 dim(dat_max_meanES) 
+dat_B_ES <- dplyr::filter(dat, ScalePoint == "B") #subset by picking only middle (B) ES from each triplet
+dim(dat_B_ES) 
 ```
 
 ```{r VCV matrices} 
@@ -58,6 +60,9 @@ VCV_lat <- make_VCV_matrix(data = dat_lat, V = "Vd", cluster = "GroupID", obs = 
 
 ## prepare VCV matrix - dat_max_ES data
 VCV_max_ES <- make_VCV_matrix(data = dat_max_ES, V = "Vd", cluster = "GroupID", obs = "EffectID")
+
+## prepare VCV matrix - dat_max_ES data
+VCV_B_ES <- make_VCV_matrix(data = dat_B_ES, V = "Vd", cluster = "GroupID", obs = "EffectID")
 
 ## prepare VCV matrix - latency data
 VCV_max_absES <- make_VCV_matrix(data = dat_max_absES, V = "Vd", cluster = "GroupID", obs = "EffectID")
@@ -98,6 +103,26 @@ CorMatrix_lat <- vcv(tree_lat, corr=TRUE)
 ###############################################################################################################
 #########################################       META-ANALYSIS       ########################################### 
 ###############################################################################################################
+
+########################################################
+#### All data points (full data set) - preliminary
+
+```{r MA all data prelim} 
+#sorting out random effects
+
+######## random-effect model (no VCV matrix, no phylogeny)
+MA_all_null <- rma.mv(yi=d, V=Vd, data = dat, method="ML") 
+MA_all_study <- rma.mv(yi=d, V=Vd,  random=list(~1|ArticleID), data = dat, method="ML") 
+anova(MA_all_study, MA_all_null) #ArticleID important
+
+MA_all_species <- rma.mv(yi=d, V=Vd,  random=list(~1|ArticleID, ~1|Species_Latin), data = dat, method="ML") 
+anova(MA_all_species, MA_all_study) #Species not important
+
+MA_all_random <- rma.mv(yi=d, V=Vd, random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|GroupID, ~1|EffectID), data = dat, method="ML") 
+anova(MA_all_random, MA_all_study) #better
+
+
+```
 
 
 ########################################################
@@ -337,6 +362,64 @@ summary(MA_maxmeanES_robust) #0.37  0.15  0.59
 save(MA_maxmeanES_robust,file = "Rdata/MA_maxmeanES_robust.Rdata")
 ```
 
+
+
+########################################################
+##### Max B ES data subset (dat_B_ES, k=106)
+#subset by picking ES from each triplet which isin the midpoint (i.e. B) 
+
+```{r MA dat_B_ES subset} 
+
+######## random-effect model (no VCV matrix, no phylogeny)
+MA_B_ES_random <- rma.mv(yi=d, V=Vd, 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|GroupID, ~1|EffectID), 
+                     data = dat_B_ES, method="REML") 
+summary(MA_B_ES_random) 
+calc.I2(dat_B_ES$Vd, MA_B_ES_random) 
+save(MA_B_ES_random, file = "Rdata/MA_B_ES_random.Rdata")
+
+
+######## random-effect model as above with VCV matrix (no phylogeny)
+MA_B_ES_random_VCV <- rma.mv(yi = d, V = VCV_B_ES, 
+                         random = list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID), 
+                         data = dat_B_ES, method = "REML")
+summary(MA_B_ES_random_VCV)
+calc.I2(dat_B_ES$Vd, MA_B_ES_random_VCV)
+save(MA_B_ES_random_VCV, file = "Rdata/MA_B_ES_random_VCV.Rdata")
+
+
+######## random-effect model with VCV, phylogeny (Species_Latin) and species identity (ScientificName)
+MA_B_ES_random_VCV_phylo <- rma.mv(yi=d, V=VCV_B_ES, 
+                             random=list(~1|Species_Latin, ~1|ScientificName, ~1|ArticleID, ~1|EffectID),
+                             R = list(Species_Latin = CorMatrix_all),
+                             data = dat_B_ES, method = "REML") 
+summary(MA_B_ES_random_VCV_phylo)   
+calc.I2(dat_B_ES$Vd, MA_B_ES_random_VCV_phylo) #82% Htotal, 3.6% phylogeny, 0% speciesID
+save(MA_B_ES_random_VCV_phylo, file = "Rdata/MA_B_ES_random_VCV_phylo.Rdata")
+
+
+######## random-effect model with VCV and phylogeny (Species_Latin), removed non-contibuting random effects
+MA_B_ES <- rma.mv(yi=d, V=VCV_B_ES, 
+                             random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                             R = list(Species_Latin = CorMatrix_all),
+                             data = dat_B_ES, method = "REML") 
+summary(MA_B_ES )    
+calc.I2(dat_B_ES$Vd, MA_B_ES ) #82% Htotal, 3.6% phylogeny
+save(MA_B_ES, file = "Rdata/MA_B_ES.Rdata")
+
+
+## Robust meta-analytic models:
+
+#robumeta (without phylogeny and VCV)
+MA_B_ES_robu <- robu(formula = d ~ 1, var.eff.size = Vd, studynum = ExperimentID,  modelweights = "HIER", smB_ES  = TRUE, data = dat_B_ES)
+print(MA_B_ES_robu) #0.21  0.07    0.36
+#save(MA_B_ES_robu,file="Rdata/MA_B_ES_robu.Rdata")
+
+#robust metafor
+MA_B_ES_robust <- robust(MA_B_ES , cluster = dat_B_ES$ExperimentID)
+summary(MA_B_ES_robust) #0.2  0.04  0.37
+save(MA_B_ES_robust,file = "Rdata/MA_B_ES_robust.Rdata")
+```
 
 
 
@@ -771,6 +854,76 @@ save(MR_all_ScalePoint2, file = "Rdata/MR_all_ScalePoint2.Rdata")
 ```
 
 
+########################################################
+#### dat_max_ES
+
+#Univariate models:
+
+- Species_Latin (Species model) 
+```{r MR dat_max_ES data - Species model}
+MR_maxES_species <- rma.mv(yi=d, V=VCV_max_ES, 
+                     mod = ~ScientificName -1, 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     data = dat_max_ES, method="REML") 
+summary(MR_maxES_species) # no species with clear effect
+save(MR_maxES_species, file = "Rdata/MR_maxES_species.Rdata")
+
+MR_maxES_species_nophylo <- rma.mv(yi=d, V=VCV_max_ES, 
+                     mod = ~ScientificName -1, 
+                     random=list(~1|ArticleID, ~1|ExperimentID, ~1|EffectID), 
+                     data = dat_max_ES, method="REML") 
+summary(MR_maxES_species_nophylo) # some species with clear effect, when phylogeny not taken into account
+save(MR_maxES_species_nophylo, file = "Rdata/MR_maxES_species_nophylo.Rdata")
+```
+
+
+########################################################
+#### dat_max_absES
+
+#Univariate models:
+
+- Species_Latin (Species model) 
+```{r MR dat_max_absES data - Species model}
+MR_maxabsES_species <- rma.mv(yi=d, V=VCV_max_absES, 
+                     mod = ~ScientificName -1, 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     data = dat_max_absES, method="REML") 
+summary(MR_maxabsES_species) # no species with clear effect
+save(MR_maxabsES_species, file = "Rdata/MR_maxabsES_species.Rdata")
+
+MR_maxabsES_species_nophylo <- rma.mv(yi=d, V=VCV_max_absES, 
+                     mod = ~ScientificName -1, 
+                     random=list(~1|ArticleID, ~1|ExperimentID, ~1|EffectID), 
+                     data = dat_max_absES, method="REML") 
+summary(MR_maxabsES_species_nophylo) # some species with clear effect, when phylogeny not taken into account
+save(MR_maxabsES_species_nophylo, file = "Rdata/MR_maxabsES_species_nophylo.Rdata")
+```
+
+
+########################################################
+#### dat_max_meanES
+
+#Univariate models:
+
+- Species_Latin (Species model) 
+```{r MR dat_max_meanES data - Species model}
+MR_maxmeanES_species <- rma.mv(yi=d, V=VCV_max_meanES, 
+                     mod = ~ScientificName -1, 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     data = dat_max_meanES, method="REML") 
+summary(MR_maxmeanES_species) # no species with clear effect
+save(MR_maxmeanES_species, file = "Rdata/MR_maxmeanES_species.Rdata")
+
+MR_maxmeanES_species_nophylo <- rma.mv(yi=d, V=VCV_max_meanES, 
+                     mod = ~ScientificName -1, 
+                     random=list(~1|ArticleID, ~1|ExperimentID, ~1|EffectID), 
+                     data = dat_max_meanES, method="REML") 
+summary(MR_maxmeanES_species_nophylo) # some species with clear effect, when phylogeny not taken into account
+save(MR_maxmeanES_species_nophylo, file = "Rdata/MR_maxmeanES_species_nophylo.Rdata")
+```
 
 
 
@@ -782,9 +935,11 @@ INTERACTIONS
 
 ## MeasureType * TaskType
 
-https://quantdev.ssri.psu.edu/tutorials/five-ish-steps-create-pretty-interaction-plots-multi-level-model-r
 
 ```{r MR all data - MeasureType*TaskType}
+
+table(dat$MeasureType, dat$TaskType)
+
 MR_all_MeasureType_TaskType1 <- rma.mv(yi=d, V=VCV, 
                      mod = ~MeasureType * TaskType -1, 
                      random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
@@ -792,6 +947,14 @@ MR_all_MeasureType_TaskType1 <- rma.mv(yi=d, V=VCV,
                      data = dat, method="REML") 
 summary(MR_all_MeasureType_TaskType1) # signif intc proportion, not latency
 save(MR_all_MeasureType_TaskType1, file = "Rdata/MR_all_MeasureType_TaskType1.Rdata")
+
+MR_all_MeasureType_TaskType2 <- rma.mv(yi=d, V=VCV, 
+                     mod = ~MeasureType * relevel(dat$TaskType, ref="go/no-go") -1, 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     data = dat, method="REML") 
+summary(MR_all_MeasureType_TaskType2) # signif intc proportion, not latency
+save(MR_all_MeasureType_TaskType2, file = "Rdata/MR_all_MeasureType_TaskType2.Rdata")
 
 MR_all_MeasureType_TaskType <- rma.mv(yi=d, V=VCV, 
                      mod = ~relevel(dat$MeasureType, ref="proportion") * relevel(dat$TaskType, ref="active choice"), 
@@ -803,9 +966,126 @@ save(MR_all_MeasureType_TaskType, file = "Rdata/MR_all_MeasureType_TaskType.Rdat
 ```
 
 
+```{r MR dat_max_ES data - MeasureType*TaskType}
+table(dat_max_ES$MeasureType, dat_max_ES$TaskType)
 
-- MeasureType * TaskType
-```{r MR all data - MeasureType*TaskType}
+MR_maxES_MeasureType_TaskType1 <- rma.mv(yi=d, V=VCV_max_ES, 
+                     mod = ~MeasureType * TaskType -1, 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     data = dat_max_ES, method="REML") 
+summary(MR_maxES_MeasureType_TaskType1) # signif intc proportion, not latency
+save(MR_maxES_MeasureType_TaskType1, file = "Rdata/MR_maxES_MeasureType_TaskType1.Rdata")
+
+MR_maxES_MeasureType_TaskType2 <- rma.mv(yi=d, V=VCV_max_ES, 
+                     mod = ~MeasureType * relevel(dat_max_ES$TaskType, ref="go/no-go") -1, 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     data = dat_max_ES, method="REML") 
+summary(MR_maxES_MeasureType_TaskType2) # signif intc proportion, not latency
+save(MR_maxES_MeasureType_TaskType2, file = "Rdata/MR_maxES_MeasureType_TaskType2.Rdata")
+
+MR_maxES_MeasureType_TaskType <- rma.mv(yi=d, V=VCV_max_ES, 
+                     mod = ~relevel(dat_max_ES$MeasureType, ref="proportion") * relevel(dat_max_ES$TaskType, ref="active choice"), 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     data = dat_max_ES, method="REML") 
+summary(MR_maxES_MeasureType_TaskType) # ns diff proportion / latency
+save(MR_maxES_MeasureType_TaskType, file = "Rdata/MR_maxES_MeasureType_TaskType.Rdata")
+```
+
+
+
+```{r MR dat_max_absES data - MeasureType*TaskType}
+table(dat_max_absES$MeasureType, dat_max_absES$TaskType)
+
+MR_maxabsES_MeasureType_TaskType1 <- rma.mv(yi=d, V=VCV_max_absES, 
+                     mod = ~MeasureType * TaskType -1, 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     data = dat_max_absES, method="REML") 
+summary(MR_maxabsES_MeasureType_TaskType1) # signif intc proportion, not latency
+save(MR_maxabsES_MeasureType_TaskType1, file = "Rdata/MR_maxabsES_MeasureType_TaskType1.Rdata")
+
+MR_maxabsES_MeasureType_TaskType2 <- rma.mv(yi=d, V=VCV_max_absES, 
+                     mod = ~MeasureType * relevel(dat_max_absES$TaskType, ref="go/no-go") -1, 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     data = dat_max_absES, method="REML") 
+summary(MR_maxabsES_MeasureType_TaskType2) # signif intc proportion, not latency
+save(MR_maxabsES_MeasureType_TaskType2, file = "Rdata/MR_maxabsES_MeasureType_TaskType2.Rdata")
+
+MR_maxabsES_MeasureType_TaskType <- rma.mv(yi=d, V=VCV_max_absES, 
+                     mod = ~relevel(dat_max_absES$MeasureType, ref="proportion") * relevel(dat_max_absES$TaskType, ref="active choice"), 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     data = dat_max_absES, method="REML") 
+summary(MR_maxabsES_MeasureType_TaskType) # ns diff proportion / latency
+save(MR_maxabsES_MeasureType_TaskType, file = "Rdata/MR_maxabsES_MeasureType_TaskType.Rdata")
+```
+
+
+```{r MR dat_max_meanES data - MeasureType*TaskType}
+table(dat_max_meanES$MeasureType, dat_max_meanES$TaskType)
+
+MR_maxmeanES_MeasureType_TaskType1 <- rma.mv(yi=d, V=VCV_max_meanES, 
+                     mod = ~MeasureType * TaskType -1, 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     data = dat_max_meanES, method="REML") 
+summary(MR_maxmeanES_MeasureType_TaskType1) # signif intc proportion, not latency
+save(MR_maxmeanES_MeasureType_TaskType1, file = "Rdata/MR_maxmeanES_MeasureType_TaskType1.Rdata")
+
+MR_maxmeanES_MeasureType_TaskType2 <- rma.mv(yi=d, V=VCV_max_meanES, 
+                     mod = ~MeasureType * relevel(dat_max_meanES$TaskType, ref="go/no-go") -1, 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     data = dat_max_meanES, method="REML") 
+summary(MR_maxmeanES_MeasureType_TaskType2) # signif intc proportion, not latency
+save(MR_maxmeanES_MeasureType_TaskType2, file = "Rdata/MR_maxmeanES_MeasureType_TaskType2.Rdata")
+
+MR_maxmeanES_MeasureType_TaskType <- rma.mv(yi=d, V=VCV_max_meanES, 
+                     mod = ~relevel(dat_max_meanES$MeasureType, ref="proportion") * relevel(dat_max_meanES$TaskType, ref="active choice"), 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     data = dat_max_meanES, method="REML") 
+summary(MR_maxmeanES_MeasureType_TaskType) # ns diff proportion / latency
+save(MR_maxmeanES_MeasureType_TaskType, file = "Rdata/MR_maxmeanES_MeasureType_TaskType.Rdata")
+```
+
+
+
+
+- MeasureType * TaskType plots
+
+https://quantdev.ssri.psu.edu/tutorials/five-ish-steps-create-pretty-interaction-plots-multi-level-model-r
+
+```{r MR all data - MeasureType*TaskType - plots}
+library(nlme)
+library(effects)
+library(ggplot2)
+library(psych)
+
+lme_all_MT_TT <- lme(fixed = d ~ MeasureType * TaskType, data=dat, random = list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),  na.action= na.exclude)
+summary(lme_all_MT_TT)
+intervals(lme_all_MT_TT)
+ef1 <- effect(term="MeasureType*TaskType", mod=lme_all_MT_TT)
+ef1
+efdata1 <- as.data.frame(ef1) #convert the effects list to a data frame
+efdata1 #print effects data frame
+efdata1$TaskTypel <- as.factor(efdata1$TaskType)
+
+ggplot(efdata1, aes(x=MeasureType, y=fit, color=TaskType,group=TaskType)) + 
+    geom_point() + 
+    geom_line(size=1.2) +
+    geom_ribbon(aes(ymin=fit-se, ymax=fit+se, fill=TaskType),alpha=0.3) + 
+    labs(title = "TaskType", x= "Measurement type", y="ES", color="MeasureType", fill="MeasureType") + theme_classic() + theme(text=element_text(size=10))
+
+
+
+
+
+########
 MR_all_MeasureType_TaskType1 <- rma.mv(yi=d, V=VCV_max_absES, 
                      mod = ~MeasureType * TaskType -1, 
                      random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
@@ -824,6 +1104,47 @@ save(MR_all_MeasureType_TaskType, file = "Rdata/MR_all_MeasureType_TaskType.Rdat
 ```
 
 
+
+
+
+
+
+###########################################################
+#### VIF
+
+https://stats.stackexchange.com/questions/201205/variance-inflation-factors-vif-mer-verus-group-factor-level-vif
+
+https://stackoverflow.com/questions/26633483/collinearity-after-accounting-for-random-mixed-effects
+
+## A VIF of 1 indicates there is no detectable linear relationship among the regressors, while a large VIF indicates a tight linear relationship
+
+```{r vif}
+vif.mer <- function (fit) {
+## adapted from rms::vif
+v <- vcov(fit)
+nam <- names(fixef(fit))
+## exclude intercepts
+ns <- sum(1 * (nam == "Intercept" | nam == "(Intercept)"))
+if (ns > 0) {
+v <- v[-(1:ns), -(1:ns), drop = FALSE]
+nam <- nam[-(1:ns)] }
+d <- diag(v)^0.5
+v <- diag(solve(v/(d %o% d)))
+names(v) <- nam 
+v }
+
+library(lme4)
+model <- lmer(d ~ MeasureType + TaskType + (1|ArticleID), data = dat)
+vif.mer(model)
+
+model <- lmer(d ~ Sex + Age + Captive_Wild.caught + AffectManipCat + AffectManipTiming + ComparisonCategory + CueTypeCat + FoodDeprived + TaskType + WithinBetween + Automated + Blind + MeasureType + ReinforcementCat + AmbigReinforced + ScalePoint + (1|ExperimentID), data = dat)
+vif.mer(model)
+
+
+model <- lmer(d ~ Sex + Age + (1|ExperimentID), data = dat)
+vif.mer(model)
+
+```
 
 
 ###########################################################
