@@ -137,6 +137,7 @@ table(tab$Sex)
 table(tab$Age)
 table(tab$Manipulation)
 table(tab$Comparison)
+table(tab$Reinforcement)
 table(tab$`Manipulation timing`)
 table(tab$Design)
 
