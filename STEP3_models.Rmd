@@ -119,9 +119,16 @@ MA_all_species <- rma.mv(yi=d, V=Vd,  random=list(~1|ArticleID, ~1|Species_Latin
 anova(MA_all_species, MA_all_study) #Species not important
 
 MA_all_random <- rma.mv(yi=d, V=Vd, random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|GroupID, ~1|EffectID), data = dat, method="ML") 
-anova(MA_all_random, MA_all_study) #better
+anova(MA_all_random, MA_all_study) #full better
 
+MA_all_random2 <- rma.mv(yi=d, V=Vd, random=list(~1|ArticleID, ~1|ExperimentID, ~1|GroupID, ~1|EffectID), data = dat, method="ML") 
+anova(MA_all_random, MA_all_random2) #species no diff
 
+MA_all_random3 <- rma.mv(yi=d, V=Vd, random=list(~1|ArticleID, ~1|GroupID, ~1|EffectID), data = dat, method="ML") 
+anova(MA_all_random, MA_all_random3) #experiment no diff
+
+MA_all_random4 <- rma.mv(yi=d, V=Vd, random=list(~1|ExperimentID, ~1|EffectID), data = dat, method="ML") 
+anova(MA_all_random, MA_all_random4) #group no diff
 ```
 
 
@@ -1117,6 +1124,7 @@ https://stats.stackexchange.com/questions/201205/variance-inflation-factors-vif-
 https://stackoverflow.com/questions/26633483/collinearity-after-accounting-for-random-mixed-effects
 
 ## A VIF of 1 indicates there is no detectable linear relationship among the regressors, while a large VIF indicates a tight linear relationship
+# A commonly used rule of thumb is that a VIF of 10 or more is evidence of severe multicollinearity (Cohen et
 
 ```{r vif}
 vif.mer <- function (fit) {
