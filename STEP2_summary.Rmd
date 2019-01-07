@@ -172,6 +172,77 @@ table(dat$biggest_ES == dat$biggest_meandir) #different for 3 studies
 ```
 
 
+
+
+####################################### EXTRA
+
+Is there correlation between  measurements from the same experiment reported as latency and proportion?
+
+```{r prop lat subset - correlation} 
+#### look for studies that have both prop and lat
+names(dat)
+#table(dat$MeasureType, dat$ArticleID) # Looks correct
+#table(dat$MeasureType, dat$ExperimentID) 
+dat_horiz <- merge(dat_lat, dplyr::select(dat_prop, ExperimentID, ScalePoint, d, Vd), by = c("ExperimentID", "ScalePoint"))
+dat_horiz <- droplevels(dat_horiz)
+str(dat_horiz)
+
+length(unique(dat_horiz$ExperimentID)) #11 experimentswhere both latency and proportion reported
+length(unique(dat_horiz$ArticleID)) #9 studies where both latency and proportion reported
+#table(dat_horiz$ExperimentID, dat_horiz$ScalePoint)
+#table(dat_horiz$ExperimentID, dat_horiz$ArticleID)
+plot(dat_horiz$d.x, dat_horiz$d.y) 
+plot(dat_horiz$d.x, dat_horiz$d.y, col=dat_horiz$ExperimentID) #make it prettier
+cor.test(dat_horiz$d.x, dat_horiz$d.y) # Pearson's product-moment correlation = 0.3867219 t = 2.1383, df = 26, p-value = 0.04206 , 95 percent confidence interval:  0.01594555 0.66399903
+#we did not need more complex model to account for non-independence and to weight by variance, after adding these cor could be even weaker
+```
+
+```{r prop lat subset maxES - correlation} 
+#### look for studies that have both prop and lat
+dat_horiz <- droplevels(dat_horiz)
+str(dat_horiz)
+dat_horiz_maxES <- filter(dat_horiz, max_ES==1)
+str(dat_horiz_maxES)
+
+length(unique(dat_horiz_maxES$ExperimentID)) #11 experimentswhere both latency and proportion reported
+length(unique(dat_horiz_maxES$ArticleID)) #9 studies where both latency and proportion reported
+#table(dat_horiz_maxES$ExperimentID, dat_horiz_maxES$ScalePoint)
+#table(dat_horiz_maxES$ExperimentID, dat_horiz_maxES$ArticleID)
+plot(dat_horiz_maxES$d.x, dat_horiz_maxES$d.y) 
+plot(dat_horiz_maxES$d.x, dat_horiz_maxES$d.y, col=dat_horiz_maxES$ExperimentID) #make it prettier
+cor.test(dat_horiz_maxES$d.x, dat_horiz_maxES$d.y) # Pearson's product-moment correlation = 0.246796 t = 0.72033, df = 8, p-value = 0.4918 , 95 percent confidence interval:  -0.4532624  0.7585515
+```
+
+
+```{r prop lat subset - OTHER - NOT SURE} 
+library(nlme)
+res_cor <- lme(d.y ~ d.x, random=list(~1|ArticleID), correlation=corGaus(form=~1|ArticleID), data=dat_horiz)
+res_cor
+
+#correlations within each experiment_ID
+dat_horiz %>% group_by(ExperimentID) %>%  summarize(COR=cor(d.x, d.y)) #note these are based on max 3 data points
+
+#using metafor multivariate model
+dat_horiz.y <- subset(dat_horiz, select=-c(d.x,Vd.x))
+dat_horiz.y$MeasureType <- "y"
+dat_horiz.x <- subset(dat_horiz, select=-c(d.y,Vd.y))
+dat_horiz.x$MeasureType <- "x"
+library(data.table)
+setnames(dat_horiz.y, old = c('d.y','Vd.y'), new = c('d','Vd'))
+setnames(dat_horiz.x, old = c('d.x','Vd.x'), new = c('d','Vd'))
+dat_horiz.xy <- rbind(dat_horiz.x, dat_horiz.y)
+str(dat_horiz.xy)
+#dat_horiz.xy$MeasureType <- factor(datallfm$sex, levels=c("female","male"))
+VCV.xy <- make_VCV_matrix(data = dat_horiz.xy, V = "Vd", cluster = "ExperimentID", obs = "EffectID")
+dim(VCV.xy)
+res.xy <- rma.mv(d, VCV.xy, mods = ~ MeasureType - 1, data = dat_horiz.xy, random = ~ MeasureType | ExperimentID, struct = "UN")
+res.xy
+### contrast for differences by MeasureType
+anova(res.xy, L=c(1,-1))
+```
+
+
+
 ###############################################################################
 
 NEXT: "STEP3_models.Rmd"
