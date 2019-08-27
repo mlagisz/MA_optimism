@@ -1,0 +1,1913 @@
+---
+title: "optimism - tables"
+author: "ML"
+date: "7/1/2018"
+output: word_document: 
+    reference_docx: "si.style.docx"
+---
+
+```{r setup, include=F, eval = T}
+knitr::opts_chunk$set(echo = F, warning = F, eval = F)
+
+# loading packages
+pacman::p_load(metafor, dplyr, readxl, MCMCglmm, knitr, mice)
+```
+
+
+###################################################################
+#### Table S3   
+
+[MA with VCV and phylo]
+
+<!-- Estimated effect sizes for meta-analytic (intercept-only) models for the difference between better and worse (*Hg*).  -->
+<!-- Positive values of *Hg* can be interpreted as animals in relatively better treatment group being more "optimistic"than animals in relatively worse treatment group.  -->
+<!-- Effects with confidence intervals (CI) not crossing zero should be indicated in bold.  -->
+<!-- Sigma^2^ for cohort_ID is the amount of variance attributed to cohort identity (N levels = number of cohorts), and   -->
+<!-- Sigma^2^ for comp_ID represents residual variance for each unit of analysis (N levels = number of comparisons).            -->
+
+### all data
+
+```{r Table MA all data phylo}
+#list.files("./Rdata/")
+d3 <- read_excel("./Tables/Results_Tables_v2.xlsx", sheet = 1) # loading table
+# loading data
+load("./Rdata/MA_all.Rdata")
+load("./Rdata/MA_maxabsES.Rdata")
+load("./Rdata/MA_maxmeanES.Rdata")
+load("./Rdata/MA_B_ES.Rdata")
+load("./Rdata/MA_maxES.Rdata")
+pos <- c(3,8,13,18,23) # saving row position
+# adding results from the models to the table
+d3$`Fixed effects`[pos] <- round(c(MA_all$b,
+                                   MA_maxabsES$b,
+                                   MA_maxmeanES$b,
+                                   MA_B_ES$b,
+                                   MA_maxES$b), 3)
+d3$X__2[pos] <- round(c(MA_all$ci.lb,
+                                   MA_maxabsES$ci.lb,
+                                   MA_maxmeanES$ci.lb,
+                                   MA_B_ES$ci.lb,
+                                   MA_maxES$ci.lb), 3)
+d3$X__3[pos] <- round(c(MA_all$ci.ub,
+                                   MA_maxabsES$ci.ub,
+                                   MA_maxmeanES$ci.ub,
+                                   MA_B_ES$ci.ub,
+                                   MA_maxES$ci.ub), 3)
+d3$`Random effects`[pos] <- round(c(MA_all$sigma2[1],
+                                   MA_maxabsES$sigma2[1],
+                                   MA_maxmeanES$sigma2[1],
+                                   MA_B_ES$sigma2[1],
+                                   MA_maxES$sigma2[1]), 3)
+d3$`Random effects`[pos + 1] <- round(c(MA_all$sigma2[2],
+                                   MA_maxabsES$sigma2[2],
+                                   MA_maxmeanES$sigma2[2],
+                                   MA_B_ES$sigma2[2],
+                                   MA_maxES$sigma2[2]), 3)
+d3$`Random effects`[pos + 2] <- round(c(MA_all$sigma2[3],
+                                   MA_maxabsES$sigma2[3],
+                                   MA_maxmeanES$sigma2[3],
+                                   MA_B_ES$sigma2[3],
+                                   MA_maxES$sigma2[3]), 3)
+d3$`Random effects`[pos + 3] <- round(c(MA_all$sigma2[4],
+                                   MA_maxabsES$sigma2[4],
+                                   MA_maxmeanES$sigma2[4],
+                                   MA_B_ES$sigma2[4],
+                                   MA_maxES$sigma2[4]), 3)
+d3$X__5[pos] <- round(c(MA_all$s.nlevels[1],
+                                   MA_maxabsES$s.nlevels[1],
+                                   MA_maxmeanES$s.nlevels[1],
+                                   MA_B_ES$s.nlevels[1],
+                                   MA_maxES$s.nlevels[1]), 3)
+d3$X__5[pos+1] <- round(c(MA_all$s.nlevels[2],
+                                   MA_maxabsES$s.nlevels[2],
+                                   MA_maxmeanES$s.nlevels[2],
+                                   MA_B_ES$s.nlevels[2],
+                                   MA_maxES$s.nlevels[2]), 3)
+d3$X__5[pos+2] <- round(c(MA_all$s.nlevels[3],
+                                   MA_maxabsES$s.nlevels[3],
+                                   MA_maxmeanES$s.nlevels[3],
+                                   MA_B_ES$s.nlevels[3],
+                                   MA_maxES$s.nlevels[3]), 3)
+d3$X__5[pos+3] <- round(c(MA_all$s.nlevels[4],
+                                   MA_maxabsES$s.nlevels[4],
+                                   MA_maxmeanES$s.nlevels[4],
+                                   MA_B_ES$s.nlevels[4],
+                                   MA_maxES$s.nlevels[4]), 3)
+
+write.csv(d3, file = "./Tables/Table_MA_v3_all.csv", row.names = F, na = "")
+```
+
+### latency 
+
+```{r Table MA lat data phylo}
+#list.files("./Rdata/")
+d3_lat <- read_excel("./Tables/Results_Tables_v2.xlsx", sheet = 1) # loading table
+# loading data
+load("./Rdata/MA_lat.Rdata")
+load("./Rdata/MA_lat_max_absES.Rdata")
+load("./Rdata/MA_lat_max_meanES.Rdata")
+load("./Rdata/MA_lat_B_ES.Rdata")
+load("./Rdata/MA_lat_maxES.Rdata")
+pos <- c(3,8,13,18,23) # saving row position
+# adding results from the models to the table
+d3_lat$`Fixed effects`[pos] <- round(c(MA_lat$b,
+                                   MA_lat_max_absES$b,
+                                   MA_lat_max_meanES$b,
+                                   MA_lat_B_ES$b,
+                                   MA_lat_maxES$b), 3)
+d3_lat$X__2[pos] <- round(c(MA_lat$ci.lb,
+                                   MA_lat_max_absES$ci.lb,
+                                   MA_lat_max_meanES$ci.lb,
+                                   MA_lat_B_ES$ci.lb,
+                                   MA_lat_maxES$ci.lb), 3)
+d3_lat$X__3[pos] <- round(c(MA_lat$ci.ub,
+                                   MA_lat_max_absES$ci.ub,
+                                   MA_lat_max_meanES$ci.ub,
+                                   MA_lat_B_ES$ci.ub,
+                                   MA_lat_maxES$ci.ub), 3)
+d3_lat$`Random effects`[pos] <- round(c(MA_lat$sigma2[1],
+                                   MA_lat_max_absES$sigma2[1],
+                                   MA_lat_max_meanES$sigma2[1],
+                                   MA_lat_B_ES$sigma2[1],
+                                   MA_lat_maxES$sigma2[1]), 3)
+d3_lat$`Random effects`[pos + 1] <- round(c(MA_lat$sigma2[2],
+                                   MA_lat_max_absES$sigma2[2],
+                                   MA_lat_max_meanES$sigma2[2],
+                                   MA_lat_B_ES$sigma2[2],
+                                   MA_lat_maxES$sigma2[2]), 3)
+d3_lat$`Random effects`[pos + 2] <- round(c(MA_lat$sigma2[3],
+                                   MA_lat_max_absES$sigma2[3],
+                                   MA_lat_max_meanES$sigma2[3],
+                                   MA_lat_B_ES$sigma2[3],
+                                   MA_lat_maxES$sigma2[3]), 3)
+d3_lat$`Random effects`[pos + 3] <- round(c(MA_lat$sigma2[4],
+                                   MA_lat_max_absES$sigma2[4],
+                                   MA_lat_max_meanES$sigma2[4],
+                                   MA_lat_B_ES$sigma2[4],
+                                   MA_lat_maxES$sigma2[4]), 3)
+d3_lat$X__5[pos] <- round(c(MA_lat$s.nlevels[1],
+                                   MA_lat_max_absES$s.nlevels[1],
+                                   MA_lat_max_meanES$s.nlevels[1],
+                                   MA_lat_B_ES$s.nlevels[1],
+                                   MA_lat_maxES$s.nlevels[1]), 3)
+d3_lat$X__5[pos+1] <- round(c(MA_lat$s.nlevels[2],
+                                   MA_lat_max_absES$s.nlevels[2],
+                                   MA_lat_max_meanES$s.nlevels[2],
+                                   MA_lat_B_ES$s.nlevels[2],
+                                   MA_lat_maxES$s.nlevels[2]), 3)
+d3_lat$X__5[pos+2] <- round(c(MA_lat$s.nlevels[3],
+                                   MA_lat_max_absES$s.nlevels[3],
+                                   MA_lat_max_meanES$s.nlevels[3],
+                                   MA_lat_B_ES$s.nlevels[3],
+                                   MA_lat_maxES$s.nlevels[3]), 3)
+d3_lat$X__5[pos+3] <- round(c(MA_lat$s.nlevels[4],
+                                   MA_lat_max_absES$s.nlevels[4],
+                                   MA_lat_max_meanES$s.nlevels[4],
+                                   MA_lat_B_ES$s.nlevels[4],
+                                   MA_lat_maxES$s.nlevels[4]), 3)
+
+write.csv(d3_lat, file = "./Tables/Table_MA_v3_lat.csv", row.names = F, na = "")
+```
+
+
+### proportion 
+
+```{r Table MA prop data phylo}
+#list.files("./Rdata/")
+d3_prop <- read_excel("./Tables/Results_Tables_v2.xlsx", sheet = 1) # loading table
+# loading data
+load("./Rdata/MA_prop.Rdata")
+load("./Rdata/MA_prop_max_absES.Rdata")
+load("./Rdata/MA_prop_max_meanES.Rdata")
+load("./Rdata/MA_prop_B_ES.Rdata")
+load("./Rdata/MA_prop_maxES.Rdata")
+pos <- c(3,8,13,18,23) # saving row position
+# adding results from the models to the table
+d3_prop$`Fixed effects`[pos] <- round(c(MA_prop$b,
+                                   MA_prop_max_absES$b,
+                                   MA_prop_max_meanES$b,
+                                   MA_prop_B_ES$b,
+                                   MA_prop_maxES$b), 3)
+d3_prop$X__2[pos] <- round(c(MA_prop$ci.lb,
+                                   MA_prop_max_absES$ci.lb,
+                                   MA_prop_max_meanES$ci.lb,
+                                   MA_prop_B_ES$ci.lb,
+                                   MA_prop_maxES$ci.lb), 3)
+d3_prop$X__3[pos] <- round(c(MA_prop$ci.ub,
+                                   MA_prop_max_absES$ci.ub,
+                                   MA_prop_max_meanES$ci.ub,
+                                   MA_prop_B_ES$ci.ub,
+                                   MA_prop_maxES$ci.ub), 3)
+d3_prop$`Random effects`[pos] <- round(c(MA_prop$sigma2[1],
+                                   MA_prop_max_absES$sigma2[1],
+                                   MA_prop_max_meanES$sigma2[1],
+                                   MA_prop_B_ES$sigma2[1],
+                                   MA_prop_maxES$sigma2[1]), 3)
+d3_prop$`Random effects`[pos + 1] <- round(c(MA_prop$sigma2[2],
+                                   MA_prop_max_absES$sigma2[2],
+                                   MA_prop_max_meanES$sigma2[2],
+                                   MA_prop_B_ES$sigma2[2],
+                                   MA_prop_maxES$sigma2[2]), 3)
+d3_prop$`Random effects`[pos + 2] <- round(c(MA_prop$sigma2[3],
+                                   MA_prop_max_absES$sigma2[3],
+                                   MA_prop_max_meanES$sigma2[3],
+                                   MA_prop_B_ES$sigma2[3],
+                                   MA_prop_maxES$sigma2[3]), 3)
+d3_prop$`Random effects`[pos + 3] <- round(c(MA_prop$sigma2[4],
+                                   MA_prop_max_absES$sigma2[4],
+                                   MA_prop_max_meanES$sigma2[4],
+                                   MA_prop_B_ES$sigma2[4],
+                                   MA_prop_maxES$sigma2[4]), 3)
+d3_prop$X__5[pos] <- round(c(MA_prop$s.nlevels[1],
+                                   MA_prop_max_absES$s.nlevels[1],
+                                   MA_prop_max_meanES$s.nlevels[1],
+                                   MA_prop_B_ES$s.nlevels[1],
+                                   MA_prop_maxES$s.nlevels[1]), 3)
+d3_prop$X__5[pos+1] <- round(c(MA_prop$s.nlevels[2],
+                                   MA_prop_max_absES$s.nlevels[2],
+                                   MA_prop_max_meanES$s.nlevels[2],
+                                   MA_prop_B_ES$s.nlevels[2],
+                                   MA_prop_maxES$s.nlevels[2]), 3)
+d3_prop$X__5[pos+2] <- round(c(MA_prop$s.nlevels[3],
+                                   MA_prop_max_absES$s.nlevels[3],
+                                   MA_prop_max_meanES$s.nlevels[3],
+                                   MA_prop_B_ES$s.nlevels[3],
+                                   MA_prop_maxES$s.nlevels[3]), 3)
+d3_prop$X__5[pos+3] <- round(c(MA_prop$s.nlevels[4],
+                                   MA_prop_max_absES$s.nlevels[4],
+                                   MA_prop_max_meanES$s.nlevels[4],
+                                   MA_prop_B_ES$s.nlevels[4],
+                                   MA_prop_maxES$s.nlevels[4]), 3)
+
+write.csv(d3_prop, file = "./Tables/Table_MA_v3_prop.csv", row.names = F, na = "")
+```
+
+
+
+
+###################################################################
+# MR models with interaction between Task Type and Measurement Type
+###################################################################
+
+```{r Table MR_TT_MT_i}
+# loading table
+di <- read_excel("./Tables/Results_Tables_v2.xlsx", sheet = 2)
+di
+
+list.files("./Rdata/")
+# loading data
+load("./Rdata/MR_all_MeasureType_TaskType1.Rdata")
+load("./Rdata/MR_all_MeasureType_TaskType2.Rdata")
+load("./Rdata/MR_maxES_MeasureType_TaskType1.Rdata")
+load("./Rdata/MR_maxES_MeasureType_TaskType2.Rdata")
+load("./Rdata/MR_maxabsES_MeasureType_TaskType1.Rdata")
+load("./Rdata/MR_maxabsES_MeasureType_TaskType2.Rdata")
+load("./Rdata/MR_maxmeanES_MeasureType_TaskType1.Rdata")
+load("./Rdata/MR_maxmeanES_MeasureType_TaskType2.Rdata")
+
+## adding info to table
+# saving row position
+rm(pos)
+pos <- c(3:7,9:13,15:19,21:25)
+
+di$`Fixed effects`[pos] <- round(c(MR_all_MeasureType_TaskType1$b[1:2],
+                                   MR_all_MeasureType_TaskType2$b[1:2],
+                                   MR_all_MeasureType_TaskType1$b[4], 
+                                   MR_maxES_MeasureType_TaskType1$b[1:2],
+                                   MR_maxES_MeasureType_TaskType2$b[1:2],
+                                   MR_maxES_MeasureType_TaskType1$b[4], 
+                                   MR_maxabsES_MeasureType_TaskType1$b[1:2],
+                                   MR_maxabsES_MeasureType_TaskType2$b[1:2],
+                                   MR_maxabsES_MeasureType_TaskType1$b[4], 
+                                   MR_maxmeanES_MeasureType_TaskType1$b[1:2],
+                                   MR_maxmeanES_MeasureType_TaskType2$b[1:2],
+                                   MR_maxmeanES_MeasureType_TaskType1$b[4]), 
+                                 3)
+
+di$X__2[pos] <- round(c(MR_all_MeasureType_TaskType1$ci.lb[1:2],
+                                   MR_all_MeasureType_TaskType2$ci.lb[1:2],
+                                   MR_all_MeasureType_TaskType1$ci.lb[4], 
+                                   MR_maxES_MeasureType_TaskType1$ci.lb[1:2],
+                                   MR_maxES_MeasureType_TaskType2$ci.lb[1:2],
+                                   MR_maxES_MeasureType_TaskType1$ci.lb[4], 
+                                   MR_maxabsES_MeasureType_TaskType1$ci.lb[1:2],
+                                   MR_maxabsES_MeasureType_TaskType2$ci.lb[1:2],
+                                   MR_maxabsES_MeasureType_TaskType1$ci.lb[4], 
+                                   MR_maxmeanES_MeasureType_TaskType1$ci.lb[1:2],
+                                   MR_maxmeanES_MeasureType_TaskType2$ci.lb[1:2],
+                                   MR_maxmeanES_MeasureType_TaskType1$ci.lb[4]), 
+                                 3)
+
+di$X__3[pos] <-round(c(MR_all_MeasureType_TaskType1$ci.ub[1:2],
+                                   MR_all_MeasureType_TaskType2$ci.ub[1:2],
+                                   MR_all_MeasureType_TaskType1$ci.ub[4], 
+                                   MR_maxES_MeasureType_TaskType1$ci.ub[1:2],
+                                   MR_maxES_MeasureType_TaskType2$ci.ub[1:2],
+                                   MR_maxES_MeasureType_TaskType1$ci.ub[4], 
+                                   MR_maxabsES_MeasureType_TaskType1$ci.ub[1:2],
+                                   MR_maxabsES_MeasureType_TaskType2$ci.ub[1:2],
+                                   MR_maxabsES_MeasureType_TaskType1$ci.ub[4], 
+                                   MR_maxmeanES_MeasureType_TaskType1$ci.ub[1:2],
+                                   MR_maxmeanES_MeasureType_TaskType2$ci.ub[1:2],
+                                   MR_maxmeanES_MeasureType_TaskType1$ci.ub[4]), 
+                                 3)
+
+di$X__4[pos] <- c(table(dat$MeasureType, dat$TaskType)[1:2],
+                  table(dat$MeasureType, dat$TaskType)[3:4],
+                  sum(table(dat$MeasureType, dat$TaskType)), 
+                  table(dat_max_ES$MeasureType, dat_max_ES$TaskType)[1:2],
+                  table(dat_max_ES$MeasureType, dat_max_ES$TaskType)[3:4],
+                  sum(table(dat_max_ES$MeasureType, dat_max_ES$TaskType)), 
+                  table(dat_max_absES$MeasureType, dat_max_absES$TaskType)[1:2],
+                  table(dat_max_absES$MeasureType, dat_max_absES$TaskType)[3:4],
+                  sum(table(dat_max_absES$MeasureType, dat_max_absES$TaskType)), 
+                  table(dat_max_meanES$MeasureType, dat_max_meanES$TaskType)[1:2],
+                  table(dat_max_meanES$MeasureType, dat_max_meanES$TaskType)[3:4],
+                  sum(table(dat_max_meanES$MeasureType, dat_max_meanES$TaskType)) )
+
+
+write.csv(di, file = "./Tables/Table MR_TT_MT_i.csv", row.names = F, na = "")
+```
+
+
+
+
+
+#### Table S4   
+
+[MA with VCV only (no phylo)]
+
+Estimated effect sizes for meta-analytic (intercept-only) models for the difference between better and worse (*Hg*). 
+Positive values of *Hg* can be interpreted as 
+Effects with confidence intervals (CI) not crossing zero are indicated in bold. 
+Sigma^2^ for cohort_ID is the amount of variance attributed to cohort identity (N levels = number of cohorts), and  
+Sigma^2^ for comp_ID represents residual variance for each unit of analysis (N levels = number of comparisons).           
+
+```{r Table MA nophylo}
+# loading table
+d4 <- read_excel("./Tables/Results Tables.xlsx", sheet = 2)
+
+# loading data
+load("./Rdata/MA_all_random_VCV.Rdata")
+load("./Rdata/MA_prop_random_VCV.Rdata")
+load("./Rdata/MA_lat_random_VCV.Rdata")
+
+## adding info to table
+# saving row position
+pos <- c(3,7,11)
+
+d4$`Fixed effects`[pos] <- round(c(MA_all_random_VCV$b,
+                                   MA_prop_random_VCV$b,
+                                   MA_lat_random_VCV$b), 3)
+
+d4$X__2[pos] <- round(c(MA_all_random_VCV$ci.lb,
+                                   MA_prop_random_VCV$ci.lb,
+                                   MA_lat_random_VCV$ci.lb), 3)
+
+d4$X__3[pos] <- round(c(MA_all_random_VCV$ci.ub,
+                                   MA_prop_random_VCV$ci.ub,
+                                   MA_lat_random_VCV$ci.ub), 3)
+
+d4$`Random effects`[pos] <- round(c(MA_all_random_VCV$sigma2[1],
+                                   MA_prop_random_VCV$sigma2[1],
+                                   MA_lat_random_VCV$sigma2[1]), 3)
+d4$`Random effects`[pos + 1] <- round(c(MA_all_random_VCV$sigma2[2],
+                                   MA_prop_random_VCV$sigma2[2],
+                                   MA_lat_random_VCV$sigma2[2]), 3)
+d4$`Random effects`[pos + 2] <- round(c(MA_all_random_VCV$sigma2[3],
+                                   MA_prop_random_VCV$sigma2[3],
+                                   MA_lat_random_VCV$sigma2[3]), 3)
+
+
+d4$X__5[pos] <- round(c(MA_all_random_VCV$s.nlevels[1],
+                                   MA_prop_random_VCV$s.nlevels[1],
+                                   MA_lat_random_VCV$s.nlevels[1]), 3)
+d4$X__5[pos+1] <- round(c(MA_all_random_VCV$s.nlevels[2],
+                                   MA_prop_random_VCV$s.nlevels[2],
+                                   MA_lat_random_VCV$s.nlevels[2]), 3)
+d4$X__5[pos+2] <- round(c(MA_all_random_VCV$s.nlevels[3],
+                                   MA_prop_random_VCV$s.nlevels[3],
+                                   MA_lat_random_VCV$s.nlevels[3]), 3)
+
+
+write.csv(d4, file = "./Tables/Table MA no phylo.csv", row.names = F, na = "")
+```
+
+
+
+
+#### Table S5   
+
+[MR with species only (VCV + phylo)]
+
+Estimated effect sizes for meta-analytic (intercept-only) models for the difference between better and worse (*Hg*). 
+Negative *Hg* values can be interpreted as .
+Positive values of *Hg* can be interpreted as girls having higher grades than boys. Effects with confidence intervals (CI) not crossing zero are indicated in bold. 
+Sigma^2^ for cohort_ID is the amount of variance attributed to cohort identity (N levels = number of cohorts), and  
+Sigma^2^ for comp_ID represents residual variance for each unit of analysis (N levels = number of comparisons).           
+
+```{r Table MR species - all data}
+# loading table
+d5 <- read_excel("./Tables/Results_Tables_v2.xlsx", sheet = 3)
+# loading data
+load("./Rdata/MR_all_species.Rdata")
+# saving row position
+pos <- c(2:22)
+# adding info to table
+d5$`Species name`[pos] <- gsub("ScientificName","",rownames(summary(MR_all_species)$b))
+d5$`Fixed effects`[pos] <- round(MR_all_species$b, 3)
+d5$X__1[pos] <- round(MR_all_species$ci.lb, 3)
+d5$X__2[pos] <- round(MR_all_species$ci.ub, 3)
+write.csv(d5, file = "./Tables/Table_MR_species_all.csv", row.names = F, na = "")
+```
+
+```{r Table MR species - all data max_absES}
+# loading table
+d5_max_absES <- read_excel("./Tables/Results_Tables_v2.xlsx", sheet = 3)
+# loading data
+load("./Rdata/MR_all_species_max_absES.Rdata")
+# saving row position
+pos <- c(2:22)
+# adding info to table
+d5_max_absES$`Species name`[pos] <- gsub("ScientificName","",rownames(summary(MR_all_species_max_absES)$b))
+d5_max_absES$`Fixed effects`[pos] <- round(MR_all_species_max_absES$b, 3)
+d5_max_absES$X__1[pos] <- round(MR_all_species_max_absES$ci.lb, 3)
+d5_max_absES$X__2[pos] <- round(MR_all_species_max_absES$ci.ub, 3)
+write.csv(d5_max_absES, file = "./Tables/Table_MR_species_all_max_absES.csv", row.names = F, na = "")
+```
+
+### latency ###
+
+```{r Table MR species - latency data}
+# loading table
+d5_lat <- read_excel("./Tables/Results_Tables_v2.xlsx", sheet = 3)
+# loading data
+load("./Rdata/MR_lat_species.Rdata")
+# saving row position
+pos <- c(3, 6:7, 9:12, 14:15, 17:20)
+# adding info to table
+d5_lat$`Species name`[pos] <- gsub("ScientificName","",rownames(summary(MR_lat_species)$b))
+d5_lat$`Fixed effects`[pos] <- round(MR_lat_species$b, 3)
+d5_lat$X__1[pos] <- round(MR_lat_species$ci.lb, 3)
+d5_lat$X__2[pos] <- round(MR_lat_species$ci.ub, 3)
+write.csv(d5_lat, file = "./Tables/Table_MR_species_lat.csv", row.names = F, na = "")
+```
+
+```{r Table MR species - latency data max_absES}
+# loading table
+d5_lat_max_absES <- read_excel("./Tables/Results_Tables_v2.xlsx", sheet = 3)
+# loading data
+load("./Rdata/MR_lat_species_max_absES.Rdata")
+# saving row position
+pos <- c(3, 6:7, 9:12, 14:15, 17:20)
+# adding info to table
+d5_lat_max_absES$`Species name`[pos] <- gsub("ScientificName","",rownames(summary(MR_lat_species_max_absES)$b))
+d5_lat_max_absES$`Fixed effects`[pos] <- round(MR_lat_species_max_absES$b, 3)
+d5_lat_max_absES$X__1[pos] <- round(MR_lat_species_max_absES$ci.lb, 3)
+d5_lat_max_absES$X__2[pos] <- round(MR_lat_species_max_absES$ci.ub, 3)
+write.csv(d5_lat_max_absES, file = "./Tables/Table_MR_species_lat_max_absES.csv", row.names = F, na = "")
+```
+
+
+### proportion ###
+
+```{r Table MR species - proportion data}
+# loading table
+d5_prop <- read_excel("./Tables/Results_Tables_v2.xlsx", sheet = 3)
+# loading data
+load("./Rdata/MR_prop_species.Rdata")
+# saving row position
+pos <- c(2, 4:5, 8, 11:17, 19:22)
+# adding info to table
+d5_prop$`Species name`[pos] <- gsub("ScientificName","",rownames(summary(MR_prop_species)$b))
+d5_prop$`Fixed effects`[pos] <- round(MR_prop_species$b, 3)
+d5_prop$X__1[pos] <- round(MR_prop_species$ci.lb, 3)
+d5_prop$X__2[pos] <- round(MR_prop_species$ci.ub, 3)
+write.csv(d5_prop, file = "./Tables/Table_MR_species_prop.csv", row.names = F, na = "")
+```
+
+```{r Table MR species - proportion data max_absES}
+# loading table
+d5_prop_max_absES <- read_excel("./Tables/Results_Tables_v2.xlsx", sheet = 3)
+# loading data
+load("./Rdata/MR_prop_species_max_absES.Rdata")
+# saving row position
+pos <- c(2, 4:5, 8, 11:17, 19:22)
+# adding info to table
+d5_prop_max_absES$`Species name`[pos] <- gsub("ScientificName","",rownames(summary(MR_prop_species_max_absES)$b))
+d5_prop_max_absES$`Fixed effects`[pos] <- round(MR_prop_species_max_absES$b, 3)
+d5_prop_max_absES$X__1[pos] <- round(MR_prop_species_max_absES$ci.lb, 3)
+d5_prop_max_absES$X__2[pos] <- round(MR_prop_species_max_absES$ci.ub, 3)
+write.csv(d5_prop_max_absES, file = "./Tables/Table_MR_species_prop_max_absES.csv", row.names = F, na = "")
+```
+
+
+
+
+### Table S6   
+
+[MR univariate all categorical moderators (VCV + phylo)]
+
+Estimated effect sizes for meta-regression univariate  models for the categorical potential moderators of the magnitude of the difference between better and worse (*Hg*). 
+
+Negative *Hg* values can be interpreted as .
+Positive values of *Hg* can be interpreted as girls having higher grades than boys. Effects with confidence intervals (CI) not crossing zero are indicated in bold. 
+Sigma^2^ for cohort_ID is the amount of variance attributed to cohort identity (N levels = number of cohorts), and  
+Sigma^2^ for comp_ID represents residual variance for each unit of analysis (N levels = number of comparisons).           
+
+```{r Table MR univ all data}
+# loading table
+d6 <- read_excel("./Tables/Results_Tables_v2.xlsx", sheet = 4)
+
+# Fixed effects
+# Sex
+load("./Rdata/MR_all_sex1.Rdata")
+load("./Rdata/MR_all_sex.Rdata") 
+load("./Rdata/MR_all_sex2.Rdata") 
+# Age
+load("./Rdata/MR_all_age1.Rdata")
+load("./Rdata/MR_all_age.Rdata")
+# Source
+load("./Rdata/MR_all_source1.Rdata")
+load("./Rdata/MR_all_source.Rdata")
+# AffectManipCat
+load("./Rdata/MR_all_AffectManipCat1.Rdata")
+load("./Rdata/MR_all_AffectManipCat.Rdata")
+# AffectManipTiming
+load("./Rdata/MR_all_AffectManipTiming1.Rdata")
+load("./Rdata/MR_all_AffectManipTiming.Rdata")
+# ComparisonCategory
+load("./Rdata/MR_all_ComparisonCategory1.Rdata")
+load("./Rdata/MR_all_ComparisonCategory.Rdata")
+load("./Rdata/MR_all_ComparisonCategory2.Rdata")
+# MR_all_CueTypeCat *
+load("./Rdata/MR_all_CueTypeCat1.Rdata")
+load("./Rdata/MR_all_CueTypeCat.Rdata")
+load("./Rdata/MR_all_CueTypeCat2.Rdata")
+load("./Rdata/MR_all_CueTypeCat3.Rdata")
+load("./Rdata/MR_all_CueTypeCat4.Rdata")
+# FoodDeprived
+load("./Rdata/MR_all_FoodDeprived1.Rdata")
+load("./Rdata/MR_all_FoodDeprived.Rdata")
+# TaskType
+load("./Rdata/MR_all_TaskType1.Rdata")
+load("./Rdata/MR_all_TaskType.Rdata")
+# WithinBetween
+load("./Rdata/MR_all_WithinBetween1.Rdata")
+load("./Rdata/MR_all_WithinBetween.Rdata")
+# Automated
+load("./Rdata/MR_all_Automated1.Rdata")
+load("./Rdata/MR_all_Automated.Rdata")
+# Blind
+load("./Rdata/MR_all_Blind1.Rdata")
+load("./Rdata/MR_all_Blind.Rdata")
+# MeasureType
+load("./Rdata/MR_all_MeasureType1.Rdata")
+load("./Rdata/MR_all_MeasureType.Rdata")
+# ReinforcementCat
+load("./Rdata/MR_all_ReinforcementCat1.Rdata")
+load("./Rdata/MR_all_ReinforcementCat.Rdata")
+load("./Rdata/MR_all_ReinforcementCat2.Rdata")
+# AmbigReinforced
+load("./Rdata/MR_all_AmbigReinforced1.Rdata")
+load("./Rdata/MR_all_AmbigReinforced.Rdata")
+# MR_all_ScalePoint1
+load("./Rdata/MR_all_ScalePoint1.Rdata")
+load("./Rdata/MR_all_ScalePoint.Rdata")
+load("./Rdata/MR_all_ScalePoint2.Rdata")
+
+# adding info to table
+
+# saving row position
+pos <- c(3:8, 10:12, 14:16, 18:20, 22:24, 26:31, 33:47, 49:51, 53:55, 57:59, 61:63, 65:67, 69:71, 73:78, 80:82, 84:89)
+
+d6$`Fixed effects`[pos] <- round(c(
+  MR_all_sex1$b, 
+  MR_all_sex$b[2:3], 
+  MR_all_sex2$b[3], 
+  MR_all_age1$b, 
+  MR_all_age$b[2], 
+  MR_all_source1$b, 
+  MR_all_source$b[2], 
+  MR_all_AffectManipCat1$b, 
+  MR_all_AffectManipCat$b[2], 
+  MR_all_AffectManipTiming1$b, 
+  MR_all_AffectManipTiming$b[2], 
+  MR_all_ComparisonCategory1$b, 
+  MR_all_ComparisonCategory$b[2:3], 
+  MR_all_ComparisonCategory2$b[3], 
+  MR_all_CueTypeCat1$b, 
+  MR_all_CueTypeCat$b[2:5], 
+  MR_all_CueTypeCat2$b[3:5], 
+  MR_all_CueTypeCat3$b[4:5], 
+  MR_all_CueTypeCat4$b[5], 
+  MR_all_FoodDeprived1$b, 
+  MR_all_FoodDeprived$b[2], 
+  MR_all_TaskType1$b, 
+  MR_all_TaskType$b[2], 
+  MR_all_WithinBetween1$b, 
+  MR_all_WithinBetween$b[2], 
+  MR_all_Automated1$b, 
+  MR_all_Automated$b[2], 
+  MR_all_Blind1$b, 
+  MR_all_Blind$b[2], 
+  MR_all_MeasureType1$b, 
+  MR_all_MeasureType$b[2], 
+  MR_all_ReinforcementCat1$b, 
+  MR_all_ReinforcementCat$b[2:3], 
+  MR_all_ReinforcementCat2$b[3], 
+  MR_all_AmbigReinforced1$b, 
+  MR_all_AmbigReinforced$b[2], 
+  MR_all_ScalePoint1$b, 
+  MR_all_ScalePoint$b[2:3], 
+  MR_all_ScalePoint2$b[3]), 3)
+
+d6$X__1[pos] <- round(c(
+  MR_all_sex1$ci.lb, 
+  MR_all_sex$ci.lb[2:3], 
+  MR_all_sex2$ci.lb[3], 
+  MR_all_age1$ci.lb, 
+  MR_all_age$ci.lb[2], 
+  MR_all_source1$ci.lb, 
+  MR_all_source$ci.lb[2], 
+  MR_all_AffectManipCat1$ci.lb, 
+  MR_all_AffectManipCat$ci.lb[2], 
+  MR_all_AffectManipTiming1$ci.lb, 
+  MR_all_AffectManipTiming$ci.lb[2], 
+  MR_all_ComparisonCategory1$ci.lb, 
+  MR_all_ComparisonCategory$ci.lb[2:3], 
+  MR_all_ComparisonCategory2$ci.lb[3], 
+  MR_all_CueTypeCat1$ci.lb, 
+  MR_all_CueTypeCat$ci.lb[2:5], 
+  MR_all_CueTypeCat2$ci.lb[3:5], 
+  MR_all_CueTypeCat3$ci.lb[4:5], 
+  MR_all_CueTypeCat4$ci.lb[5], 
+  MR_all_FoodDeprived1$ci.lb, 
+  MR_all_FoodDeprived$ci.lb[2], 
+  MR_all_TaskType1$ci.lb, 
+  MR_all_TaskType$ci.lb[2], 
+  MR_all_WithinBetween1$ci.lb, 
+  MR_all_WithinBetween$ci.lb[2], 
+  MR_all_Automated1$ci.lb, 
+  MR_all_Automated$ci.lb[2], 
+  MR_all_Blind1$ci.lb, 
+  MR_all_Blind$ci.lb[2], 
+  MR_all_MeasureType1$ci.lb, 
+  MR_all_MeasureType$ci.lb[2], 
+  MR_all_ReinforcementCat1$ci.lb, 
+  MR_all_ReinforcementCat$ci.lb[2:3], 
+  MR_all_ReinforcementCat2$ci.lb[3], 
+  MR_all_AmbigReinforced1$ci.lb, 
+  MR_all_AmbigReinforced$ci.lb[2], 
+  MR_all_ScalePoint1$ci.lb, 
+  MR_all_ScalePoint$ci.lb[2:3], 
+  MR_all_ScalePoint2$ci.lb[3]), 3)
+
+d6$X__2[pos] <- round(c(
+  MR_all_sex1$ci.ub, 
+  MR_all_sex$ci.ub[2:3], 
+  MR_all_sex2$ci.ub[3], 
+  MR_all_age1$ci.ub, 
+  MR_all_age$ci.ub[2], 
+  MR_all_source1$ci.ub, 
+  MR_all_source$ci.ub[2], 
+  MR_all_AffectManipCat1$ci.ub, 
+  MR_all_AffectManipCat$ci.ub[2], 
+  MR_all_AffectManipTiming1$ci.ub, 
+  MR_all_AffectManipTiming$ci.ub[2], 
+  MR_all_ComparisonCategory1$ci.ub, 
+  MR_all_ComparisonCategory$ci.ub[2:3], 
+  MR_all_ComparisonCategory2$ci.ub[3], 
+  MR_all_CueTypeCat1$ci.ub, 
+  MR_all_CueTypeCat$ci.ub[2:5], 
+  MR_all_CueTypeCat2$ci.ub[3:5], 
+  MR_all_CueTypeCat3$ci.ub[4:5], 
+  MR_all_CueTypeCat4$ci.ub[5], 
+  MR_all_FoodDeprived1$ci.ub, 
+  MR_all_FoodDeprived$ci.ub[2], 
+  MR_all_TaskType1$ci.ub, 
+  MR_all_TaskType$ci.ub[2], 
+  MR_all_WithinBetween1$ci.ub, 
+  MR_all_WithinBetween$ci.ub[2], 
+  MR_all_Automated1$ci.ub, 
+  MR_all_Automated$ci.ub[2], 
+  MR_all_Blind1$ci.ub, 
+  MR_all_Blind$ci.ub[2], 
+  MR_all_MeasureType1$ci.ub, 
+  MR_all_MeasureType$ci.ub[2], 
+  MR_all_ReinforcementCat1$ci.ub, 
+  MR_all_ReinforcementCat$ci.ub[2:3], 
+  MR_all_ReinforcementCat2$ci.ub[3], 
+  MR_all_AmbigReinforced1$ci.ub, 
+  MR_all_AmbigReinforced$ci.ub[2], 
+  MR_all_ScalePoint1$ci.ub, 
+  MR_all_ScalePoint$ci.ub[2:3], 
+  MR_all_ScalePoint2$ci.ub[3]), 3)
+
+write.csv(d6, file = "./Tables/Table_MR_univ_all.csv", row.names = F, na = "")
+```
+
+
+```{r Table MR univ all max_absES}
+# loading table
+d6_max_absES <- read_excel("./Tables/Results_Tables_v2.xlsx", sheet = 4)
+
+# Fixed effects
+# Sex
+load("./Rdata/MR_all_sex1_max_absES.Rdata")
+load("./Rdata/MR_all_sex_max_absES.Rdata") 
+load("./Rdata/MR_all_sex2_max_absES.Rdata") 
+# Age
+load("./Rdata/MR_all_age1_max_absES.Rdata")
+load("./Rdata/MR_all_age_max_absES.Rdata")
+# Source
+load("./Rdata/MR_all_source1_max_absES.Rdata")
+load("./Rdata/MR_all_source_max_absES.Rdata")
+# AffectManipCat
+load("./Rdata/MR_all_AffectManipCat1_max_absES.Rdata")
+load("./Rdata/MR_all_AffectManipCat_max_absES.Rdata")
+# AffectManipTiming
+load("./Rdata/MR_all_AffectManipTiming1_max_absES.Rdata")
+load("./Rdata/MR_all_AffectManipTiming_max_absES.Rdata")
+# ComparisonCategory
+load("./Rdata/MR_all_ComparisonCategory1_max_absES.Rdata")
+load("./Rdata/MR_all_ComparisonCategory_max_absES.Rdata")
+load("./Rdata/MR_all_ComparisonCategory2_max_absES.Rdata")
+# MR_all_CueTypeCat *
+load("./Rdata/MR_all_CueTypeCat1_max_absES.Rdata")
+load("./Rdata/MR_all_CueTypeCat_max_absES.Rdata")
+load("./Rdata/MR_all_CueTypeCat2_max_absES.Rdata")
+load("./Rdata/MR_all_CueTypeCat3_max_absES.Rdata")
+load("./Rdata/MR_all_CueTypeCat4_max_absES.Rdata")
+# FoodDeprived
+load("./Rdata/MR_all_FoodDeprived1_max_absES.Rdata")
+load("./Rdata/MR_all_FoodDeprived_max_absES.Rdata")
+# TaskType
+load("./Rdata/MR_all_TaskType1_max_absES.Rdata")
+load("./Rdata/MR_all_TaskType_max_absES.Rdata")
+# WithinBetween
+load("./Rdata/MR_all_WithinBetween1_max_absES.Rdata")
+load("./Rdata/MR_all_WithinBetween_max_absES.Rdata")
+# Automated
+load("./Rdata/MR_all_Automated1_max_absES.Rdata")
+load("./Rdata/MR_all_Automated_max_absES.Rdata")
+# Blind
+load("./Rdata/MR_all_Blind1_max_absES.Rdata")
+load("./Rdata/MR_all_Blind_max_absES.Rdata")
+# MeasureType
+load("./Rdata/MR_all_MeasureType1_max_absES.Rdata")
+load("./Rdata/MR_all_MeasureType_max_absES.Rdata")
+# ReinforcementCat
+load("./Rdata/MR_all_ReinforcementCat1_max_absES.Rdata")
+load("./Rdata/MR_all_ReinforcementCat_max_absES.Rdata")
+load("./Rdata/MR_all_ReinforcementCat2_max_absES.Rdata")
+# AmbigReinforced
+load("./Rdata/MR_all_AmbigReinforced1_max_absES.Rdata")
+load("./Rdata/MR_all_AmbigReinforced_max_absES.Rdata")
+# MR_all_ScalePoint1
+load("./Rdata/MR_all_ScalePoint1_max_absES.Rdata")
+load("./Rdata/MR_all_ScalePoint_max_absES.Rdata")
+load("./Rdata/MR_all_ScalePoint2_max_absES.Rdata")
+
+# adding info to table
+
+# saving row position
+pos <- c(3:8, 10:12, 14:16, 18:20, 22:24, 26:31, 33:47, 49:51, 53:55, 57:59, 61:63, 65:67, 69:71, 73:78, 80:82, 84:89)
+
+d6_max_absES$`Fixed effects`[pos] <- round(c(
+  MR_all_sex1_max_absES$b, 
+  MR_all_sex_max_absES$b[2:3], 
+  MR_all_sex2_max_absES$b[3], 
+  MR_all_age1_max_absES$b, 
+  MR_all_age_max_absES$b[2], 
+  MR_all_source1_max_absES$b, 
+  MR_all_source_max_absES$b[2], 
+  MR_all_AffectManipCat1_max_absES$b, 
+  MR_all_AffectManipCat_max_absES$b[2], 
+  MR_all_AffectManipTiming1_max_absES$b, 
+  MR_all_AffectManipTiming_max_absES$b[2], 
+  MR_all_ComparisonCategory1_max_absES$b, 
+  MR_all_ComparisonCategory_max_absES$b[2:3], 
+  MR_all_ComparisonCategory2_max_absES$b[3], 
+  MR_all_CueTypeCat1_max_absES$b, 
+  MR_all_CueTypeCat_max_absES$b[2:5], 
+  MR_all_CueTypeCat2_max_absES$b[3:5], 
+  MR_all_CueTypeCat3_max_absES$b[4:5], 
+  MR_all_CueTypeCat4_max_absES$b[5], 
+  MR_all_FoodDeprived1_max_absES$b, 
+  MR_all_FoodDeprived_max_absES$b[2], 
+  MR_all_TaskType1_max_absES$b, 
+  MR_all_TaskType_max_absES$b[2], 
+  MR_all_WithinBetween1_max_absES$b, 
+  MR_all_WithinBetween_max_absES$b[2], 
+  MR_all_Automated1_max_absES$b, 
+  MR_all_Automated_max_absES$b[2], 
+  MR_all_Blind1_max_absES$b, 
+  MR_all_Blind_max_absES$b[2], 
+  MR_all_MeasureType1_max_absES$b, 
+  MR_all_MeasureType_max_absES$b[2], 
+  MR_all_ReinforcementCat1_max_absES$b, 
+  MR_all_ReinforcementCat_max_absES$b[2:3], 
+  MR_all_ReinforcementCat2_max_absES$b[3], 
+  MR_all_AmbigReinforced1_max_absES$b, 
+  MR_all_AmbigReinforced_max_absES$b[2], 
+  MR_all_ScalePoint1_max_absES$b, 
+  MR_all_ScalePoint_max_absES$b[2:3], 
+  MR_all_ScalePoint2_max_absES$b[3]), 3)
+
+d6_max_absES$X__1[pos] <- round(c(
+  MR_all_sex1_max_absES$ci.lb, 
+  MR_all_sex_max_absES$ci.lb[2:3], 
+  MR_all_sex2_max_absES$ci.lb[3], 
+  MR_all_age1_max_absES$ci.lb, 
+  MR_all_age_max_absES$ci.lb[2], 
+  MR_all_source1_max_absES$ci.lb, 
+  MR_all_source_max_absES$ci.lb[2], 
+  MR_all_AffectManipCat1_max_absES$ci.lb, 
+  MR_all_AffectManipCat_max_absES$ci.lb[2], 
+  MR_all_AffectManipTiming1_max_absES$ci.lb, 
+  MR_all_AffectManipTiming_max_absES$ci.lb[2], 
+  MR_all_ComparisonCategory1_max_absES$ci.lb, 
+  MR_all_ComparisonCategory_max_absES$ci.lb[2:3], 
+  MR_all_ComparisonCategory2_max_absES$ci.lb[3], 
+  MR_all_CueTypeCat1_max_absES$ci.lb, 
+  MR_all_CueTypeCat_max_absES$ci.lb[2:5], 
+  MR_all_CueTypeCat2_max_absES$ci.lb[3:5], 
+  MR_all_CueTypeCat3_max_absES$ci.lb[4:5], 
+  MR_all_CueTypeCat4_max_absES$ci.lb[5], 
+  MR_all_FoodDeprived1_max_absES$ci.lb, 
+  MR_all_FoodDeprived_max_absES$ci.lb[2], 
+  MR_all_TaskType1_max_absES$ci.lb, 
+  MR_all_TaskType_max_absES$ci.lb[2], 
+  MR_all_WithinBetween1_max_absES$ci.lb, 
+  MR_all_WithinBetween_max_absES$ci.lb[2], 
+  MR_all_Automated1_max_absES$ci.lb, 
+  MR_all_Automated_max_absES$ci.lb[2], 
+  MR_all_Blind1_max_absES$ci.lb, 
+  MR_all_Blind_max_absES$ci.lb[2], 
+  MR_all_MeasureType1_max_absES$ci.lb, 
+  MR_all_MeasureType_max_absES$ci.lb[2], 
+  MR_all_ReinforcementCat1_max_absES$ci.lb, 
+  MR_all_ReinforcementCat_max_absES$ci.lb[2:3], 
+  MR_all_ReinforcementCat2_max_absES$ci.lb[3], 
+  MR_all_AmbigReinforced1_max_absES$ci.lb, 
+  MR_all_AmbigReinforced_max_absES$ci.lb[2], 
+  MR_all_ScalePoint1_max_absES$ci.lb, 
+  MR_all_ScalePoint_max_absES$ci.lb[2:3], 
+  MR_all_ScalePoint2_max_absES$ci.lb[3]), 3)
+
+d6_max_absES$X__2[pos] <- round(c(
+  MR_all_sex1_max_absES$ci.ub, 
+  MR_all_sex_max_absES$ci.ub[2:3], 
+  MR_all_sex2_max_absES$ci.ub[3], 
+  MR_all_age1_max_absES$ci.ub, 
+  MR_all_age_max_absES$ci.ub[2], 
+  MR_all_source1_max_absES$ci.ub, 
+  MR_all_source_max_absES$ci.ub[2], 
+  MR_all_AffectManipCat1_max_absES$ci.ub, 
+  MR_all_AffectManipCat_max_absES$ci.ub[2], 
+  MR_all_AffectManipTiming1_max_absES$ci.ub, 
+  MR_all_AffectManipTiming_max_absES$ci.ub[2], 
+  MR_all_ComparisonCategory1_max_absES$ci.ub, 
+  MR_all_ComparisonCategory_max_absES$ci.ub[2:3], 
+  MR_all_ComparisonCategory2_max_absES$ci.ub[3], 
+  MR_all_CueTypeCat1_max_absES$ci.ub, 
+  MR_all_CueTypeCat_max_absES$ci.ub[2:5], 
+  MR_all_CueTypeCat2_max_absES$ci.ub[3:5], 
+  MR_all_CueTypeCat3_max_absES$ci.ub[4:5], 
+  MR_all_CueTypeCat4_max_absES$ci.ub[5], 
+  MR_all_FoodDeprived1_max_absES$ci.ub, 
+  MR_all_FoodDeprived_max_absES$ci.ub[2], 
+  MR_all_TaskType1_max_absES$ci.ub, 
+  MR_all_TaskType_max_absES$ci.ub[2], 
+  MR_all_WithinBetween1_max_absES$ci.ub, 
+  MR_all_WithinBetween_max_absES$ci.ub[2], 
+  MR_all_Automated1_max_absES$ci.ub, 
+  MR_all_Automated_max_absES$ci.ub[2], 
+  MR_all_Blind1_max_absES$ci.ub, 
+  MR_all_Blind_max_absES$ci.ub[2], 
+  MR_all_MeasureType1_max_absES$ci.ub, 
+  MR_all_MeasureType_max_absES$ci.ub[2], 
+  MR_all_ReinforcementCat1_max_absES$ci.ub, 
+  MR_all_ReinforcementCat_max_absES$ci.ub[2:3], 
+  MR_all_ReinforcementCat2_max_absES$ci.ub[3], 
+  MR_all_AmbigReinforced1_max_absES$ci.ub, 
+  MR_all_AmbigReinforced_max_absES$ci.ub[2], 
+  MR_all_ScalePoint1_max_absES$ci.ub, 
+  MR_all_ScalePoint_max_absES$ci.ub[2:3], 
+  MR_all_ScalePoint2_max_absES$ci.ub[3]), 3)
+
+write.csv(d6_max_absES, file = "./Tables/Table_MR_univ_all_max_absES.csv", row.names = F, na = "")
+```
+
+
+### latency subsets ###
+
+```{r Table MR univ latency data}
+# loading table
+d6_lat <- read_excel("./Tables/Results_Tables_v2.xlsx", sheet = 4)
+
+# Fixed effects
+# Sex
+load("./Rdata/MR_lat_sex1.Rdata")
+load("./Rdata/MR_lat_sex.Rdata") 
+load("./Rdata/MR_lat_sex2.Rdata") 
+# Age
+load("./Rdata/MR_lat_age1.Rdata")
+load("./Rdata/MR_lat_age.Rdata")
+# Source
+load("./Rdata/MR_lat_source1.Rdata")
+load("./Rdata/MR_lat_source.Rdata")
+# AffectManipCat
+load("./Rdata/MR_lat_AffectManipCat1.Rdata")
+load("./Rdata/MR_lat_AffectManipCat.Rdata")
+# AffectManipTiming
+load("./Rdata/MR_lat_AffectManipTiming1.Rdata")
+load("./Rdata/MR_lat_AffectManipTiming.Rdata")
+# ComparisonCategory
+load("./Rdata/MR_lat_ComparisonCategory1.Rdata")
+load("./Rdata/MR_lat_ComparisonCategory.Rdata")
+load("./Rdata/MR_lat_ComparisonCategory2.Rdata")
+# MR_lat_CueTypeCat *
+load("./Rdata/MR_lat_CueTypeCat1.Rdata")
+load("./Rdata/MR_lat_CueTypeCat.Rdata")
+    #load("./Rdata/MR_lat_CueTypeCat2.Rdata") #no such model - no olfactory cues in the subset
+load("./Rdata/MR_lat_CueTypeCat3.Rdata")
+load("./Rdata/MR_lat_CueTypeCat4.Rdata")
+# FoodDeprived
+load("./Rdata/MR_lat_FoodDeprived1.Rdata")
+load("./Rdata/MR_lat_FoodDeprived.Rdata")
+# TaskType
+load("./Rdata/MR_lat_TaskType1.Rdata")
+load("./Rdata/MR_lat_TaskType.Rdata")
+# WithinBetween
+load("./Rdata/MR_lat_WithinBetween1.Rdata")
+load("./Rdata/MR_lat_WithinBetween.Rdata")
+# Automated
+load("./Rdata/MR_lat_Automated1.Rdata")
+load("./Rdata/MR_lat_Automated.Rdata")
+# Blind
+load("./Rdata/MR_lat_Blind1.Rdata")
+load("./Rdata/MR_lat_Blind.Rdata")
+# ReinforcementCat
+load("./Rdata/MR_lat_ReinforcementCat1.Rdata")
+load("./Rdata/MR_lat_ReinforcementCat.Rdata")
+load("./Rdata/MR_lat_ReinforcementCat2.Rdata")
+# AmbigReinforced
+load("./Rdata/MR_lat_AmbigReinforced1.Rdata")
+load("./Rdata/MR_lat_AmbigReinforced.Rdata")
+# MR_lat_ScalePoint1
+load("./Rdata/MR_lat_ScalePoint1.Rdata")
+load("./Rdata/MR_lat_ScalePoint.Rdata")
+load("./Rdata/MR_lat_ScalePoint2.Rdata")
+
+# adding info to table
+
+# saving row position
+pos <- c(3:8, 10:12, 14:16, 18:20, 22:24, 26:31, 33, 35:37, 39:41, 45:47, 49:51, 53:55, 57:59, 61:63, 65:67, 73:78, 80:82, 84:89)
+
+d6_lat$`Fixed effects`[pos] <- round(c(
+  MR_lat_sex1$b, 
+  MR_lat_sex$b[2:3], 
+  MR_lat_sex2$b[3], 
+  MR_lat_age1$b, 
+  MR_lat_age$b[2], 
+  MR_lat_source1$b, 
+  MR_lat_source$b[2], 
+  MR_lat_AffectManipCat1$b, 
+  MR_lat_AffectManipCat$b[2], 
+  MR_lat_AffectManipTiming1$b, 
+  MR_lat_AffectManipTiming$b[2], 
+  MR_lat_ComparisonCategory1$b, 
+  MR_lat_ComparisonCategory$b[2:3],
+  MR_lat_ComparisonCategory2$b[3], 
+  MR_lat_CueTypeCat1$b, 
+  MR_lat_CueTypeCat$b[2:4], 
+  MR_lat_CueTypeCat3$b[3:4], 
+  MR_lat_CueTypeCat4$b[4], 
+  MR_lat_FoodDeprived1$b, 
+  MR_lat_FoodDeprived$b[2], 
+  MR_lat_TaskType1$b, 
+  MR_lat_TaskType$b[2], 
+  MR_lat_WithinBetween1$b, 
+  MR_lat_WithinBetween$b[2], 
+  MR_lat_Automated1$b, 
+  MR_lat_Automated$b[2], 
+  MR_lat_Blind1$b, 
+  MR_lat_Blind$b[2],
+  MR_lat_ReinforcementCat1$b, 
+  MR_lat_ReinforcementCat$b[2:3], 
+  MR_lat_ReinforcementCat2$b[3], 
+  MR_lat_AmbigReinforced1$b, 
+  MR_lat_AmbigReinforced$b[2], 
+  MR_lat_ScalePoint1$b, 
+  MR_lat_ScalePoint$b[2:3], 
+  MR_lat_ScalePoint2$b[3]), 3)
+
+d6_lat$X__1[pos] <- round(c(
+  MR_lat_sex1$ci.lb, 
+  MR_lat_sex$ci.lb[2:3], 
+  MR_lat_sex2$ci.lb[3], 
+  MR_lat_age1$ci.lb, 
+  MR_lat_age$ci.lb[2], 
+  MR_lat_source1$ci.lb, 
+  MR_lat_source$ci.lb[2], 
+  MR_lat_AffectManipCat1$ci.lb, 
+  MR_lat_AffectManipCat$ci.lb[2], 
+  MR_lat_AffectManipTiming1$ci.lb, 
+  MR_lat_AffectManipTiming$ci.lb[2], 
+  MR_lat_ComparisonCategory1$ci.lb, 
+  MR_lat_ComparisonCategory$ci.lb[2:3],
+  MR_lat_ComparisonCategory2$ci.lb[3], 
+  MR_lat_CueTypeCat1$ci.lb, 
+  MR_lat_CueTypeCat$ci.lb[2:4], 
+  MR_lat_CueTypeCat3$ci.lb[3:4], 
+  MR_lat_CueTypeCat4$ci.lb[4], 
+  MR_lat_FoodDeprived1$ci.lb, 
+  MR_lat_FoodDeprived$ci.lb[2], 
+  MR_lat_TaskType1$ci.lb, 
+  MR_lat_TaskType$ci.lb[2], 
+  MR_lat_WithinBetween1$ci.lb, 
+  MR_lat_WithinBetween$ci.lb[2], 
+  MR_lat_Automated1$ci.lb, 
+  MR_lat_Automated$ci.lb[2], 
+  MR_lat_Blind1$ci.lb, 
+  MR_lat_Blind$ci.lb[2],
+  MR_lat_ReinforcementCat1$ci.lb, 
+  MR_lat_ReinforcementCat$ci.lb[2:3], 
+  MR_lat_ReinforcementCat2$ci.lb[3], 
+  MR_lat_AmbigReinforced1$ci.lb, 
+  MR_lat_AmbigReinforced$ci.lb[2], 
+  MR_lat_ScalePoint1$ci.lb, 
+  MR_lat_ScalePoint$ci.lb[2:3], 
+  MR_lat_ScalePoint2$ci.lb[3]), 3)
+
+d6_lat$X__2[pos] <- round(c(
+  MR_lat_sex1$ci.ub, 
+  MR_lat_sex$ci.ub[2:3], 
+  MR_lat_sex2$ci.ub[3], 
+  MR_lat_age1$ci.ub, 
+  MR_lat_age$ci.ub[2], 
+  MR_lat_source1$ci.ub, 
+  MR_lat_source$ci.ub[2], 
+  MR_lat_AffectManipCat1$ci.ub, 
+  MR_lat_AffectManipCat$ci.ub[2], 
+  MR_lat_AffectManipTiming1$ci.ub, 
+  MR_lat_AffectManipTiming$ci.ub[2], 
+  MR_lat_ComparisonCategory1$ci.ub, 
+  MR_lat_ComparisonCategory$ci.ub[2:3],
+  MR_lat_ComparisonCategory2$ci.ub[3], 
+  MR_lat_CueTypeCat1$ci.ub, 
+  MR_lat_CueTypeCat$ci.ub[2:4], 
+  MR_lat_CueTypeCat3$ci.ub[3:4], 
+  MR_lat_CueTypeCat4$ci.ub[4], 
+  MR_lat_FoodDeprived1$ci.ub, 
+  MR_lat_FoodDeprived$ci.ub[2], 
+  MR_lat_TaskType1$ci.ub, 
+  MR_lat_TaskType$ci.ub[2], 
+  MR_lat_WithinBetween1$ci.ub, 
+  MR_lat_WithinBetween$ci.ub[2], 
+  MR_lat_Automated1$ci.ub, 
+  MR_lat_Automated$ci.ub[2], 
+  MR_lat_Blind1$ci.ub, 
+  MR_lat_Blind$ci.ub[2],
+  MR_lat_ReinforcementCat1$ci.ub, 
+  MR_lat_ReinforcementCat$ci.ub[2:3], 
+  MR_lat_ReinforcementCat2$ci.ub[3], 
+  MR_lat_AmbigReinforced1$ci.ub, 
+  MR_lat_AmbigReinforced$ci.ub[2], 
+  MR_lat_ScalePoint1$ci.ub, 
+  MR_lat_ScalePoint$ci.ub[2:3], 
+  MR_lat_ScalePoint2$ci.ub[3]), 3)
+write.csv(d6_lat, file = "./Tables/Table_MR_univ_lat.csv", row.names = F, na = "")
+```
+
+
+```{r Table MR univ latency data max_absES}
+# loading table
+d6_lat_max_absES <- read_excel("./Tables/Results_Tables_v2.xlsx", sheet = 4)
+
+# Fixed effects
+# Sex
+load("./Rdata/MR_lat_sex1_max_absES.Rdata")
+load("./Rdata/MR_lat_sex_max_absES.Rdata") 
+load("./Rdata/MR_lat_sex2_max_absES.Rdata") 
+# Age
+load("./Rdata/MR_lat_age1_max_absES.Rdata")
+load("./Rdata/MR_lat_age_max_absES.Rdata")
+# Source
+load("./Rdata/MR_lat_source1_max_absES.Rdata")
+load("./Rdata/MR_lat_source_max_absES.Rdata")
+# AffectManipCat
+load("./Rdata/MR_lat_AffectManipCat1_max_absES.Rdata")
+load("./Rdata/MR_lat_AffectManipCat_max_absES.Rdata")
+# AffectManipTiming
+load("./Rdata/MR_lat_AffectManipTiming1_max_absES.Rdata")
+load("./Rdata/MR_lat_AffectManipTiming_max_absES.Rdata")
+# ComparisonCategory
+load("./Rdata/MR_lat_ComparisonCategory1_max_absES.Rdata")
+load("./Rdata/MR_lat_ComparisonCategory_max_absES.Rdata")
+load("./Rdata/MR_lat_ComparisonCategory2_max_absES.Rdata")
+# MR_lat_CueTypeCat *
+load("./Rdata/MR_lat_CueTypeCat1_max_absES.Rdata")
+load("./Rdata/MR_lat_CueTypeCat_max_absES.Rdata")
+    #load("./Rdata/MR_lat_CueTypeCat2_max_absES.Rdata") #no such model - no olfactory cues in the subset
+load("./Rdata/MR_lat_CueTypeCat3_max_absES.Rdata")
+load("./Rdata/MR_lat_CueTypeCat4_max_absES.Rdata")
+# FoodDeprived
+load("./Rdata/MR_lat_FoodDeprived1_max_absES.Rdata")
+load("./Rdata/MR_lat_FoodDeprived_max_absES.Rdata")
+# TaskType
+load("./Rdata/MR_lat_TaskType1_max_absES.Rdata")
+load("./Rdata/MR_lat_TaskType_max_absES.Rdata")
+# WithinBetween
+load("./Rdata/MR_lat_WithinBetween1_max_absES.Rdata")
+load("./Rdata/MR_lat_WithinBetween_max_absES.Rdata")
+# Automated
+load("./Rdata/MR_lat_Automated1_max_absES.Rdata")
+load("./Rdata/MR_lat_Automated_max_absES.Rdata")
+# Blind
+load("./Rdata/MR_lat_Blind1_max_absES.Rdata")
+load("./Rdata/MR_lat_Blind_max_absES.Rdata")
+# ReinforcementCat
+load("./Rdata/MR_lat_ReinforcementCat1_max_absES.Rdata")
+load("./Rdata/MR_lat_ReinforcementCat_max_absES.Rdata")
+load("./Rdata/MR_lat_ReinforcementCat2_max_absES.Rdata")
+# AmbigReinforced
+load("./Rdata/MR_lat_AmbigReinforced1_max_absES.Rdata")
+load("./Rdata/MR_lat_AmbigReinforced_max_absES.Rdata")
+# MR_lat_ScalePoint1
+load("./Rdata/MR_lat_ScalePoint1_max_absES.Rdata")
+load("./Rdata/MR_lat_ScalePoint_max_absES.Rdata")
+load("./Rdata/MR_lat_ScalePoint2_max_absES.Rdata")
+
+# adding info to table
+
+# saving row position
+pos <- c(3:8, 10:12, 14:16, 18:20, 22:24, 26:31, 33, 35:37, 39:41, 45:47, 49:51, 53:55, 57:59, 61:63, 65:67, 73:78, 80:82, 84:89)
+
+d6_lat_max_absES$`Fixed effects`[pos] <- round(c(
+  MR_lat_sex1_max_absES$b, 
+  MR_lat_sex_max_absES$b[2:3], 
+  MR_lat_sex2_max_absES$b[3], 
+  MR_lat_age1_max_absES$b, 
+  MR_lat_age_max_absES$b[2], 
+  MR_lat_source1_max_absES$b, 
+  MR_lat_source_max_absES$b[2], 
+  MR_lat_AffectManipCat1_max_absES$b, 
+  MR_lat_AffectManipCat_max_absES$b[2], 
+  MR_lat_AffectManipTiming1_max_absES$b, 
+  MR_lat_AffectManipTiming_max_absES$b[2], 
+  MR_lat_ComparisonCategory1_max_absES$b, 
+  MR_lat_ComparisonCategory_max_absES$b[2:3],
+  MR_lat_ComparisonCategory2_max_absES$b[3], 
+  MR_lat_CueTypeCat1_max_absES$b, 
+  MR_lat_CueTypeCat_max_absES$b[2:4], 
+  MR_lat_CueTypeCat3_max_absES$b[3:4], 
+  MR_lat_CueTypeCat4_max_absES$b[4], 
+  MR_lat_FoodDeprived1_max_absES$b, 
+  MR_lat_FoodDeprived_max_absES$b[2], 
+  MR_lat_TaskType1_max_absES$b, 
+  MR_lat_TaskType_max_absES$b[2], 
+  MR_lat_WithinBetween1_max_absES$b, 
+  MR_lat_WithinBetween_max_absES$b[2], 
+  MR_lat_Automated1_max_absES$b, 
+  MR_lat_Automated_max_absES$b[2], 
+  MR_lat_Blind1_max_absES$b, 
+  MR_lat_Blind_max_absES$b[2],
+  MR_lat_ReinforcementCat1_max_absES$b, 
+  MR_lat_ReinforcementCat_max_absES$b[2:3], 
+  MR_lat_ReinforcementCat2_max_absES$b[3], 
+  MR_lat_AmbigReinforced1_max_absES$b, 
+  MR_lat_AmbigReinforced_max_absES$b[2], 
+  MR_lat_ScalePoint1_max_absES$b, 
+  MR_lat_ScalePoint_max_absES$b[2:3], 
+  MR_lat_ScalePoint2_max_absES$b[3]), 3)
+
+d6_lat_max_absES$X__1[pos] <- round(c(
+  MR_lat_sex1_max_absES$ci.lb, 
+  MR_lat_sex_max_absES$ci.lb[2:3], 
+  MR_lat_sex2_max_absES$ci.lb[3], 
+  MR_lat_age1_max_absES$ci.lb, 
+  MR_lat_age_max_absES$ci.lb[2], 
+  MR_lat_source1_max_absES$ci.lb, 
+  MR_lat_source_max_absES$ci.lb[2], 
+  MR_lat_AffectManipCat1_max_absES$ci.lb, 
+  MR_lat_AffectManipCat_max_absES$ci.lb[2], 
+  MR_lat_AffectManipTiming1_max_absES$ci.lb, 
+  MR_lat_AffectManipTiming_max_absES$ci.lb[2], 
+  MR_lat_ComparisonCategory1_max_absES$ci.lb, 
+  MR_lat_ComparisonCategory_max_absES$ci.lb[2:3],
+  MR_lat_ComparisonCategory2_max_absES$ci.lb[3], 
+  MR_lat_CueTypeCat1_max_absES$ci.lb, 
+  MR_lat_CueTypeCat_max_absES$ci.lb[2:4], 
+  MR_lat_CueTypeCat3_max_absES$ci.lb[3:4], 
+  MR_lat_CueTypeCat4_max_absES$ci.lb[4], 
+  MR_lat_FoodDeprived1_max_absES$ci.lb, 
+  MR_lat_FoodDeprived_max_absES$ci.lb[2], 
+  MR_lat_TaskType1_max_absES$ci.lb, 
+  MR_lat_TaskType_max_absES$ci.lb[2], 
+  MR_lat_WithinBetween1_max_absES$ci.lb, 
+  MR_lat_WithinBetween_max_absES$ci.lb[2], 
+  MR_lat_Automated1_max_absES$ci.lb, 
+  MR_lat_Automated_max_absES$ci.lb[2], 
+  MR_lat_Blind1_max_absES$ci.lb, 
+  MR_lat_Blind_max_absES$ci.lb[2],
+  MR_lat_ReinforcementCat1_max_absES$ci.lb, 
+  MR_lat_ReinforcementCat_max_absES$ci.lb[2:3], 
+  MR_lat_ReinforcementCat2_max_absES$ci.lb[3], 
+  MR_lat_AmbigReinforced1_max_absES$ci.lb, 
+  MR_lat_AmbigReinforced_max_absES$ci.lb[2], 
+  MR_lat_ScalePoint1_max_absES$ci.lb, 
+  MR_lat_ScalePoint_max_absES$ci.lb[2:3], 
+  MR_lat_ScalePoint2_max_absES$ci.lb[3]), 3)
+
+d6_lat_max_absES$X__2[pos] <- round(c(
+  MR_lat_sex1_max_absES$ci.ub, 
+  MR_lat_sex_max_absES$ci.ub[2:3], 
+  MR_lat_sex2_max_absES$ci.ub[3], 
+  MR_lat_age1_max_absES$ci.ub, 
+  MR_lat_age_max_absES$ci.ub[2], 
+  MR_lat_source1_max_absES$ci.ub, 
+  MR_lat_source_max_absES$ci.ub[2], 
+  MR_lat_AffectManipCat1_max_absES$ci.ub, 
+  MR_lat_AffectManipCat_max_absES$ci.ub[2], 
+  MR_lat_AffectManipTiming1_max_absES$ci.ub, 
+  MR_lat_AffectManipTiming_max_absES$ci.ub[2], 
+  MR_lat_ComparisonCategory1_max_absES$ci.ub, 
+  MR_lat_ComparisonCategory_max_absES$ci.ub[2:3],
+  MR_lat_ComparisonCategory2_max_absES$ci.ub[3], 
+  MR_lat_CueTypeCat1_max_absES$ci.ub, 
+  MR_lat_CueTypeCat_max_absES$ci.ub[2:4], 
+  MR_lat_CueTypeCat3_max_absES$ci.ub[3:4], 
+  MR_lat_CueTypeCat4_max_absES$ci.ub[4], 
+  MR_lat_FoodDeprived1_max_absES$ci.ub, 
+  MR_lat_FoodDeprived_max_absES$ci.ub[2], 
+  MR_lat_TaskType1_max_absES$ci.ub, 
+  MR_lat_TaskType_max_absES$ci.ub[2], 
+  MR_lat_WithinBetween1_max_absES$ci.ub, 
+  MR_lat_WithinBetween_max_absES$ci.ub[2], 
+  MR_lat_Automated1_max_absES$ci.ub, 
+  MR_lat_Automated_max_absES$ci.ub[2], 
+  MR_lat_Blind1_max_absES$ci.ub, 
+  MR_lat_Blind_max_absES$ci.ub[2],
+  MR_lat_ReinforcementCat1_max_absES$ci.ub, 
+  MR_lat_ReinforcementCat_max_absES$ci.ub[2:3], 
+  MR_lat_ReinforcementCat2_max_absES$ci.ub[3], 
+  MR_lat_AmbigReinforced1_max_absES$ci.ub, 
+  MR_lat_AmbigReinforced_max_absES$ci.ub[2], 
+  MR_lat_ScalePoint1_max_absES$ci.ub, 
+  MR_lat_ScalePoint_max_absES$ci.ub[2:3], 
+  MR_lat_ScalePoint2_max_absES$ci.ub[3]), 3)
+write.csv(d6_lat_max_absES, file = "./Tables/Table_MR_univ_lat_max_absES.csv", row.names = F, na = "")
+```
+
+
+### proportion subsets ###
+
+```{r Table MR univ proportion data}
+# loading table
+d6_prop <- read_excel("./Tables/Results_Tables_v2.xlsx", sheet = 4)
+
+# Fixed effects
+# Sex
+load("./Rdata/MR_prop_sex1.Rdata")
+load("./Rdata/MR_prop_sex.Rdata") 
+load("./Rdata/MR_prop_sex2.Rdata") 
+# Age
+load("./Rdata/MR_prop_age1.Rdata")
+load("./Rdata/MR_prop_age.Rdata")
+# Source
+load("./Rdata/MR_prop_source1.Rdata")
+load("./Rdata/MR_prop_source.Rdata")
+# AffectManipCat
+load("./Rdata/MR_prop_AffectManipCat1.Rdata")
+load("./Rdata/MR_prop_AffectManipCat.Rdata")
+# AffectManipTiming
+load("./Rdata/MR_prop_AffectManipTiming1.Rdata")
+load("./Rdata/MR_prop_AffectManipTiming.Rdata")
+# ComparisonCategory
+load("./Rdata/MR_prop_ComparisonCategory1.Rdata")
+load("./Rdata/MR_prop_ComparisonCategory.Rdata")
+load("./Rdata/MR_prop_ComparisonCategory2.Rdata")
+# MR_prop_CueTypeCat *
+load("./Rdata/MR_prop_CueTypeCat1.Rdata")
+load("./Rdata/MR_prop_CueTypeCat.Rdata")
+load("./Rdata/MR_prop_CueTypeCat2.Rdata")
+load("./Rdata/MR_prop_CueTypeCat3.Rdata")
+load("./Rdata/MR_prop_CueTypeCat4.Rdata")
+# FoodDeprived
+load("./Rdata/MR_prop_FoodDeprived1.Rdata")
+load("./Rdata/MR_prop_FoodDeprived.Rdata")
+# TaskType
+load("./Rdata/MR_prop_TaskType1.Rdata")
+load("./Rdata/MR_prop_TaskType.Rdata")
+# WithinBetween
+load("./Rdata/MR_prop_WithinBetween1.Rdata")
+load("./Rdata/MR_prop_WithinBetween.Rdata")
+# Automated
+load("./Rdata/MR_prop_Automated1.Rdata")
+load("./Rdata/MR_prop_Automated.Rdata")
+# Blind
+load("./Rdata/MR_prop_Blind1.Rdata")
+load("./Rdata/MR_prop_Blind.Rdata")
+# ReinforcementCat
+load("./Rdata/MR_prop_ReinforcementCat1.Rdata")
+load("./Rdata/MR_prop_ReinforcementCat.Rdata")
+load("./Rdata/MR_prop_ReinforcementCat2.Rdata")
+# AmbigReinforced
+load("./Rdata/MR_prop_AmbigReinforced1.Rdata")
+load("./Rdata/MR_prop_AmbigReinforced.Rdata")
+# MR_prop_ScalePoint1
+load("./Rdata/MR_prop_ScalePoint1.Rdata")
+load("./Rdata/MR_prop_ScalePoint.Rdata")
+load("./Rdata/MR_prop_ScalePoint2.Rdata")
+
+# adding info to table
+
+# saving row position
+pos <- c(3:8, 10:12, 14:16, 18:20, 22:24, 26:31, 33:47, 49:51, 53:55, 57:59, 61:63, 65:67, 73:78, 80:82, 84:89)
+
+d6_prop$`Fixed effects`[pos] <- round(c(
+  MR_prop_sex1$b, 
+  MR_prop_sex$b[2:3], 
+  MR_prop_sex2$b[3], 
+  MR_prop_age1$b, 
+  MR_prop_age$b[2], 
+  MR_prop_source1$b, 
+  MR_prop_source$b[2], 
+  MR_prop_AffectManipCat1$b, 
+  MR_prop_AffectManipCat$b[2], 
+  MR_prop_AffectManipTiming1$b, 
+  MR_prop_AffectManipTiming$b[2], 
+  MR_prop_ComparisonCategory1$b, 
+  MR_prop_ComparisonCategory$b[2:3],
+  MR_prop_ComparisonCategory2$b[3], 
+  MR_prop_CueTypeCat1$b, 
+  MR_prop_CueTypeCat$b[2:5], 
+  MR_prop_CueTypeCat2$b[3:5], 
+  MR_prop_CueTypeCat3$b[4:5], 
+  MR_prop_CueTypeCat4$b[5], 
+  MR_prop_FoodDeprived1$b, 
+  MR_prop_FoodDeprived$b[2], 
+  MR_prop_TaskType1$b, 
+  MR_prop_TaskType$b[2], 
+  MR_prop_WithinBetween1$b, 
+  MR_prop_WithinBetween$b[2], 
+  MR_prop_Automated1$b, 
+  MR_prop_Automated$b[2], 
+  MR_prop_Blind1$b, 
+  MR_prop_Blind$b[2],
+  MR_prop_ReinforcementCat1$b, 
+  MR_prop_ReinforcementCat$b[2:3], 
+  MR_prop_ReinforcementCat2$b[3], 
+  MR_prop_AmbigReinforced1$b, 
+  MR_prop_AmbigReinforced$b[2], 
+  MR_prop_ScalePoint1$b, 
+  MR_prop_ScalePoint$b[2:3], 
+  MR_prop_ScalePoint2$b[3]), 3)
+
+d6_prop$X__1[pos] <- round(c(
+  MR_prop_sex1$ci.lb, 
+  MR_prop_sex$ci.lb[2:3], 
+  MR_prop_sex2$ci.lb[3], 
+  MR_prop_age1$ci.lb, 
+  MR_prop_age$ci.lb[2], 
+  MR_prop_source1$ci.lb, 
+  MR_prop_source$ci.lb[2], 
+  MR_prop_AffectManipCat1$ci.lb, 
+  MR_prop_AffectManipCat$ci.lb[2], 
+  MR_prop_AffectManipTiming1$ci.lb, 
+  MR_prop_AffectManipTiming$ci.lb[2], 
+  MR_prop_ComparisonCategory1$ci.lb, 
+  MR_prop_ComparisonCategory$ci.lb[2:3],
+  MR_prop_ComparisonCategory2$ci.lb[3], 
+  MR_prop_CueTypeCat1$ci.lb, 
+  MR_prop_CueTypeCat$ci.lb[2:5], 
+  MR_prop_CueTypeCat2$ci.lb[3:5], 
+  MR_prop_CueTypeCat3$ci.lb[4:5], 
+  MR_prop_CueTypeCat4$ci.lb[5], 
+  MR_prop_FoodDeprived1$ci.lb, 
+  MR_prop_FoodDeprived$ci.lb[2], 
+  MR_prop_TaskType1$ci.lb, 
+  MR_prop_TaskType$ci.lb[2], 
+  MR_prop_WithinBetween1$ci.lb, 
+  MR_prop_WithinBetween$ci.lb[2], 
+  MR_prop_Automated1$ci.lb, 
+  MR_prop_Automated$ci.lb[2], 
+  MR_prop_Blind1$ci.lb, 
+  MR_prop_Blind$ci.lb[2],
+  MR_prop_ReinforcementCat1$ci.lb, 
+  MR_prop_ReinforcementCat$ci.lb[2:3], 
+  MR_prop_ReinforcementCat2$ci.lb[3], 
+  MR_prop_AmbigReinforced1$ci.lb, 
+  MR_prop_AmbigReinforced$ci.lb[2], 
+  MR_prop_ScalePoint1$ci.lb, 
+  MR_prop_ScalePoint$ci.lb[2:3], 
+  MR_prop_ScalePoint2$ci.lb[3]), 3)
+
+d6_prop$X__2[pos] <- round(c(
+  MR_prop_sex1$ci.ub, 
+  MR_prop_sex$ci.ub[2:3], 
+  MR_prop_sex2$ci.ub[3], 
+  MR_prop_age1$ci.ub, 
+  MR_prop_age$ci.ub[2], 
+  MR_prop_source1$ci.ub, 
+  MR_prop_source$ci.ub[2], 
+  MR_prop_AffectManipCat1$ci.ub, 
+  MR_prop_AffectManipCat$ci.ub[2], 
+  MR_prop_AffectManipTiming1$ci.ub, 
+  MR_prop_AffectManipTiming$ci.ub[2], 
+  MR_prop_ComparisonCategory1$ci.ub, 
+  MR_prop_ComparisonCategory$ci.ub[2:3],
+  MR_prop_ComparisonCategory2$ci.ub[3], 
+  MR_prop_CueTypeCat1$ci.ub, 
+  MR_prop_CueTypeCat$ci.ub[2:5], 
+  MR_prop_CueTypeCat2$ci.ub[3:5], 
+  MR_prop_CueTypeCat3$ci.ub[4:5], 
+  MR_prop_CueTypeCat4$ci.ub[5], 
+  MR_prop_FoodDeprived1$ci.ub, 
+  MR_prop_FoodDeprived$ci.ub[2], 
+  MR_prop_TaskType1$ci.ub, 
+  MR_prop_TaskType$ci.ub[2], 
+  MR_prop_WithinBetween1$ci.ub, 
+  MR_prop_WithinBetween$ci.ub[2], 
+  MR_prop_Automated1$ci.ub, 
+  MR_prop_Automated$ci.ub[2], 
+  MR_prop_Blind1$ci.ub, 
+  MR_prop_Blind$ci.ub[2],
+  MR_prop_ReinforcementCat1$ci.ub, 
+  MR_prop_ReinforcementCat$ci.ub[2:3], 
+  MR_prop_ReinforcementCat2$ci.ub[3], 
+  MR_prop_AmbigReinforced1$ci.ub, 
+  MR_prop_AmbigReinforced$ci.ub[2], 
+  MR_prop_ScalePoint1$ci.ub, 
+  MR_prop_ScalePoint$ci.ub[2:3], 
+  MR_prop_ScalePoint2$ci.ub[3]), 3)
+write.csv(d6_prop, file = "./Tables/Table_MR_univ_prop.csv", row.names = F, na = "")
+```
+
+
+```{r Table MR univ proportion data max_absES}
+# loading table
+d6_prop_max_absES <- read_excel("./Tables/Results_Tables_v2.xlsx", sheet = 4)
+
+# Fixed effects
+# Sex
+load("./Rdata/MR_prop_sex1_max_absES.Rdata")
+load("./Rdata/MR_prop_sex_max_absES.Rdata") 
+load("./Rdata/MR_prop_sex2_max_absES.Rdata") 
+# Age
+load("./Rdata/MR_prop_age1_max_absES.Rdata")
+load("./Rdata/MR_prop_age_max_absES.Rdata")
+# Source
+load("./Rdata/MR_prop_source1_max_absES.Rdata")
+load("./Rdata/MR_prop_source_max_absES.Rdata")
+# AffectManipCat
+load("./Rdata/MR_prop_AffectManipCat1_max_absES.Rdata")
+load("./Rdata/MR_prop_AffectManipCat_max_absES.Rdata")
+# AffectManipTiming
+load("./Rdata/MR_prop_AffectManipTiming1_max_absES.Rdata")
+load("./Rdata/MR_prop_AffectManipTiming_max_absES.Rdata")
+# ComparisonCategory
+load("./Rdata/MR_prop_ComparisonCategory1_max_absES.Rdata")
+load("./Rdata/MR_prop_ComparisonCategory_max_absES.Rdata")
+load("./Rdata/MR_prop_ComparisonCategory2_max_absES.Rdata")
+# MR_prop_CueTypeCat *
+load("./Rdata/MR_prop_CueTypeCat1_max_absES.Rdata")
+load("./Rdata/MR_prop_CueTypeCat_max_absES.Rdata")
+load("./Rdata/MR_prop_CueTypeCat2_max_absES.Rdata")
+load("./Rdata/MR_prop_CueTypeCat3_max_absES.Rdata")
+load("./Rdata/MR_prop_CueTypeCat4_max_absES.Rdata")
+# FoodDeprived
+load("./Rdata/MR_prop_FoodDeprived1_max_absES.Rdata")
+load("./Rdata/MR_prop_FoodDeprived_max_absES.Rdata")
+# TaskType
+load("./Rdata/MR_prop_TaskType1_max_absES.Rdata")
+load("./Rdata/MR_prop_TaskType_max_absES.Rdata")
+# WithinBetween
+load("./Rdata/MR_prop_WithinBetween1_max_absES.Rdata")
+load("./Rdata/MR_prop_WithinBetween_max_absES.Rdata")
+# Automated
+load("./Rdata/MR_prop_Automated1_max_absES.Rdata")
+load("./Rdata/MR_prop_Automated_max_absES.Rdata")
+# Blind
+load("./Rdata/MR_prop_Blind1_max_absES.Rdata")
+load("./Rdata/MR_prop_Blind_max_absES.Rdata")
+# ReinforcementCat
+load("./Rdata/MR_prop_ReinforcementCat1_max_absES.Rdata")
+load("./Rdata/MR_prop_ReinforcementCat_max_absES.Rdata")
+load("./Rdata/MR_prop_ReinforcementCat2_max_absES.Rdata")
+# AmbigReinforced
+load("./Rdata/MR_prop_AmbigReinforced1_max_absES.Rdata")
+load("./Rdata/MR_prop_AmbigReinforced_max_absES.Rdata")
+# MR_prop_ScalePoint1
+load("./Rdata/MR_prop_ScalePoint1_max_absES.Rdata")
+load("./Rdata/MR_prop_ScalePoint_max_absES.Rdata")
+load("./Rdata/MR_prop_ScalePoint2_max_absES.Rdata")
+
+# adding info to table
+
+# saving row position
+pos <- c(3:8, 10:12, 14:16, 18:20, 22:24, 26:31, 33:47, 49:51, 53:55, 57:59, 61:63, 65:67, 73:78, 80:82, 84:89)
+
+d6_prop_max_absES$`Fixed effects`[pos] <- round(c(
+  MR_prop_sex1_max_absES$b, 
+  MR_prop_sex_max_absES$b[2:3], 
+  MR_prop_sex2_max_absES$b[3], 
+  MR_prop_age1_max_absES$b, 
+  MR_prop_age_max_absES$b[2], 
+  MR_prop_source1_max_absES$b, 
+  MR_prop_source_max_absES$b[2], 
+  MR_prop_AffectManipCat1_max_absES$b, 
+  MR_prop_AffectManipCat_max_absES$b[2], 
+  MR_prop_AffectManipTiming1_max_absES$b, 
+  MR_prop_AffectManipTiming_max_absES$b[2], 
+  MR_prop_ComparisonCategory1_max_absES$b, 
+  MR_prop_ComparisonCategory_max_absES$b[2:3],
+  MR_prop_ComparisonCategory2_max_absES$b[3], 
+  MR_prop_CueTypeCat1_max_absES$b, 
+  MR_prop_CueTypeCat_max_absES$b[2:5], 
+  MR_prop_CueTypeCat2_max_absES$b[3:5], 
+  MR_prop_CueTypeCat3_max_absES$b[4:5], 
+  MR_prop_CueTypeCat4_max_absES$b[5],   
+  MR_prop_FoodDeprived1_max_absES$b, 
+  MR_prop_FoodDeprived_max_absES$b[2], 
+  MR_prop_TaskType1_max_absES$b, 
+  MR_prop_TaskType_max_absES$b[2], 
+  MR_prop_WithinBetween1_max_absES$b, 
+  MR_prop_WithinBetween_max_absES$b[2], 
+  MR_prop_Automated1_max_absES$b, 
+  MR_prop_Automated_max_absES$b[2], 
+  MR_prop_Blind1_max_absES$b, 
+  MR_prop_Blind_max_absES$b[2],
+  MR_prop_ReinforcementCat1_max_absES$b, 
+  MR_prop_ReinforcementCat_max_absES$b[2:3], 
+  MR_prop_ReinforcementCat2_max_absES$b[3], 
+  MR_prop_AmbigReinforced1_max_absES$b, 
+  MR_prop_AmbigReinforced_max_absES$b[2], 
+  MR_prop_ScalePoint1_max_absES$b, 
+  MR_prop_ScalePoint_max_absES$b[2:3], 
+  MR_prop_ScalePoint2_max_absES$b[3]), 3)
+
+d6_prop_max_absES$X__1[pos] <- round(c(
+  MR_prop_sex1_max_absES$ci.lb, 
+  MR_prop_sex_max_absES$ci.lb[2:3], 
+  MR_prop_sex2_max_absES$ci.lb[3], 
+  MR_prop_age1_max_absES$ci.lb, 
+  MR_prop_age_max_absES$ci.lb[2], 
+  MR_prop_source1_max_absES$ci.lb, 
+  MR_prop_source_max_absES$ci.lb[2], 
+  MR_prop_AffectManipCat1_max_absES$ci.lb, 
+  MR_prop_AffectManipCat_max_absES$ci.lb[2], 
+  MR_prop_AffectManipTiming1_max_absES$ci.lb, 
+  MR_prop_AffectManipTiming_max_absES$ci.lb[2], 
+  MR_prop_ComparisonCategory1_max_absES$ci.lb, 
+  MR_prop_ComparisonCategory_max_absES$ci.lb[2:3],
+  MR_prop_ComparisonCategory2_max_absES$ci.lb[3], 
+  MR_prop_CueTypeCat1_max_absES$ci.lb, 
+  MR_prop_CueTypeCat_max_absES$ci.lb[2:5], 
+  MR_prop_CueTypeCat2_max_absES$ci.lb[3:5], 
+  MR_prop_CueTypeCat3_max_absES$ci.lb[4:5], 
+  MR_prop_CueTypeCat4_max_absES$ci.lb[5],   
+  MR_prop_FoodDeprived1_max_absES$ci.lb, 
+  MR_prop_FoodDeprived_max_absES$ci.lb[2], 
+  MR_prop_TaskType1_max_absES$ci.lb, 
+  MR_prop_TaskType_max_absES$ci.lb[2], 
+  MR_prop_WithinBetween1_max_absES$ci.lb, 
+  MR_prop_WithinBetween_max_absES$ci.lb[2], 
+  MR_prop_Automated1_max_absES$ci.lb, 
+  MR_prop_Automated_max_absES$ci.lb[2], 
+  MR_prop_Blind1_max_absES$ci.lb, 
+  MR_prop_Blind_max_absES$ci.lb[2],
+  MR_prop_ReinforcementCat1_max_absES$ci.lb, 
+  MR_prop_ReinforcementCat_max_absES$ci.lb[2:3], 
+  MR_prop_ReinforcementCat2_max_absES$ci.lb[3], 
+  MR_prop_AmbigReinforced1_max_absES$ci.lb, 
+  MR_prop_AmbigReinforced_max_absES$ci.lb[2], 
+  MR_prop_ScalePoint1_max_absES$ci.lb, 
+  MR_prop_ScalePoint_max_absES$ci.lb[2:3], 
+  MR_prop_ScalePoint2_max_absES$ci.lb[3]), 3)
+
+d6_prop_max_absES$X__2[pos] <- round(c(
+  MR_prop_sex1_max_absES$ci.ub, 
+  MR_prop_sex_max_absES$ci.ub[2:3], 
+  MR_prop_sex2_max_absES$ci.ub[3], 
+  MR_prop_age1_max_absES$ci.ub, 
+  MR_prop_age_max_absES$ci.ub[2], 
+  MR_prop_source1_max_absES$ci.ub, 
+  MR_prop_source_max_absES$ci.ub[2], 
+  MR_prop_AffectManipCat1_max_absES$ci.ub, 
+  MR_prop_AffectManipCat_max_absES$ci.ub[2], 
+  MR_prop_AffectManipTiming1_max_absES$ci.ub, 
+  MR_prop_AffectManipTiming_max_absES$ci.ub[2], 
+  MR_prop_ComparisonCategory1_max_absES$ci.ub, 
+  MR_prop_ComparisonCategory_max_absES$ci.ub[2:3],
+  MR_prop_ComparisonCategory2_max_absES$ci.ub[3], 
+  MR_prop_CueTypeCat1_max_absES$ci.ub, 
+  MR_prop_CueTypeCat_max_absES$ci.ub[2:5], 
+  MR_prop_CueTypeCat2_max_absES$ci.ub[3:5], 
+  MR_prop_CueTypeCat3_max_absES$ci.ub[4:5], 
+  MR_prop_CueTypeCat4_max_absES$ci.ub[5],   
+  MR_prop_FoodDeprived1_max_absES$ci.ub, 
+  MR_prop_FoodDeprived_max_absES$ci.ub[2], 
+  MR_prop_TaskType1_max_absES$ci.ub, 
+  MR_prop_TaskType_max_absES$ci.ub[2], 
+  MR_prop_WithinBetween1_max_absES$ci.ub, 
+  MR_prop_WithinBetween_max_absES$ci.ub[2], 
+  MR_prop_Automated1_max_absES$ci.ub, 
+  MR_prop_Automated_max_absES$ci.ub[2], 
+  MR_prop_Blind1_max_absES$ci.ub, 
+  MR_prop_Blind_max_absES$ci.ub[2],
+  MR_prop_ReinforcementCat1_max_absES$ci.ub, 
+  MR_prop_ReinforcementCat_max_absES$ci.ub[2:3], 
+  MR_prop_ReinforcementCat2_max_absES$ci.ub[3], 
+  MR_prop_AmbigReinforced1_max_absES$ci.ub, 
+  MR_prop_AmbigReinforced_max_absES$ci.ub[2], 
+  MR_prop_ScalePoint1_max_absES$ci.ub, 
+  MR_prop_ScalePoint_max_absES$ci.ub[2:3], 
+  MR_prop_ScalePoint2_max_absES$ci.ub[3]), 3)
+write.csv(d6_prop_max_absES, file = "./Tables/Table_MR_univ_prop_max_absES.csv", row.names = F, na = "")
+```
+
+
+
+
+
+
+
+
+#### Table S7   
+
+[MR full signif only (VCV + phylo)]
+
+Estimated effect sizes for meta-analytic (intercept-only) models for the difference between better and worse (*Hg*). 
+Negative *Hg* values can be interpreted as .
+Positive values of *Hg* can be interpreted as girls having higher grades than boys. Effects with confidence intervals (CI) not crossing zero are indicated in bold. 
+
+```{r Table MR full}
+# loading table
+d7 <- read_excel("./Tables/Results Tables.xlsx", sheet = 5)
+
+# loading data
+load("./Rdata/MR_all_Full_1.Rdata")
+load("./Rdata/MR_all_Full_2.Rdata")
+load("./Rdata/MR_all_Full_3.Rdata")
+load("./Rdata/MR_all_Full_4.Rdata")
+load("./Rdata/MR_all_Full_2i.Rdata") #model with interaction
+## adding info to table
+
+# saving row position
+pos <- c(3:14)
+
+#d7$`row`[pos] <- gsub("ScientificName","",rownames(summary(MR_all_Full_1)$b))
+
+d7$`Fixed effects`[pos] <- round(c(
+                                MR_all_Full_1$b[1:3],                      
+                                MR_all_Full_4$b[1:3],
+                                MR_all_Full_2$b[2:3],
+                                MR_all_Full_3$b[3],
+                                MR_all_Full_3$b[4],
+                                MR_all_Full_2i$b[5:6]
+                                ), 3)
+
+d7$X__1[pos] <- round(c(
+                      MR_all_Full_1$ci.lb[1:3],
+                      MR_all_Full_4$ci.lb[1:3],
+                      MR_all_Full_2$ci.lb[2:3],
+                      MR_all_Full_3$ci.lb[3],
+                      MR_all_Full_3$ci.lb[4],
+                      MR_all_Full_2i$ci.lb[5:6]
+                      ), 3)
+
+d7$X__2[pos] <- round(c(
+                      MR_all_Full_1$ci.ub[1:3],
+                      MR_all_Full_4$ci.ub[1:3],
+                      MR_all_Full_2$ci.ub[2:3],
+                      MR_all_Full_3$ci.ub[3],
+                      MR_all_Full_3$ci.ub[4],
+                      MR_all_Full_2i$ci.ub[5:6]
+                      ), 3)
+
+
+write.csv(d7, file = "./Tables/Table S7.csv", row.names = F, na = "")
+```
+
+
+#### Table MR full Bayesian  
+
+Multivariate Multilevel Bayesian Phylogenetic Meta-Regression model. This model includes moderators (fixed effects) that had statistically significant differences among their levels (contrasts) in the univariate meta-regression models (Table S5). The model includes ArticleID and ExperimentID as random effects. Effects with Highest Posterior Density intervals (HPD) not crossing zero are indicated in bold.
+
+```{r Table MR full Bayesian}
+# loading table
+d8 <- read_excel("./Tables/Results Tables.xlsx", sheet = 6)  
+
+# loading data
+dat <- read.csv("data_with_ES.csv")
+load("./Rdata/bayesian_runs_full1.RData")
+
+m1 <- bayesian_full1.1
+m2 <- bayesian_full1.2
+m3 <- bayesian_full1.3
+
+#gelman.diag(list(m1.uni$Sol[,1],m2.uni$Sol[,1],m3.uni$Sol[,1]))
+#gelman.diag(list(m1.uni$Deviance,m2.uni$Deviance,m3.uni$Deviance))
+#check chain autocorrelation
+#autocorr(m1.uni$Sol[,c(3)])
+#autocorr(m1.uni$VCV[,c(1)])
+#autocorr(m2.uni$Sol[,c(3)])
+#autocorr(m2.uni$VCV[,c(1)])
+#autocorr(m3.uni$Sol[,c(3)])
+#autocorr(m3.uni$VCV[,c(1)]) #not good
+#extract and summarise DIC
+#print(c(m1.uni$DIC,m2.uni$DIC,m3.uni$DIC))
+#mean(c(m1.uni$DIC, m2.uni$DIC, m3.uni$DIC)) 
+#range(c(m1.uni$DIC, m2.uni$DIC, m3.uni$DIC))  
+
+chosen <- bayesian_full1.1
+summary(chosen)
+
+### mean and range for DIC
+DICs <- c(m1$DIC, m2$DIC, m3$DIC)
+DICmean <- format(round(mean(DICs),2), nsmschool = 2)
+DICrange <- paste0("(",format(round(range(DICs)[1],2), nsmschool = 2)," - ",format(round(range(DICs)[2],2), nsmschool = 2), ")")
+DIC <- c("", "", "", DICmean, DICrange)
+# heterogeneity and variances
+WI <- na.omit(1/dat$Vd) 
+s2I <- sum(WI*(length(WI)-1))/(sum(WI)^2-sum(WI^2)) # typical sampling (measurement) error variance (sigma2m)
+total_var <- chosen$VCV[,"ArticleID"]+chosen$VCV[,"ExperimentID"]+chosen$VCV[,"units"]+s2I # total variance (sigma2t)
+total_het <- (total_var-s2I)/total_var # total heterogeneity I2
+ArticleID <- round(c(posterior.mode(chosen$VCV[,"ArticleID"]/total_var)*100, summary(chosen$VCV[,"ArticleID"]/total_var)$statistics[1]*100, summary(chosen$VCV[,"ArticleID"]/total_var)$statistics[2]*100),1)
+ExperimentID <- round(c(posterior.mode(chosen$VCV[,"ExperimentID"]/total_var)*100, summary(chosen$VCV[,"ExperimentID"]/total_var)$statistics[1]*100, summary(chosen$VCV[,"ExperimentID"]/total_var)$statistics[2]*100),1)
+units <- round(c(posterior.mode(chosen$VCV[,"units"]/total_var)*100, summary(chosen$VCV[,"units"]/total_var)$statistics[1]*100, summary(chosen$VCV[,"units"]/total_var)$statistics[2]*100),1)
+total <- round(c(posterior.mode(total_het)*100, summary(total_het)$statistics[1]*100, summary(total_het)$statistics[2]*100),1)
+var.res_df <- t(data.frame(DIC=DIC, ArticleID=c(ArticleID,"",""), ExperimentID=c(ExperimentID,"",""), units=c(units,"",""), total=c(total,"","")))
+var.res_df <- format(var.res_df, nsmschool = 2)
+colnames(var.res_df) <- c("Mode","Mean","SD", "DIC mean", "DIC range")
+rownames(var.res_df) <- c("school data MR full model:","I2Article","I2Experiment","I2residual","I2total")
+
+summary(chosen)
+
+# fixed effects (moderators)
+mod <- posterior.mode(chosen$Sol)[1:4]
+av <- summary(chosen$Sol[,1:4])$statistics[,1]
+sd <- summary(chosen$Sol[,1:4])$statistics[,2]
+HPDlo <- HPDinterval(chosen$Sol[,1:4])[,1]
+HPDhi <- HPDinterval(chosen$Sol[,1:4])[,2]
+fixed.res_df <- data.frame(Mode=mod,Mean=av,SD=sd,Lower=HPDlo,Upper=HPDhi)
+#fixed.res_df <- fixed.res_df[c(2,1,3,4),] #reorder moderators
+fixed.res_df <- format(round(fixed.res_df,3), nsmuni = 3)
+rownames(fixed.res_df) <- c("Females Latency intercept", "Males Latency intercept", "Mixed-sex Latency intercept", "Latency – Proportion contrast")
+
+# random effects
+Mode <- posterior.mode(chosen$VCV)
+Mean <- summary(chosen$VCV)$statistics[,1]
+SD <- summary(chosen$VCV)$statistics[,2]
+Lower <- HPDinterval(chosen$VCV)[,1]
+Upper <- HPDinterval(chosen$VCV)[,2]
+random.res_df <- data.frame(Mode=Mode,Mean=Mean,SD=SD,Lower=Lower,Upper=Upper)
+random.res_df <- random.res_df[-3,]
+random.res_df <- format(round(random.res_df,3), nsmuni = 3)
+rownames(random.res_df) <- c("ArticleID","ExperimentID","residuals")
+
+var.res_df
+fixed.res_df
+random.res_df
+
+# saving position of rows
+pos <- c(3:6, 12:14, 20:23)
+density.pos <- c(3:6, 12:14, 20)
+
+# updating table
+d8$`Fixed effects`[pos] <- c(fixed.res_df$Mode, random.res_df$Mode, as.numeric(var.res_df[2:5,1]))
+d8$X__2[pos] <- c(fixed.res_df$Mean, random.res_df$Mean, as.numeric(var.res_df[2:5,2]))
+d8$X__3[pos] <- c(fixed.res_df$SD, random.res_df$SD, as.numeric(var.res_df[2:5,3]))
+d8$X__4[density.pos] <- c(fixed.res_df$Lower, random.res_df$Lower, as.numeric(var.res_df[1,4]))
+d8$X__5[density.pos] <- c(fixed.res_df$Upper, random.res_df$Upper, var.res_df[1,5])
+
+write.csv(d8, file = "./Tables/Table MR full Bayesian.csv", row.names = F, na = "")
+```
+
+
+#### Table S10   
+
+[MR full signif only (VCV + phylo)] using robust metafor models
+
+Estimated effect sizes for meta-analytic (intercept-only) models for the difference between better and worse (*Hg*) using robust function in metafor. 
+Negative *Hg* values can be interpreted as .
+Positive values of *Hg* can be interpreted as girls having higher grades than boys. Effects with confidence intervals (CI) not crossing zero are indicated in bold. 
+       
+
+```{r Table MR full robust}
+# loading table
+d10 <- read_excel("./Tables/Results Tables.xlsx", sheet = 5)
+
+# loading data
+load("./Rdata/MR_all_Full_1_robust.Rdata")
+load("./Rdata/MR_all_Full_2_robust.Rdata")
+load("./Rdata/MR_all_Full_3_robust.Rdata")
+load("./Rdata/MR_all_Full_4_robust.Rdata")
+load("./Rdata/MR_all_Full_2i_robust.Rdata") #model with interaction
+## adding info to table
+
+# saving row position
+pos <- c(3:14)
+
+d10$`Fixed effects`[pos] <- round(c(
+                                MR_all_Full_1_robust$b[1:3],                      
+                                MR_all_Full_4_robust$b[1:3],
+                                MR_all_Full_2_robust$b[2:3],
+                                MR_all_Full_3_robust$b[3],
+                                MR_all_Full_3_robust$b[4],
+                                MR_all_Full_2i_robust$b[5:6]
+                                ), 3)
+
+d10$X__1[pos] <- round(c(
+                      MR_all_Full_1_robust$ci.lb[1:3],
+                      MR_all_Full_4_robust$ci.lb[1:3],
+                      MR_all_Full_2_robust$ci.lb[2:3],
+                      MR_all_Full_3_robust$ci.lb[3],
+                      MR_all_Full_3_robust$ci.lb[4],
+                      MR_all_Full_2i_robust$ci.lb[5:6]
+                      ), 3)
+
+d10$X__2[pos] <- round(c(
+                      MR_all_Full_1_robust$ci.ub[1:3],
+                      MR_all_Full_4_robust$ci.ub[1:3],
+                      MR_all_Full_2_robust$ci.ub[2:3],
+                      MR_all_Full_3_robust$ci.ub[3],
+                      MR_all_Full_3_robust$ci.ub[4],
+                      MR_all_Full_2i_robust$ci.ub[5:6]
+                      ), 3)
+
+
+write.csv(d10, file = "./Tables/Table MR full robust.csv", row.names = F, na = "")
+```
+
+
+
+
+
+
+###############################################################################################################
+###########################################        SUBSET - max ES per study        ########################################### 
+###############################################################################################################
+
+
+
+
+#### Table S7   
+
+[MR full signif only (VCV + phylo)]
+
+Estimated effect sizes for meta-analytic (intercept-only) models for the difference between better and worse (*Hg*). 
+Negative *Hg* values can be interpreted as .
+Positive values of *Hg* can be interpreted as girls having higher grades than boys. Effects with confidence intervals (CI) not crossing zero are indicated in bold. 
+
+```{r Table MR full}
+# loading table
+d7m <- read_excel("./Tables/Results Tables.xlsx", sheet = 5)
+
+# loading data
+load("./Rdata/MR_all_max_Full_1.Rdata")
+load("./Rdata/MR_all_max_Full_2.Rdata")
+load("./Rdata/MR_all_max_Full_3.Rdata")
+load("./Rdata/MR_all_max_Full_4.Rdata")
+load("./Rdata/MR_all_max_Full_2i.Rdata") #model with interaction
+## adding info to table
+
+# saving row position
+pos <- c(3:14)
+
+#d7$`row`[pos] <- gsub("ScientificName","",rownames(summary(MR_all_Full_1)$b))
+
+d7m$`Fixed effects`[pos] <- round(c(
+                                MR_all_max_Full_1$b[1:3],                      
+                                MR_all_max_Full_4$b[1:3],
+                                MR_all_max_Full_2$b[2:3],
+                                MR_all_max_Full_3$b[3],
+                                MR_all_max_Full_3$b[4],
+                                MR_all_max_Full_2i$b[5:6]
+                                ), 3)
+
+d7m$X__1[pos] <- round(c(
+                      MR_all_max_Full_1$ci.lb[1:3],
+                      MR_all_max_Full_4$ci.lb[1:3],
+                      MR_all_max_Full_2$ci.lb[2:3],
+                      MR_all_max_Full_3$ci.lb[3],
+                      MR_all_max_Full_3$ci.lb[4],
+                      MR_all_max_Full_2i$ci.lb[5:6]
+                      ), 3)
+
+d7m$X__2[pos] <- round(c(
+                      MR_all_max_Full_1$ci.ub[1:3],
+                      MR_all_max_Full_4$ci.ub[1:3],
+                      MR_all_max_Full_2$ci.ub[2:3],
+                      MR_all_max_Full_3$ci.ub[3],
+                      MR_all_max_Full_3$ci.ub[4],
+                      MR_all_max_Full_2i$ci.ub[5:6]
+                      ), 3)
+
+
+write.csv(d7m, file = "./Tables/Table S7 max.csv", row.names = F, na = "")
+```

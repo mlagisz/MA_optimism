@@ -1,0 +1,521 @@
+---
+title: "optimism - plots"
+author: "ML"
+date: "7/1/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+sessionInfo()
+options(scipen=100)
+pacman::p_load(tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr, rotl, fulltext, metafor, car, ggplot2, gridExtra)
+#source("functions.R")
+```
+
+
+## MA models for full data and 3 subsets - OLD - see below
+```{r forestplot MA Models OLD, echo=FALSE}
+res_MA <- read.csv("./Tables/Table MA_v3.csv", col.names=c("ES", "Dataset", "Intercept", "Mean", "CI.lb", "CI.ub", "RandomEffects", "S2", "k"), skip=2)
+str(res_MA)
+res_MA$k <- c(res_MA$k[4], rep(NA,4), res_MA$k[9], rep(NA,4), res_MA$k[14], rep(NA,4), res_MA$k[19], rep(NA,4), res_MA$k[24], rep(NA,3)) #transfer sample sizes values to the top row for each subset
+res_MA <- dplyr::filter(res_MA, Mean != "NA") #get rid of redundant rows
+res_MA$Signif <- ifelse(res_MA$CI.lb>0 | res_MA$CI.ub<0, "*", "") #add column with stars for estimates that significantly differ from zero
+res_MA$pch <- 20 #set font size
+res_MA <- res_MA[dim(res_MA)[1]:1, ] #reverse order
+
+pdf(file="plots/Fig_MA_models.pdf",width=6,height=4,pointsize=12)
+par(mfcol=c(1,1))
+#layout(matrix(1))
+par(mar=c(4,4,1,0))
+plot(res_MA$Mean, 1:length(res_MA$Mean), ylab=NA, yaxt="n", bty="n", xlim=c(-2,2), ylim=c(0.25, length(res_MA$Mean)+.5), xlab="effect size [Hg]", pch=res_MA$pch, cex=1.5, cex.axis=.9, xaxp=c(-1, 1, 4) )
+abline(v=0,lty=3)
+mtext(res_MA$Dataset[1:length(res_MA$Dataset)], side = 2, line = -3, at=1:length(res_MA$Dataset), las=2, cex=.8, font=3, outer = FALSE) #add dataset labels
+#mtext(res_MA$Model[1:2], 2, -1, at=1:2, las=2, cex=.8, font=1)
+segments(res_MA$CI.lb, 1:length(res_MA$M), res_MA$CI.ub, 1:length(res_MA$M), lwd=1.25) #add whiskers for CI
+for (i in 1:length(rownames(res_MA))) mtext(res_MA$Signif[i], side = 2, line = -5, at=i, las=2, cex=.7) #add stars
+mtext(res_MA$k, 4, -2.8, at=1:(length(res_MA$k)), las=2, cex=.8, font=1, adj=1) #add k values
+mtext("k", 4, -2.8, at=length(res_MA$k)+0.5, las=2, cex=.8, font=3, adj=1)
+
+dev.off()
+```
+
+
+###################################################################
+## NEWER MA models plots
+
+## MA models for full data and its 4 ES subsets, using "./Tables/Table_MA_v3_all.csv"
+
+```{r forestplot MA Models all data, echo=FALSE}
+res_MA <- read.csv("./Tables/Table_MA_v3_all.csv", col.names=c("ES", "Dataset", "Intercept", "Mean", "CI.lb", "CI.ub", "RandomEffects", "S2", "k", "X","row"), skip=2)
+str(res_MA)
+res_MA <- select(res_MA, - c(X, row)) #remove last 2 columns
+res_MA <- slice(res_MA, 1:24) #remove empty rows at the bottom
+res_MA$k <- c(res_MA$k[4], rep(NA,4), res_MA$k[9], rep(NA,4), res_MA$k[14], rep(NA,4), res_MA$k[19], rep(NA,4), res_MA$k[24], rep(NA,3)) #transfer sample sizes values to the top row for each subset
+res_MA <- dplyr::filter(res_MA, Mean != "NA") #get rid of redundant rows
+res_MA$Signif <- ifelse(res_MA$CI.lb>0 | res_MA$CI.ub<0, "*", "") #add column with stars for estimates that significantly differ from zero
+res_MA$pch <- 20 #set font size
+res_MA <- res_MA[dim(res_MA)[1]:1, ] #reverse order
+
+pdf(file="plots/Fig_MA_models.pdf",width=6,height=4,pointsize=12)
+par(mfcol=c(1,1))
+#layout(matrix(1))
+par(mar=c(4,4,1,0))
+plot(res_MA$Mean, 1:length(res_MA$Mean), ylab=NA, yaxt="n", bty="n", xlim=c(-2,2), ylim=c(0.25, length(res_MA$Mean)+.5), xlab="effect size [Hg]", pch=res_MA$pch, cex=1.5, cex.axis=.9, xaxp=c(-1, 1, 4) )
+abline(v=0,lty=3)
+mtext(res_MA$Dataset[1:length(res_MA$Dataset)], side = 2, line = -3, at=1:length(res_MA$Dataset), las=2, cex=.8, font=3, outer = FALSE) #add dataset labels
+#mtext(res_MA$Model[1:2], 2, -1, at=1:2, las=2, cex=.8, font=1)
+segments(res_MA$CI.lb, 1:length(res_MA$M), res_MA$CI.ub, 1:length(res_MA$M), lwd=1.25) #add whiskers for CI
+for (i in 1:length(rownames(res_MA))) mtext(res_MA$Signif[i], side = 2, line = -5, at=i, las=2, cex=.7) #add stars
+mtext(res_MA$k, 4, -2.8, at=1:(length(res_MA$k)), las=2, cex=.8, font=1, adj=1) #add k values
+mtext("k", 4, -2.8, at=length(res_MA$k)+0.5, las=2, cex=.8, font=3, adj=1)
+title("All data")
+dev.off()
+```
+
+
+
+## MA models for latency data and its 4 ES subsets, using "./Tables/Table_MA_v3_lat.csv"
+
+```{r forestplot MA Models latency data, echo=FALSE}
+res_MA_lat <- read.csv("./Tables/Table_MA_v3_lat.csv", col.names=c("ES", "Dataset", "Intercept", "Mean", "CI.lb", "CI.ub", "RandomEffects", "S2", "k", "X","row"), skip=2)
+str(res_MA_lat)
+res_MA_lat <- select(res_MA_lat, - c(X, row)) #remove last 2 columns
+res_MA_lat <- slice(res_MA_lat, 1:24) #remove empty rows at the bottom
+res_MA_lat$k <- c(res_MA_lat$k[4], rep(NA,4), res_MA_lat$k[9], rep(NA,4), res_MA_lat$k[14], rep(NA,4), res_MA_lat$k[19], rep(NA,4), res_MA_lat$k[24], rep(NA,3)) #transfer sample sizes values to the top row for each subset
+res_MA_lat <- dplyr::filter(res_MA_lat, Mean != "NA") #get rid of redundant rows
+res_MA_lat$Signif <- ifelse(res_MA_lat$CI.lb>0 | res_MA_lat$CI.ub<0, "*", "") #add column with stars for estimates that significantly differ from zero
+res_MA_lat$pch <- 20 #set font size
+res_MA_lat <- res_MA_lat[dim(res_MA_lat)[1]:1, ] #reverse order
+
+pdf(file="plots/Fig_MA_models_lat.pdf",width=6,height=4,pointsize=12)
+par(mfcol=c(1,1))
+#layout(matrix(1))
+par(mar=c(4,4,1,0))
+plot(res_MA_lat$Mean, 1:length(res_MA_lat$Mean), ylab=NA, yaxt="n", bty="n", xlim=c(-2,2), ylim=c(0.25, length(res_MA_lat$Mean)+.5), xlab="effect size [Hg]", pch=res_MA_lat$pch, cex=1.5, cex.axis=.9, xaxp=c(-1, 1, 4) )
+abline(v=0,lty=3)
+mtext(res_MA_lat$Dataset[1:length(res_MA_lat$Dataset)], side = 2, line = -3, at=1:length(res_MA_lat$Dataset), las=2, cex=.8, font=3, outer = FALSE) #add dataset labels
+#mtext(res_MA_lat$Model[1:2], 2, -1, at=1:2, las=2, cex=.8, font=1)
+segments(res_MA_lat$CI.lb, 1:length(res_MA_lat$M), res_MA_lat$CI.ub, 1:length(res_MA_lat$M), lwd=1.25) #add whiskers for CI
+for (i in 1:length(rownames(res_MA_lat))) mtext(res_MA_lat$Signif[i], side = 2, line = -5, at=i, las=2, cex=.7) #add stars
+mtext(res_MA_lat$k, 4, -2.8, at=1:(length(res_MA_lat$k)), las=2, cex=.8, font=1, adj=1) #add k values
+mtext("k", 4, -2.8, at=length(res_MA_lat$k)+0.5, las=2, cex=.8, font=3, adj=1)
+title("Latency data")
+dev.off()
+```
+
+
+
+## MA models for proportion data and its 4 ES subsets, using "./Tables/Table_MA_v3_prop.csv"
+
+```{r forestplot MA Models proportion data, echo=FALSE}
+res_MA_prop <- read.csv("./Tables/Table_MA_v3_prop.csv", col.names=c("ES", "Dataset", "Intercept", "Mean", "CI.lb", "CI.ub", "RandomEffects", "S2", "k", "X","row"), skip=2)
+str(res_MA_prop)
+res_MA_prop <- select(res_MA_prop, - c(X, row)) #remove last 2 columns
+res_MA_prop <- slice(res_MA_prop, 1:24) #remove empty rows at the bottom
+res_MA_prop$k <- c(res_MA_prop$k[4], rep(NA,4), res_MA_prop$k[9], rep(NA,4), res_MA_prop$k[14], rep(NA,4), res_MA_prop$k[19], rep(NA,4), res_MA_prop$k[24], rep(NA,3)) #transfer sample sizes values to the top row for each subset
+res_MA_prop <- dplyr::filter(res_MA_prop, Mean != "NA") #get rid of redundant rows
+res_MA_prop$Signif <- ifelse(res_MA_prop$CI.lb>0 | res_MA_prop$CI.ub<0, "*", "") #add column with stars for estimates that significantly differ from zero
+res_MA_prop$pch <- 20 #set font size
+res_MA_prop <- res_MA_prop[dim(res_MA_prop)[1]:1, ] #reverse order
+
+pdf(file="plots/Fig_MA_models_prop.pdf",width=6,height=4,pointsize=12)
+par(mfcol=c(1,1))
+#layout(matrix(1))
+par(mar=c(4,4,1,0))
+plot(res_MA_prop$Mean, 1:length(res_MA_prop$Mean), ylab=NA, yaxt="n", bty="n", xlim=c(-2,2), ylim=c(0.25, length(res_MA_prop$Mean)+.5), xlab="effect size [Hg]", pch=res_MA_prop$pch, cex=1.5, cex.axis=.9, xaxp=c(-1, 1, 4) )
+abline(v=0,lty=3)
+mtext(res_MA_prop$Dataset[1:length(res_MA_prop$Dataset)], side = 2, line = -3, at=1:length(res_MA_prop$Dataset), las=2, cex=.8, font=3, outer = FALSE) #add dataset labels
+#mtext(res_MA_prop$Model[1:2], 2, -1, at=1:2, las=2, cex=.8, font=1)
+segments(res_MA_prop$CI.lb, 1:length(res_MA_prop$M), res_MA_prop$CI.ub, 1:length(res_MA_prop$M), lwd=1.25) #add whiskers for CI
+for (i in 1:length(rownames(res_MA_prop))) mtext(res_MA_prop$Signif[i], side = 2, line = -5, at=i, las=2, cex=.7) #add stars
+mtext(res_MA_prop$k, 4, -2.8, at=1:(length(res_MA_prop$k)), las=2, cex=.8, font=1, adj=1) #add k values
+mtext("k", 4, -2.8, at=length(res_MA_prop$k)+0.5, las=2, cex=.8, font=3, adj=1)
+title("Proportion data")
+dev.off()
+```
+
+
+
+
+###################################################################
+## MR interaction plot for Test Type vs.Measurement Type 
+###################################################################
+
+```{r forestplot MA Models, echo=FALSE}
+res_MRi <- read.csv("./Tables/Table MR_TT_MT_i.csv", col.names=c("ES", "Dataset", "Intercept", "Test Type", "Measurement Type", "Mean" ,"CI.lb", "CI.ub", "k"), skip=2)
+str(res_MRi)
+#res_MRi <- dplyr::filter(res_MRi, Mean != "NA") #get rid of redundant rows
+res_MRi$Signif <- ifelse(res_MRi$CI.lb>0 | res_MRi$CI.ub<0, "*", "") #add column with stars for estimates that significantly differ from zero
+res_MRi$pch <- 20 #set font size
+#res_MRi <- res_MRi[dim(res_MRi)[1]:1, ] #reverse order
+
+
+p1 <- ggplot(res_MRi[1:4,], aes(x=Measurement.Type, y=Mean, color= Test.Type, group=Test.Type)) + 
+    geom_point() + 
+    geom_line(size=1.2) +
+    geom_ribbon(aes(ymin=CI.lb, ymax=CI.ub, fill= Test.Type),alpha=0.3) + 
+    geom_hline(yintercept = 0, linetype="dashed") +
+    labs(title = "A. All data", x= "Measurement type", y="Hg", color="Measurement.Type", fill="Measurement.Type") + theme_classic() + theme(text=element_text(size=10)) +
+    theme(legend.position = c(0.2, 0.9)) +
+    coord_cartesian(ylim = c(-0.6, 1.4))
+
+p2 <- ggplot(res_MRi[7:10,], aes(x=Measurement.Type, y=Mean, color= Test.Type, group=Test.Type)) + 
+    geom_point() + 
+    geom_line(size=1.2) +
+    geom_ribbon(aes(ymin=CI.lb, ymax=CI.ub, fill= Test.Type),alpha=0.3) + 
+    geom_hline(yintercept = 0, linetype="dashed") +
+    labs(title = "B. Max(Hg) subset", x= "Measurement type", y="Hg", color="Measurement.Type", fill="Measurement.Type") + theme_classic() + theme(text=element_text(size=10)) +
+    theme(legend.position = c(0.2, 0.9)) +
+    coord_cartesian(ylim = c(-0.6, 1.4))
+
+p3 <- ggplot(res_MRi[13:16,], aes(x=Measurement.Type, y=Mean, color= Test.Type, group=Test.Type)) + 
+    geom_point() + 
+    geom_line(size=1.2) +
+    geom_ribbon(aes(ymin=CI.lb, ymax=CI.ub, fill= Test.Type),alpha=0.3) + 
+    geom_hline(yintercept = 0, linetype="dashed") +
+    labs(title = "C. Max(abs(Hg)) subset", x= "Measurement type", y="Hg", color="Measurement.Type", fill="Measurement.Type") + theme_classic() + theme(text=element_text(size=10)) +
+    theme(legend.position = c(0.2, 0.9)) +
+    coord_cartesian(ylim = c(-0.6, 1.4))
+
+p4 <- ggplot(res_MRi[19:22,], aes(x=Measurement.Type, y=Mean, color= Test.Type, group=Test.Type)) + 
+    geom_point() + 
+    geom_line(size=1.2) +
+    geom_ribbon(aes(ymin=CI.lb, ymax=CI.ub, fill= Test.Type),alpha=0.3) + 
+    geom_hline(yintercept = 0, linetype="dashed") +
+    labs(title = "D. Dominant Hg subset", x= "Measurement type", y="Hg", color="Measurement.Type", fill="Measurement.Type") + theme_classic() + theme(text=element_text(size=10)) +
+    theme(legend.position = c(0.2, 0.9)) +
+    coord_cartesian(ylim = c(-0.6, 1.4))
+
+
+#grid.arrange(p1, p2, p3, p4, ncol = 2, nrow = 2)
+
+pdf(file="plots/Fig_MR_TT_MT_i.pdf",width=8,height=8,pointsize=12)
+  grid.arrange(p1, p2, p3, p4, ncol = 2, nrow = 2)
+dev.off()
+```
+
+
+
+## Species forest + phylogeny
+
+```{r species plot}
+### PLOT - species phylogeny and forest plot v2 (narrower)
+# loading data
+tree <- read.tree(file="tree_all.tre")
+load("./Rdata/MR_all_species.Rdata") #with phylogeny
+#load("./Rdata/MR_all_species2.Rdata") #without phylogeny
+ssp <- MR_all_species
+load("Rdata/MA_all.Rdata")
+#gsub("ScientificName","",rownames(summary(MR_all_species)$b))
+res_species_df <- data.frame(Model = substr(attr(ssp$b,"dimnames")[[1]], 15, 50), M = ssp$b, CI.lb = ssp$ci.lb, CI.ub = ssp$ci.ub, I2=NA, pch=20)
+res_species_df <- res_species_df[match(tree$tip.label, res_species_df$Model), ] #reorder dataframe to match order of the tip labels on the tree
+res_species_df$Signif <- ifelse(res_species_df$CI.lb>0 | res_species_df$CI.ub<0, "*", "") #add column with stars for estimates that significantly differ from zero
+count_animals <- data.frame(Model=names(table(dat$Species_Latin)), k=table(dat$Species_Latin)) #count how many ES per species
+merged_res_species_df <- merge(res_species_df, count_animals, all=FALSE, sort=FALSE)
+tab <- read.csv("tables/papers_table.csv")
+table(tab$Species)
+count_papers <- data.frame(Model=names(table(tab$Species)), K=table(tab$Species)) #count how many papers per species
+merged_res_species_df2 <- merge(merged_res_species_df, count_papers, all=FALSE, sort=FALSE)
+merged_res_species_df2 <- rbind(merged_res_species_df2, data.frame(Model=c("Meta-analytic mean "), M=MA_all$b[1], CI.lb=MA_all$ci.lb[1], CI.ub=MA_all$ci.ub[1], I2=NA, pch=18, Signif="", k.Var1 = NA, k.Freq=sum(merged_res_species_df2$k.Freq), K.Var1=NA, K.Freq=sum(merged_res_species_df2$K.Freq)))
+write.csv(merged_res_species_df2,"tables/MR_species_res.csv")
+
+pdf(file="plots/Fig_species_v2.pdf",width=6.5,height=6.5,pointsize=11)
+layout(matrix(c(1,2),1), c(1,3), c(1,3))
+par(mar=c(5.2,1,3.1,0))
+plot(tree, font=1, cex=0.8, x.lim=1, show.tip.label = FALSE)
+par(mar=c(4,7,1,0))
+plot(merged_res_species_df2$M, 1:length(merged_res_species_df2$M), ylab=NA, yaxt="n", bty="n", xlim=c(-4,4), ylim=c(0.25, length(merged_res_species_df2$M)+.5), xlab="effect size [Hg]", pch=merged_res_species_df2$pch, cex=1.5, cex.axis=.9, xaxp=c(-1, 1, 4) )
+abline(v=0,lty=3)
+mtext(merged_res_species_df2$Model[1:length(merged_res_species_df2$Model)], 2, -1, at=1:length(merged_res_species_df2$Model), las=2, cex=.8, font=3)
+#mtext(merged_res_species_df2$Model[1:2], 2, -1, at=1:2, las=2, cex=.8, font=1)
+segments(merged_res_species_df2$CI.lb, 1:length(merged_res_species_df2$M), merged_res_species_df2$CI.ub, 1:length(merged_res_species_df2$M), lwd=1.25)
+for (i in 1:length(rownames(merged_res_species_df2))) mtext(merged_res_species_df2$Signif[i], 2, -1.5, at=i, las=2, cex=.7) #add stars
+mtext(merged_res_species_df2$k.Freq, 4, -2.8, at=1:(length(merged_res_species_df2$k.Freq)), las=2, cex=.8, font=1, adj=1) #add k values
+mtext(merged_res_species_df2$K.Freq, 4, -1.4, at=1:(length(merged_res_species_df2$K.Freq)), las=2, cex=.8, font=1, adj=1) #add K values
+mtext("k", 4, -2.8, at=length(merged_res_species_df2$k.Freq)+1, las=2, cex=.8, font=1, adj=1)
+mtext("K", 4, -1.4, at=length(merged_res_species_df2$K.Freq)+1, las=2, cex=.8, font=1, adj=1)
+dev.off()
+
+#NOTE: fine edit plot formatting in AdobeIllustrator (add pictograms)
+```
+
+
+```{r boxplot Sex vs MeasureType, echo=FALSE}
+pdf(file="plots/Fig_boxplot_raw_Sex_MeasureType.pdf",width=11,height=5,pointsize=11)
+boxplot(dat$d ~ dat$Sex + dat$MeasureType, ylab="effect size [Hg]", varwidth=TRUE)
+abline(h=0, lty=3)
+dev.off()
+```
+
+
+```{r forestplot Full Model, echo=FALSE}
+res_full <- read.csv("./Tables/Table S7.csv", col.names=c("names", "Levels.and.contrasts","Mean", "CI.lb", "CI.ub", "k"), skip=2)
+str(res_full)
+res_full$Signif <- ifelse(res_full$CI.lb>0 | res_full$CI.ub<0, "*", "") #add column with stars for estimates that significantly differ from zero
+res_full$k <- c(table(dat$Sex, dat$MeasureType),rep(NA,6))
+res_full$pch <- 20
+res_full$Levels.and.contrasts <- gsub(" – ", " vs. ", res_full$Levels.and.contrasts) 
+res_full <- res_full[dim(res_full)[1]:1, ] #reverse order
+
+pdf(file="plots/Fig_full_model.pdf",width=6,height=4,pointsize=12)
+par(mfcol=c(1,1))
+#layout(matrix(1))
+par(mar=c(4,6,1,0))
+plot(res_full$M, 1:length(res_full$M), ylab=NA, yaxt="n", bty="n", xlim=c(-2,2), ylim=c(0.25, length(res_full$M)+.5), xlab="effect size [Hg]", pch=res_full$pch, cex=1.5, cex.axis=.9, xaxp=c(-1, 1, 4) )
+abline(v=0,lty=3)
+mtext(res_full$Levels.and.contrasts[1:length(res_full$Levels.and.contrasts)], side = 2, line = -6, at=1:length(res_full$Levels.and.contrasts), las=2, cex=.8, font=3, outer = FALSE)
+#mtext(res_full$Model[1:2], 2, -1, at=1:2, las=2, cex=.8, font=1)
+segments(res_full$CI.lb, 1:length(res_full$M), res_full$CI.ub, 1:length(res_full$M), lwd=1.25)
+for (i in 1:length(rownames(res_full))) mtext(res_full$Signif[i], side = 2, line = -7, at=i, las=2, cex=.7) #add stars
+mtext(res_full$k, 4, -2.8, at=1:(length(res_full$k)), las=2, cex=.8, font=1, adj=1) #add k values
+mtext("k", 4, -2.8, at=length(res_full$k)+1, las=2, cex=.8, font=1, adj=1)
+
+dev.off()
+```
+
+### Figure Funnels  
+Funnel plots for the estimated effect sizes for meta-analytic (intercept-only) models for the difference between better and worse treatments (*Hg*). 
+Positive values of *Hg* can be interpreted as animals in relatively better treatment group being more "optimistic"than animals in relatively worse treatment group. 
+Panel **A** is based on raw effect sizes and their precision (inversed square root of standard errors). Panel **B** is based on the residual values from the full meta-regression models, containing all moderators, and their precision.  
+
+```{r Figure Funnels}
+#rm(list=ls())
+load("Rdata/MA_all.Rdata")
+load(file="Rdata/residuals_Prec.RData") #loads es and Prec for residuals
+load(file="Rdata/bayesian_runs_full1.RData") #m1: bayesian_full1.1
+model <- bayesian_full1.1
+
+pdf(file="plots/Figure_funnels.pdf",width=8,height=4,family="sans",pointsize=10)
+par(mfcol=c(1,2),mar=c(5,4,2,1.75),oma=c(1,2,1,0))
+
+#raw data
+ES <- dat$d
+VES <- dat$Vd
+prec <- 1/sqrt(VES)
+plot(prec~ES, pch=16, xlim=c(-8,8), ylim=c(0,10),  xlab="Effect size [Hg]", ylab=expression("Precision  "(1/SE)),  main="", type="n") #raw
+points(prec~ES, col=rgb(0, 0, 0, alpha=0.3), pch=16)
+abline(v=0,lty=3)
+mtext("A",3,0,at=-12, cex=1.4, font=2)
+
+#regressed residuals
+plot(prec~es, xlim=c(-8,8), ylim=c(0,10), pch=16, xlab="Regressed residuals",	ylab=expression("Precision  "(1/SE)),  main="", type="n") #es values are from Eggers regression
+points(prec~es, col=rgb(0, 0, 0, alpha=0.3), pch=16)
+abline(v=0,lty=3)
+mtext("B",3,0,at=-12, cex=1.4, font=2)
+
+dev.off()
+```
+
+
+
+
+
+###############################################################################################################
+###########################################        SUBSET - max ES per study        ########################################### 
+###############################################################################################################
+
+
+```{r subset data max ES} 
+dim(dat) #265 70
+names(dat)
+
+# View(tbl_df(dat) %>% group_by(ExperimentID, MeasureType, GroupID, ComparisonCategory, Sex) %>% summarise_at("d", funs(n())) ) #how many rows within each group 105, 121 129
+
+dat_max <- tbl_df(dat) %>% group_by(ExperimentID, MeasureType, GroupID, ComparisonCategory, Sex) %>% summarise_at("d", funs(max(., na.rm = TRUE))) #which d value is max within each group
+dat_max$d
+#hist(dat_max$d)
+dim(dat_max) #107
+unique(dat_max$d) #all 107 - can use to merge back
+
+dat_max_merged <- dplyr::inner_join(dat, dat_max, by = c("ExperimentID","MeasureType","GroupID","ComparisonCategory", "Sex","d"))
+
+dim(dat_max_merged)
+names(dat_max_merged)
+#View(dat_max_merged)
+
+dat_max <- dat_max_merged
+str(dat_max)
+
+## prepare VCV matrix - all data
+VCV_max <- make_VCV_matrix(data = dat_max, V = "Vd", cluster = "GroupID", obs = "EffectID")
+```
+
+
+## Species forest + phylogeny
+
+```{r species plot max}
+### PLOT - species phylogeny and forest plot v2 (narrower)
+# loading data
+tree <- read.tree(file="tree_all.tre")
+load("./Rdata/MR_all_max_species.Rdata") #with phylogeny
+#load("./Rdata/MR_all_species2.Rdata") #without phylogeny
+ssp <- MR_all_max_species
+load("Rdata/MA_all_max.Rdata")
+MA <- MA_all_max
+#gsub("ScientificName","",rownames(summary(MR_all_species)$b))
+res_species_df <- data.frame(Model = substr(attr(ssp$b,"dimnames")[[1]], 15, 50), M = ssp$b, CI.lb = ssp$ci.lb, CI.ub = ssp$ci.ub, I2=NA, pch=20)
+res_species_df <- res_species_df[match(tree$tip.label, res_species_df$Model), ] #reorder dataframe to match order of the tip labels on the tree
+res_species_df$Signif <- ifelse(res_species_df$CI.lb>0 | res_species_df$CI.ub<0, "*", "") #add column with stars for estimates that significantly differ from zero
+count_animals <- data.frame(Model=names(table(dat_max$Species_Latin)), k=table(dat_max$Species_Latin)) #count how many ES per species
+merged_res_species_df <- merge(res_species_df, count_animals, all=FALSE, sort=FALSE)
+tab <- read.csv("tables/papers_table.csv")
+table(tab$Species)
+count_papers <- data.frame(Model=names(table(tab$Species)), K=table(tab$Species)) #count how many papers per species
+merged_res_species_df2 <- merge(merged_res_species_df, count_papers, all=FALSE, sort=FALSE)
+merged_res_species_df2 <- rbind(merged_res_species_df2, data.frame(Model=c("Meta-analytic mean "), M=MA$b[1], CI.lb=MA$ci.lb[1], CI.ub=MA$ci.ub[1], I2=NA, pch=18, Signif="", k.Var1 = NA, k.Freq=sum(merged_res_species_df2$k.Freq), K.Var1=NA, K.Freq=sum(merged_res_species_df2$K.Freq)))
+write.csv(merged_res_species_df2,"tables/MR_species_res_max.csv")
+
+pdf(file="plots/Fig_species_max_v2.pdf",width=6.5,height=6.5,pointsize=11)
+layout(matrix(c(1,2),1), c(1,3), c(1,3))
+par(mar=c(5.2,1,3.1,0))
+plot(tree, font=1, cex=0.8, x.lim=1, show.tip.label = FALSE)
+par(mar=c(4,7,1,0))
+plot(merged_res_species_df2$M, 1:length(merged_res_species_df2$M), ylab=NA, yaxt="n", bty="n", xlim=c(-4,4), ylim=c(0.25, length(merged_res_species_df2$M)+.5), xlab="effect size [Hg]", pch=merged_res_species_df2$pch, cex=1.5, cex.axis=.9, xaxp=c(-1, 1, 4) )
+abline(v=0,lty=3)
+mtext(merged_res_species_df2$Model[1:length(merged_res_species_df2$Model)], 2, -1, at=1:length(merged_res_species_df2$Model), las=2, cex=.8, font=3)
+#mtext(merged_res_species_df2$Model[1:2], 2, -1, at=1:2, las=2, cex=.8, font=1)
+segments(merged_res_species_df2$CI.lb, 1:length(merged_res_species_df2$M), merged_res_species_df2$CI.ub, 1:length(merged_res_species_df2$M), lwd=1.25)
+for (i in 1:length(rownames(merged_res_species_df2))) mtext(merged_res_species_df2$Signif[i], 2, -1.5, at=i, las=2, cex=.7) #add stars
+mtext(merged_res_species_df2$k.Freq, 4, -2.8, at=1:(length(merged_res_species_df2$k.Freq)), las=2, cex=.8, font=1, adj=1) #add k values
+mtext(merged_res_species_df2$K.Freq, 4, -1.4, at=1:(length(merged_res_species_df2$K.Freq)), las=2, cex=.8, font=1, adj=1) #add K values
+mtext("k", 4, -2.8, at=length(merged_res_species_df2$k.Freq)+1, las=2, cex=.8, font=1, adj=1)
+mtext("K", 4, -1.4, at=length(merged_res_species_df2$K.Freq)+1, las=2, cex=.8, font=1, adj=1)
+dev.off()
+
+#NOTE: fine edit plot formatting in AdobeIllustrator (add pictograms)
+```
+
+
+
+```{r boxplot Sex vs MeasureType, echo=FALSE}
+pdf(file="plots/Fig_boxplot_raw_Sex_MeasureType_max.pdf",width=11,height=5,pointsize=11)
+boxplot(dat_max$d ~ dat_max$Sex + dat_max$MeasureType, ylab="effect size [Hg]", varwidth=TRUE)
+abline(h=0, lty=3)
+dev.off()
+```
+
+
+```{r forestplot Full Model max, echo=FALSE}
+res_full <- read.csv("./Tables/Table S7 max.csv", col.names=c("names", "Levels.and.contrasts","Mean", "CI.lb", "CI.ub", "k"), skip=2)
+str(res_full)
+res_full$Signif <- ifelse(res_full$CI.lb>0 | res_full$CI.ub<0, "*", "") #add column with stars for estimates that significantly differ from zero
+res_full$k <- c(table(dat_max$Sex, dat_max$MeasureType),rep(NA,6))
+res_full$pch <- 20
+res_full$Levels.and.contrasts <- gsub(" – ", " vs. ", res_full$Levels.and.contrasts) 
+res_full <- res_full[dim(res_full)[1]:1, ] #reverse order
+
+pdf(file="plots/Fig_full_model_max.pdf",width=6,height=4,pointsize=12)
+par(mfcol=c(1,1))
+#layout(matrix(1))
+par(mar=c(4,6,1,0))
+plot(res_full$M, 1:length(res_full$M), ylab=NA, yaxt="n", bty="n", xlim=c(-2,2), ylim=c(0.25, length(res_full$M)+.5), xlab="effect size [Hg]", pch=res_full$pch, cex=1.5, cex.axis=.9, xaxp=c(-1, 1, 4) )
+abline(v=0,lty=3)
+mtext(res_full$Levels.and.contrasts[1:length(res_full$Levels.and.contrasts)], side = 2, line = -6, at=1:length(res_full$Levels.and.contrasts), las=2, cex=.8, font=3, outer = FALSE)
+#mtext(res_full$Model[1:2], 2, -1, at=1:2, las=2, cex=.8, font=1)
+segments(res_full$CI.lb, 1:length(res_full$M), res_full$CI.ub, 1:length(res_full$M), lwd=1.25)
+for (i in 1:length(rownames(res_full))) mtext(res_full$Signif[i], side = 2, line = -7, at=i, las=2, cex=.7) #add stars
+mtext(res_full$k, 4, -2.8, at=1:(length(res_full$k)), las=2, cex=.8, font=1, adj=1) #add k values
+mtext("k", 4, -2.8, at=length(res_full$k)+1, las=2, cex=.8, font=1, adj=1)
+
+dev.off()
+```
+
+### Figure Funnels  
+Funnel plots for the estimated effect sizes for meta-analytic (intercept-only) models for the difference between better and worse treatments (*Hg*). 
+Positive values of *Hg* can be interpreted as animals in relatively better treatment group being more "optimistic"than animals in relatively worse treatment group. 
+Panel **A** is based on raw effect sizes and their precision (inversed square root of standard errors). Panel **B** is based on the residual values from the full meta-regression models, containing all moderators, and their precision.  
+
+#TODO
+```{r Figure Funnels}
+#rm(list=ls())
+load("Rdata/MA_all_max.Rdata")
+load(file="Rdata/residuals_Prec.RData") #loads es and Prec for residuals
+load(file="Rdata/bayesian_runs_full1.RData") #m1: bayesian_full1.1
+model <- bayesian_full1.1
+
+pdf(file="plots/Figure_funnels.pdf",width=8,height=4,family="sans",pointsize=10)
+par(mfcol=c(1,2),mar=c(5,4,2,1.75),oma=c(1,2,1,0))
+
+#raw data
+ES <- dat$d
+VES <- dat$Vd
+prec <- 1/sqrt(VES)
+plot(prec~ES, pch=16, xlim=c(-8,8), ylim=c(0,10),  xlab="Effect size [Hg]", ylab=expression("Precision  "(1/SE)),  main="", type="n") #raw
+points(prec~ES, col=rgb(0, 0, 0, alpha=0.3), pch=16)
+abline(v=0,lty=3)
+mtext("A",3,0,at=-12, cex=1.4, font=2)
+
+#regressed residuals
+plot(prec~es, xlim=c(-8,8), ylim=c(0,10), pch=16, xlab="Regressed residuals",	ylab=expression("Precision  "(1/SE)),  main="", type="n") #es values are from Eggers regression
+points(prec~es, col=rgb(0, 0, 0, alpha=0.3), pch=16)
+abline(v=0,lty=3)
+mtext("B",3,0,at=-12, cex=1.4, font=2)
+
+dev.off()
+```
+
+
+###################################################
+# Univariate models - all data
+###################################################
+
+```{r forestplot Univariate Models - all data, echo=FALSE}
+res_univ_all <- read.csv("./Tables/Table_MR_univ_all.csv", col.names=c("Moderator", "Levels.and.contrasts","Mean", "CI.lb", "CI.ub","x.1", "x.2", "x.3"), skip=1) 
+str(res_univ_all)
+res_univ_all$Signif <- ifelse(res_univ_all$CI.lb>0 | res_univ_all$CI.ub<0, "*", "") #add column with stars for estimates that significantly differ from zero
+res_univ_all$pch <- 20
+res_univ_all$Levels.and.contrasts <- gsub(" – ", " vs. ", res_univ_all$Levels.and.contrasts) 
+res_univ_all$Levels.and.contrasts <- gsub(" intercept", "", res_univ_all$Levels.and.contrasts) 
+res_univ_all$Levels.and.contrasts <- gsub(" contrast", "", res_univ_all$Levels.and.contrasts) 
+res_univ_all <- res_univ_all[dim(res_univ_all)[1]:1, ] #reverse order
+
+pdf(file="plots/Fig_univ_model_all.pdf",width=8,height=12,pointsize=10)
+par(mfcol=c(1,1))
+#layout(matrix(1))
+par(mar=c(4,7,1,0))
+plot(res_univ_all$Mean, 1:length(res_univ_all$Mean), ylab=NA, yaxt="n", bty="n", xlim=c(-2,2), ylim=c(0.25, length(res_univ_all$Mean)+.5), xlab="effect size [Hg]", pch=res_univ_all$pch, cex=1.5, cex.axis=.9, xaxp=c(-1, 1, 4) )
+abline(v=0,lty=3)
+mtext(res_univ_all$Moderator[1:length(res_univ_all$Moderator)], side=2, line=7, at=1:length(res_univ_all$Moderator), las=2, cex=.8, font=2, adj=0, outer=FALSE)
+mtext(res_univ_all$Levels.and.contrasts[1:length(res_univ_all$Levels.and.contrasts)], side=2, line=6, at=1:length(res_univ_all$Levels.and.contrasts), las=2, cex=.8, font=3, adj=0, outer=FALSE)
+segments(res_univ_all$CI.lb, 1:length(res_univ_all$Mean), res_univ_all$CI.ub, 1:length(res_univ_all$Mean), lwd=1.25)
+for (i in 1:length(rownames(res_univ_all))) mtext(res_univ_all$Signif[i], side = 2, line = 6.2, at=i, las=2, cex=.7) #add stars
+title("All data")
+#mtext(res_univ_all$k, 4, -2.8, at=1:(length(res_univ_all$k)), las=2, cex=.8, font=1, adj=1) #add k values
+#mtext("k", 4, -2.8, at=length(res_univ_all$k)+1, las=2, cex=.8, font=1, adj=1)
+#add overall MA mean?
+dev.off()
+```
+
+
+```{r forestplot Univariate Models - all data max_absES, echo=FALSE}
+res_univ_max_absES <- read.csv("./Tables/Table_MR_univ_all_max_absES.csv", col.names=c("Moderator", "Levels.and.contrasts","Mean", "CI.lb", "CI.ub","x.1", "x.2", "x.3"), skip=1) 
+str(res_univ_max_absES)
+res_univ_max_absES$Signif <- ifelse(res_univ_max_absES$CI.lb>0 | res_univ_max_absES$CI.ub<0, "*", "") #add column with stars for estimates that significantly differ from zero
+#res_univ_max_absES$k <- c(table(dat$Sex, dat$MeasureType),rep(NA,6))
+res_univ_max_absES$pch <- 20
+res_univ_max_absES$Levels.and.contrasts <- gsub(" – ", " vs. ", res_univ_max_absES$Levels.and.contrasts) 
+res_univ_max_absES$Levels.and.contrasts <- gsub(" intercept", "", res_univ_max_absES$Levels.and.contrasts) 
+res_univ_max_absES$Levels.and.contrasts <- gsub(" contrast", "", res_univ_max_absES$Levels.and.contrasts) 
+res_univ_max_absES <- res_univ_max_absES[dim(res_univ_max_absES)[1]:1, ] #reverse order
+
+pdf(file="plots/Fig_univ_model_all_max_absES.pdf",width=6,height=12,pointsize=10)
+par(mfcol=c(1,1))
+#layout(matrix(1))
+par(mar=c(4,7,1,0))
+plot(res_univ_max_absES$Mean, 1:length(res_univ_max_absES$Mean), ylab=NA, yaxt="n", bty="n", xlim=c(-2,2), ylim=c(0.25, length(res_univ_max_absES$Mean)+.5), xlab="effect size [Hg]", pch=res_univ_max_absES$pch, cex=1.5, cex.axis=.9, xaxp=c(-1, 1, 4) )
+abline(v=0,lty=3)
+mtext(res_univ_max_absES$Moderator[1:length(res_univ_max_absES$Moderator)], side=2, line=7, at=1:length(res_univ_max_absES$Moderator), las=2, cex=.8, font=2, adj=0, outer=FALSE)
+
+mtext(res_univ_max_absES$Levels.and.contrasts[1:length(res_univ_max_absES$Levels.and.contrasts)], side=2, line=6, at=1:length(res_univ_max_absES$Levels.and.contrasts), las=2, cex=.8, font=3, adj=0, outer=FALSE)
+
+#mtext(res_univ_max_absES$Model[1:2], 2, -1, at=1:2, las=2, cex=.8, font=1)
+segments(res_univ_max_absES$CI.lb, 1:length(res_univ_max_absES$Mean), res_univ_max_absES$CI.ub, 1:length(res_univ_max_absES$Mean), lwd=1.25)
+for (i in 1:length(rownames(res_univ_max_absES))) mtext(res_univ_max_absES$Signif[i], side = 2, line = 6.2, at=i, las=2, cex=.7) #add stars
+title("All data Max(abs(ES)) subset")
+#mtext(res_univ_max_absES$k, 4, -2.8, at=1:(length(res_univ_max_absES$k)), las=2, cex=.8, font=1, adj=1) #add k values
+#mtext("k", 4, -2.8, at=length(res_univ_max_absES$k)+1, las=2, cex=.8, font=1, adj=1)
+#add overall MA mean?
+dev.off()
+```
+
