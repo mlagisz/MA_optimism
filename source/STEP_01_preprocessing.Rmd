@@ -1,21 +1,18 @@
 ---
 title: "preprocessing"
 author: "ML"
-date: "11/29/2017"
+date: "08/27/2019"
 output: html_document
 ---
 
 # MA of cognitive bias (optimism) in animal studies.
 
-## STEP1 - preprocessing data
+## STEP_01 - preprocessing data
 
-The outcome measures are either letencies or proportions (percent or logit). Need to use different functions for calculating effect sizes.
-
+### Setup R
 ```{r setup}
+writeLines(capture.output(sessionInfo()), "source/sessionInfo.txt") #save session info into a text file
 
-sessionInfo() #R version 3.4.2 (2017-09-28)
-#Platform: x86_64-apple-darwin15.6.0 (64-bit)
-#Running under: macOS Sierra 10.12.6
 options(scipen=100)
 
 #install.packages("car", "meta", "metafor", "ape", "dplyr", "ggplot2", "scales", "cowplot")
@@ -35,58 +32,63 @@ options(scipen=100)
 #library(easyGgplot2)
 #library(cowplot)
 
-pacman::p_load(tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr)
-source("functions.R")
+pacman::p_load(tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr, readxl, janitor) #load packages
+source("functions/functions.R") #load custom functions
 ```
 
-################################################# Load MA dataset #############################
+### Load MA dataset
                                         
-```{r MA_dataset load, eval=TRUE}                                          
-#load proportion data from text file:
-dat <- read.csv("MA_dataset_2018_checked.csv")
+```{r load MA extractions dataset, eval=TRUE}                                          
+#load data from Excel file:
+dat <- read_excel("./data/MA_dataset_2019_updated.xlsx", sheet = 1, range="A1:BH520")
+dim(dat) #519 60
 names(dat)
 tail(dat)
 str(dat) 
-dim(dat)
 
-unlist(lapply(dat, function(x) sum(is.na(x)))) #how many NA per numerical column
-dat <- dplyr::select(dat, -c(Checked : X.7)) #get rid of empty columns (last 7 columns) and 2 other unneeded ones
-dat <- dplyr::filter(dat, !is.na(Better)) #get rid of rows with no data (last empty row)
-table(dat$DataSE) # 0 SE were missing
-dat <- droplevels(dat)
-table(dat$WithinBetween) # 168 "between", 96 "within"
-table(dat$StudyDesign, dat$WithinBetween) #good overlap
-dat$EffectID #262 levels for 264 rows, needs fixing
-dat$EffectID <- paste("Effect", 1:nrow(dat), sep="_") #fix column with ES ID (unique ID for effect sizes)
-dat[,"EffectID"] <- as.factor(dat$EffectID)
+#exclude data points marked as "Y" in the Exclude column: 
+dat %>% tabyl(Exclude) #60 rows to be removed (usually missing values at cues or wrong experimental design)
+dat %>% filter(is.na(Exclude)) -> dat
+dim(dat) #459 60
+dat %>% dplyr::select(-c(Exclude)) -> dat#get rid of empty column
 
-dim(dat) #264 59
+#check for missing data:
+unlist(lapply(dat, function(x) sum(is.na(x)))) #see how many NA per numerical column, no missing means or SD or SE or N
+
+get_dupes(dat, EffectID) #there are 5 pairs of duplicated EffectID, fix
+dat$EffectID <- as.factor(paste("ES", 1:nrow(dat), sep="_")) #fix column with ES ID (unique ID for effect sizes)
+
+dat <- droplevels(dat) #get rid of redundant factor levels
 ```
 
-
+### Initial data checks
 
 ```{r data check, eval=TRUE}  
+#study designs
+dat %>% tabyl(WithinBetween)
+dat %>% tabyl(StudyDesign, WithinBetween)
+
 #which means are already logit-transformed?
 table(dat$DataScale) #6 data points on logit scale
 dat[which(dat$DataScale == "logit"), ]
 
 #find rows with means or SD = 0 for natural scale proportion data
-dat[which(dat$Better == 0 & dat$DataScale == "natural"), ] #none
-dat[which(dat$BetterSD == 0 & dat$DataScale == "natural"), ] #none
-dat[which(dat$Worse == 0 & dat$DataScale == "natural"), ] #3 rows
-dat[which(dat$WorseSD == 0 & dat$DataScale == "natural"), ] #3 rows
-dat[which(dat$Worse < 0.5 & dat$DataScale == "natural"), ]$Worse
+dat[which(dat$Better == 0 & dat$DataScale == "natural"), ] #2 rows
+dat[which(dat$BetterSD == 0 & dat$DataScale == "natural"), ] #n5 rows
+dat[which(dat$Worse == 0 & dat$DataScale == "natural"), ] #10 rows
+dat[which(dat$WorseSD == 0 & dat$DataScale == "natural"), ] #15 rows
+sort(dat[which(dat$Worse < 0.5 & dat$DataScale == "natural"), ]$Worse)
 dat$Worse[which(dat$Worse == 0 & dat$DataScale == "natural")] <- 0.01 #substitute the 0 values with 0.01
-dat[which(dat$WorseSD < 0.5 & dat$DataScale == "natural"), ]$WorseSD 
+sort(dat[which(dat$WorseSD < 0.5 & dat$DataScale == "natural"), ]$WorseSD)
 dat$WorseSD[which(dat$WorseSD == 0 & dat$DataScale == "natural")] <- 0.01 #substitute the 0 values with 0.01
 
 #find rows with means proportions > 1 (more than 100%) for the proportion data subset
-dat[which(dat$Better >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ] #1 row
-dat[which(dat$Worse >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ] #1 row
-dat[which(dat$Worse > 0.9 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ]$Worse #largest value before 1 is 0.95
-dat$Worse[which(dat$Worse >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion")] <- 0.96 #substitute the >1 value with 0.96
-dat[which(dat$Better > 0.9 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ]$Better #largest value before 1 is 1 (0.993)
-dat$Better[which(dat$Better >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion")] <- 0.994 #substitute the >1 value with 0.994
+dat[which(dat$Better >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ] #32 rows
+dat[which(dat$Worse >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ] #35 rows
+sort(dat[which(dat$Worse > 0.9 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ]$Worse) #largest value before 1 is 99.16
+dat$Worse[which(dat$Worse >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion")] <- 0.96 #substitute the >1 value with 0.992
+sort(dat[which(dat$Better > 0.9 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ]$Better) #largest value before 1 is 98.33
+dat$Better[which(dat$Better >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion")] <- 0.994 #substitute the >1 value with 0.992
 
 #check again for rows with mean proportion > 1 (more than 100%) for the proportion data
 dat[which(dat$Better >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ] #0 rows
@@ -94,29 +96,54 @@ dat[which(dat$Worse >= 1 & dat$DataScale == "natural" & dat$MeasureType == "prop
 ```
 
 
+### Caluclate effect sizes (ES)
+
+The outcome measures are either letencies or proportions (percent or logit). Need to use different functions for calculating effect sizes.
+
 ```{r calculate ES, eval=TRUE}  
-#subset dataframe and recalculate means and variances to the same scale using custom functions for specific data types and scales
- table(dat$MeasureType, dat$DataScale) # 138 "latency", 120 "proportion", and 6 logit proportion
+ dat %>% tabyl(MeasureType, DataScale) # 201 "latency" (natural), 248 "proportion", and 10 "logit proportion"
+
+#subset the original dataframe by outcome measure type and recalculate means and variances to the same scale using custom functions for specific data types and scales
 
 ## latency data subset
  dat_lat <- dplyr::filter(dat, MeasureType == "latency") #subset latency data
  dim(dat_lat) 
- table(dat_lat$WithinBetween) #by stydy design type: 100 between, 38 within
  dat_lat2 <- dat_lat %>% calc_ES_latency(Worse, WorseSD, WorseN, Better, BetterSD, BetterN, WithinBetween, adjusted=TRUE, type="lnorm") #calcualte ES (d = Hedges g) and reverse its sign
-
+ 
+ dim(dat_lat2)
+ hist(dat_lat2$d)
+ hist(dat_lat2$Vd)
+ #dplyr::filter(dat_lat2, d < -8)[, 1:6]
+ #dplyr::filter(dat_lat2, d < -8)[, 46:67]
+ 
 ## logit of proportion data subset
  dat_prop_logit <- dplyr::filter(dat, MeasureType == "proportion" & DataScale == "logit") #subset proportion data (percentage) on logit scale
  dim(dat_prop_logit)
  table(dat_prop_logit$WithinBetween) #by stydy design type: 6 between
  dat_prop_logit2 <- dat_prop_logit %>% calc_ES_proportion(Worse, WorseSD, WorseN, Better, BetterSD, BetterN, WithinBetween, adjusted=TRUE, type="logit") #calcualte ES (d = Hedges g)
- 
+
+ dim(dat_prop_logit2)
+ hist(dat_prop_logit2$d)
+ hist(dat_prop_logit2$Vd)
+  
 ## percent data subset
  dat_prop_pct <- dplyr::filter(dat, MeasureType == "proportion" & DataScale == "natural") #subset proportion data (percentage) on natural scale
  dim(dat_prop_pct) 
+ hist(dat_prop_pct$Better)
+ hist(dat_prop_pct$Worse)
+ hist(dat_prop_pct$BetterSD) #looks like % not proportion!!!!
+ hist(dat_prop_pct$WorseSD) #looks like % not proportion!!!!
+ 
  table(dat_prop_pct$WithinBetween) #by stydy design type: 62 between, 58 within
  dat_prop_pct2 <- dat_prop_pct %>% calc_ES_proportion(Worse, WorseSD, WorseN, Better, BetterSD, BetterN, WithinBetween, adjusted=TRUE, type="proportion") #calcualte ES (d = Hedges g)
  
+ dim(dat_prop_pct2)
+ hist(dat_prop_pct2$d)
+ hist(dat_prop_pct2$Vd)
 
+#dat_lat2[1:10, 46:67]
+ #dplyr::filter(dat_lat2, d < -8)[, 46:67]
+ 
 ## merge back the subsets
 dat2 <- rbind(dat_lat2, dat_prop_logit2, dat_prop_pct2)
 names(dat2)
@@ -148,7 +175,7 @@ Prepare phyogenetic tree for the included species
 #well as other information to help users ensure that the taxa matched are the correct ones
 
 names(dat2)
-table(dat2$ScientificName)
+dat2 %>% tabyl(ScientificName)
 unique(dat2$Species_Latin)
 
 species_list <- as.character(unique(dat2$Species_Latin))
@@ -255,4 +282,4 @@ write.csv(newdat, "data_with_ES_subsets.csv", row.names = FALSE)
 
 ###############################################################################
 
-NEXT: "STEP2_summary.Rmd"
+NEXT RUN: "STEP_02_summary.Rmd"
