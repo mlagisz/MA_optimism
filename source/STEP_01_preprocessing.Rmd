@@ -65,34 +65,48 @@ dat <- droplevels(dat) #get rid of redundant factor levels
 
 ```{r data check, eval=TRUE}  
 #study designs
-dat %>% tabyl(WithinBetween)
+dat %>% tabyl(WithinBetween) #mostly between
 dat %>% tabyl(StudyDesign, WithinBetween)
 
 #which means are already logit-transformed?
-table(dat$DataScale) #6 data points on logit scale
+table(dat$DataScale) #10 data points on logit scale
 dat[which(dat$DataScale == "logit"), ]
 
 #find rows with means or SD = 0 for natural scale proportion data
-dat[which(dat$Better == 0 & dat$DataScale == "natural"), ] #2 rows
-dat[which(dat$BetterSD == 0 & dat$DataScale == "natural"), ] #n5 rows
-dat[which(dat$Worse == 0 & dat$DataScale == "natural"), ] #10 rows
-dat[which(dat$WorseSD == 0 & dat$DataScale == "natural"), ] #15 rows
-sort(dat[which(dat$Worse < 0.5 & dat$DataScale == "natural"), ]$Worse)
-dat$Worse[which(dat$Worse == 0 & dat$DataScale == "natural")] <- 0.01 #substitute the 0 values with 0.01
-sort(dat[which(dat$WorseSD < 0.5 & dat$DataScale == "natural"), ]$WorseSD)
-dat$WorseSD[which(dat$WorseSD == 0 & dat$DataScale == "natural")] <- 0.01 #substitute the 0 values with 0.01
+dat[which(dat$Better <= 0 & dat$DataScale == "natural"), ] #2 rows
+dat[which(dat$BetterSD <= 0 & dat$DataScale == "natural"), ] #5 rows
 
-#find rows with means proportions > 1 (more than 100%) for the proportion data subset
-dat[which(dat$Better >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ] #32 rows
-dat[which(dat$Worse >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ] #35 rows
-sort(dat[which(dat$Worse > 0.9 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ]$Worse) #largest value before 1 is 99.16
-dat$Worse[which(dat$Worse >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion")] <- 0.96 #substitute the >1 value with 0.992
-sort(dat[which(dat$Better > 0.9 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ]$Better) #largest value before 1 is 98.33
-dat$Better[which(dat$Better >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion")] <- 0.994 #substitute the >1 value with 0.992
+sort(dat[which(dat$Better < 0.05 & dat$DataScale == "natural"), ]$Better) #see the smallest value after 0
+dat$Better[which(dat$Better <= 0 & dat$DataScale == "natural")] <- 0.01 #substitute the 0 values
+sort(dat[which(dat$BetterSD < 0.05 & dat$DataScale == "natural"), ]$BetterSD) #see the smallest value after 0
+dat$BetterSD[which(dat$BetterSD <= 0 & dat$DataScale == "natural")] <- 0.01 #substitute the 0 values
 
-#check again for rows with mean proportion > 1 (more than 100%) for the proportion data
-dat[which(dat$Better >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ] #0 rows
-dat[which(dat$Worse >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ]  #0 rows
+dat[which(dat$Worse <= 0 & dat$DataScale == "natural"), ] #10 rows
+dat[which(dat$WorseSD <= 0 & dat$DataScale == "natural"), ] #15 rows
+
+sort(dat[which(dat$Worse < 0.05 & dat$DataScale == "natural"), ]$Worse) #see the smallest value after 0
+dat$Worse[which(dat$Worse <= 0 & dat$DataScale == "natural")] <- 0.01 #substitute the <=0 values 
+sort(dat[which(dat$WorseSD < 0.05 & dat$DataScale == "natural"), ]$WorseSD) #see the smallest value after 0
+dat$WorseSD[which(dat$WorseSD <= 0 & dat$DataScale == "natural")] <- 0.01 #substitute the <=0 values
+
+#find rows with means proportions > 11 (more than 100%) for the proportion data subset
+dat[which(dat$Better >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ] #3 rows
+dat[which(dat$Worse >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ] #5 rows
+
+sort(dat[which(dat$Worse > 0.9 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ]$Worse) #see the largest value before 1
+dat$Worse[which(dat$Worse >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion")] <- 0.99 #substitute the >1 values
+sort(dat[which(dat$Better > 0.9 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ]$Better) #see the largest value before 1
+dat$Better[which(dat$Better >= 1 & dat$DataScale == "natural" & dat$MeasureType == "proportion")] <- 0.99 #substitute the >1 values
+
+
+#find rows with means proportions <= 0 (less than 0%) for the proportion data subset
+dat[which(dat$Better <= 0 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ] #2 rows
+dat[which(dat$Worse <= 0 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ] #5 rows
+
+sort(dat[which(dat$Worse < 0.05 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ]$Worse) #see the smallest value after 0
+dat$Worse[which(dat$Worse <= 0 & dat$DataScale == "natural" & dat$MeasureType == "proportion")] <- 0.01 #substitute the <=0 values 
+sort(dat[which(dat$Better < 0.05 & dat$DataScale == "natural" & dat$MeasureType == "proportion"), ]$Better) #see the smallest value after 0
+dat$Better[which(dat$Better <= 0 & dat$DataScale == "natural" & dat$MeasureType == "proportion")] <- 0.01 #substitute the <=0 values 
 ```
 
 
@@ -107,10 +121,10 @@ The outcome measures are either letencies or proportions (percent or logit). Nee
 
 ## latency data subset
  dat_lat <- dplyr::filter(dat, MeasureType == "latency") #subset latency data
- dim(dat_lat) 
+ dim(dat_lat) #201 59
  dat_lat2 <- dat_lat %>% calc_ES_latency(Worse, WorseSD, WorseN, Better, BetterSD, BetterN, WithinBetween, adjusted=TRUE, type="lnorm") #calcualte ES (d = Hedges g) and reverse its sign
  
- dim(dat_lat2)
+ dim(dat_lat2) #201 67
  hist(dat_lat2$d)
  hist(dat_lat2$Vd)
  #dplyr::filter(dat_lat2, d < -8)[, 1:6]
@@ -118,79 +132,86 @@ The outcome measures are either letencies or proportions (percent or logit). Nee
  
 ## logit of proportion data subset
  dat_prop_logit <- dplyr::filter(dat, MeasureType == "proportion" & DataScale == "logit") #subset proportion data (percentage) on logit scale
- dim(dat_prop_logit)
+ dim(dat_prop_logit) #10 59
+ 
+ hist(dat_prop_logit$Better)
+ hist(dat_prop_logit$BetterSD)
+ hist(dat_prop_logit$Worse)
+ hist(dat_prop_logit$WorseSD)
+ 
  table(dat_prop_logit$WithinBetween) #by stydy design type: 6 between
  dat_prop_logit2 <- dat_prop_logit %>% calc_ES_proportion(Worse, WorseSD, WorseN, Better, BetterSD, BetterN, WithinBetween, adjusted=TRUE, type="logit") #calcualte ES (d = Hedges g)
 
- dim(dat_prop_logit2)
+ dim(dat_prop_logit2) #10 67
  hist(dat_prop_logit2$d)
  hist(dat_prop_logit2$Vd)
   
 ## percent data subset
  dat_prop_pct <- dplyr::filter(dat, MeasureType == "proportion" & DataScale == "natural") #subset proportion data (percentage) on natural scale
- dim(dat_prop_pct) 
- hist(dat_prop_pct$Better)
- hist(dat_prop_pct$Worse)
- hist(dat_prop_pct$BetterSD) #looks like % not proportion!!!!
- hist(dat_prop_pct$WorseSD) #looks like % not proportion!!!!
+ dim(dat_prop_pct) #248 59
  
- table(dat_prop_pct$WithinBetween) #by stydy design type: 62 between, 58 within
+ hist(dat_prop_pct$Better)
+ hist(dat_prop_pct$BetterSD) 
+ hist(dat_prop_pct$Worse) 
+ hist(dat_prop_pct$WorseSD) 
+
+ table(dat_prop_pct$WithinBetween) #by stydy design type: between, within
  dat_prop_pct2 <- dat_prop_pct %>% calc_ES_proportion(Worse, WorseSD, WorseN, Better, BetterSD, BetterN, WithinBetween, adjusted=TRUE, type="proportion") #calcualte ES (d = Hedges g)
  
- dim(dat_prop_pct2)
+ dim(dat_prop_pct2) #248 67
  hist(dat_prop_pct2$d)
  hist(dat_prop_pct2$Vd)
 
-#dat_lat2[1:10, 46:67]
- #dplyr::filter(dat_lat2, d < -8)[, 46:67]
+#View(dplyr::filter(dat2, d > 4)) #look at effect sizes > 4  checked against the original papers
+#View(dplyr::filter(dat2, d < (-2))) #look at effect sizes <  -4  checked agains the original papers
+
+ #very large negative ES - check:
+ dplyr::filter(dat_prop_pct2, d < -3)[, 46:67] #3
+ dplyr::filter(dat_prop_pct2, d < -3)[, 1:10] #3
+ #very large positive ES - check:
+ dplyr::filter(dat_prop_pct2, d > 3)[, 46:67] #4
+ dplyr::filter(dat_prop_pct2, d > 3)[, 1:10] #4
  
 ## merge back the subsets
 dat2 <- rbind(dat_lat2, dat_prop_logit2, dat_prop_pct2)
 names(dat2)
-dat2$d
 hist(dat2$d)
 hist(dat2$Vd)
 
 dat2$Species_Latin <- as.character(dat2$ScientificName) #Make new column in the data frame and adjust species names
-write.csv(dat2, "data_with_ES.csv", row.names = FALSE)
-
-#View(dplyr::filter(dat2, d > 4)) #look at effect sizes > 4  checked against the original papers
-#View(dplyr::filter(dat2, d < (-2))) #look at effect sizes <  -4  checked agains the original papers
+unique(dat2$Species_Latin) #22 species
+write.csv(dat2, "data/MA_dataset_with_ES.csv", row.names = FALSE)
 ```
 
-
-```{r clean, eval=FALSE}  
-# #remove odd one?
-# #dat2[dat2$ArticleID == "Doyle2011b", ]
-# dat2 <- dat2[dat2$ArticleID != "Doyle2011b", ] #sheep long terms stress
-# dim(dat2)
-```
 
 ############## TREE 
 
 Prepare phyogenetic tree for the included species  
 
 ```{r  tree, eval=TRUE}
-#The function tnrs_match_names returns a data frame that lists the Open Tree identifiers as
-#well as other information to help users ensure that the taxa matched are the correct ones
+#"The function tnrs_match_names returns a data frame that lists the Open Tree identifiers as
+#well as other information to help users ensure that the taxa matched are the correct ones"
 
-names(dat2)
+#names(dat2)
 dat2 %>% tabyl(ScientificName)
-unique(dat2$Species_Latin)
+#unique(dat2$Species_Latin)
 
 species_list <- as.character(unique(dat2$Species_Latin))
 taxa <- tnrs_match_names(names = species_list) #call rotl function to find these species on OTL
-#taxa
-tree <- tol_induced_subtree(ott_ids= taxa[["ott_id"]])
-tree
-plot(tree, cex=.8, label.offset =.1, no.margin = TRUE)
+taxa #Capra hircus come with an extra text in the brackets, Drosophila melanogaster comes as Sporophila melanogaster with ott_id 128440, which is a wrong one (for the birs - black-bellied seedeater!)
+tree <- tol_induced_subtree(ott_ids= c(taxa[["ott_id"]], 505714)) #added correct D.melanogaster OTT: 128440 (was not fonding it correctly)
 str(tree) # no branch lengths
 is.binary.tree(tree) #TRUE 
-tree$node.label <- "" # remove
-tree$tip.label <- gsub("_ott.*","", tree$tip.label) #clean up tip labels
+tree$tip.label #23 tree tips /species
+plot(tree, cex=.8, label.offset =.1, no.margin = TRUE)
+tree$node.label <- "" # remove node labels
+tree$tip.label <- gsub("_ott.*","", tree$tip.label) #clean up tip labels - remove ottID
+tree$tip.label <- gsub("_\\(.*)","", tree$tip.label) #clean up tip labels - remove extra text in brackets
+tree <- drop.tip(tree, "Sporophila_melanogaster")
 plot(tree, cex=.8, label.offset =.1, no.margin = TRUE)
 tree <- collapse.singles(tree)
-intersect(unique(dat2$Species_Latin), tree$tip.label) #all are matching
+intersect(unique(dat2$Species_Latin), tree$tip.label) #22 are matching
+setdiff(unique(dat2$Species_Latin), tree$tip.label) #0 if all matching
 
 ### computing branch lengths
 tree_bl <- compute.brlen(tree)
@@ -201,70 +222,70 @@ str(tree_bl)
 #if you need to remove some species from the tree later (due to working on the subset of the data), use drop.tip function, for example:
 #tree_noInsect <- drop.tip(tree, "Bombus_terrestris_audax") # remove "Bombus_terrestris_audax" from the tree
 
-write.tree(tree_bl,file="tree_all.tre")
-#tree <- read.tree(file="tree_all.tre")
+write.tree(tree_bl,file="data/tree_all.tre")
+#tree <- read.tree(file="data/tree_all.tre")
 ```
 
 
 
 ############################## NEW adding variables for creating subsets
 
-```{r  subsets, eval=TRUE}
-dat <- read.csv("data_with_ES.csv")
-table(dat$ExperimentID)
-table(dat$ExperimentID, dat$Sex)
-table(dat$ExperimentID, dat$Sex, dat$MeasureType) 
-table(table(dat$ExperimentID, dat$Sex, dat$MeasureType))
-table(table(dat$ExperimentID, dat$Sex, dat$MeasureType, dat$ComparisonCategory)) #use this to get all triplets and singlets (points from the same curve)
+```{r subsets, eval=TRUE}
+#dat2 <- read.csv("data/MA_dataset_with_ES.csv")
 
-dat2 <- dat
-#tbl_df(dat2) %>% group_by(ExperimentID, MeasureType, GroupID, ComparisonCategory, Sex) # triplets are set by indices stored in a list (107)
-dat2$unique <- as.factor(paste(paste0(dat2$ExperimentID, dat2$MeasureType, dat2$GroupID, dat2$ComparisonCategory, dat2$Sex)))
+#table(dat2$ExperimentID)
+#table(dat2$ExperimentID, dat2$Sex)
+#table(dat2$ExperimentID, dat2$Sex, dat2$MeasureType) 
+#table(table(dat$ExperimentID, dat2$Sex, dat2$MeasureType))
+table(table(dat2$ExperimentID, dat2$Sex, dat2$MeasureType, dat2$ComparisonCategory)) #use this to get all the sets of points from the same curve (1-5)
+
+#tbl_df(dat2) %>% group_by(ExperimentID, MeasureType, GroupID, ComparisonCategory, Sex) # sets of points are set by indices stored in a list
+dat2$unique <- as.factor(paste(paste0(dat2$ExperimentID, dat2$MeasureType, dat2$GroupID, dat2$ComparisonCategory, dat2$Sex))) # sets of points are set by unique indices stored in a column
 uni <- levels(dat2$unique)
 #uni
 
+#create a new column with absoulte avlue of each effect size
+dat2$abs_d <- abs(dat2$d)
+
+#create new empty columns
 dat2$max_ES <- NA
 dat2$biggest_ES <- NA
 dat2$biggest_meandir <- NA
-dat2$abs_d <- abs(dat2$d)
 
-  
+#fill in new columns and create new data frame 
+
 for (i in 1:length(uni)){
-  
   tempdat <- dat2[dat2$unique == uni[i],] #subset by unique==uni
 
-  #NEW: add max ES in positive direction
-  max_es <- max(tempdat$d) #max absolute value of ES
+  
+  max_es <- max(tempdat$d) #find max value of ES (in positive direction) from each curve
   max_es_row <- which(tempdat$d == max_es)[1]
   max_es_ScalePoint = tempdat$ScalePoint[max_es_row]
   tempdat$max_ES[tempdat$ScalePoint == max_es_ScalePoint[1]] <- '1'
   tempdat$max_ES[tempdat$ScalePoint != max_es_ScalePoint[1]] <- '0'
-  tempdat$ScalePoint_max <- max_es_ScalePoint[1]
+  tempdat$ScalePoint_max_ES <- max_es_ScalePoint[1]
 
-    
-  max_es <- max(abs(tempdat$d)) #max absolute value of ES
+  max_es <- max(abs(tempdat$d)) #find max absolute value of ES (in any direction) from each curve
   max_es_row <- which(tempdat$abs_d == max_es)[1]
   max_es_ScalePoint <- tempdat$ScalePoint[max_es_row]
   tempdat$biggest_ES[tempdat$ScalePoint == max_es_ScalePoint[1]] <- '1'
   tempdat$biggest_ES[tempdat$ScalePoint != max_es_ScalePoint[1]] <- '0'
-  tempdat$ScalePoint1 <- max_es_ScalePoint[1]
+  tempdat$ScalePoint_biggest_ES <- max_es_ScalePoint[1]
   
-  mean_es <- mean(tempdat$d) #max effect size in the same direction as the mean ES from the triplet
-  
-  if (mean_es<0) {
-    max_es_md <- max(abs(tempdat[tempdat$d<0,]$d))
-  }
+  mean_es <- mean(tempdat$d) #calcualte mean ES from each curve, to know its overall direction
+  # get max effect size in the same direction as the mean ES:
+  if (mean_es < 0) {
+    max_es_md <- max(abs(tempdat[tempdat$d < 0, ]$d)) #if overall negative, pick the max abs negative ES
+    }
   else {
-    max_es_md <- max(abs(tempdat[tempdat$d > 0,]$d))
+    max_es_md <- max(abs(tempdat[tempdat$d > 0, ]$d)) #if overall negative, pick the max abs positive ES
   }
-  
   max_es_md_row <- which(tempdat$abs_d == max_es_md)[1]
   max_es_md_ScalePoint <- tempdat$ScalePoint[max_es_md_row]
   
   tempdat$biggest_meandir[tempdat$ScalePoint == max_es_md_ScalePoint[1]] <- '1'
   tempdat$biggest_meandir[tempdat$ScalePoint != max_es_md_ScalePoint[1]] <- '0'
-  tempdat$ScalePoint2 <- max_es_md_ScalePoint[1]
-
+  tempdat$ScalePoint_biggest_meandir <- max_es_md_ScalePoint[1]
 
   if (i == 1){
     newdat <- tempdat
@@ -272,11 +293,23 @@ for (i in 1:length(uni)){
   else {
     newdat <- rbind(newdat,tempdat)
   }
-  
 }
 
+names(newdat)
+
+# Descriptions of the new columns:
+
+# "max_ES"            - "1" denotes the max absolute value of ES (in positive direction) from each curve
+# "biggest_ES"        - "1" denotes the max absolute value of ES (in any direction) from each curve 
+# "biggest_meandir"   - "1" denotes the max absolute value of ES (in any direction) in the same direction as the mean ES from each curve
+
+# "ScalePoint_max_ES"         -  contains the name of a ScalePoints (test cue location) matching the max_ES from each curve
+# "ScalePoint_biggest_ES"     - contains the name of a ScalePoints (test cue location) matching the biggest_ES from each curve
+# "ScalePoint_biggest_meandir"- contains the name of a ScalePoints (test cue location) matching the max_ES from each curve
+
+
 #View(newdat)
-write.csv(newdat, "data_with_ES_subsets.csv", row.names = FALSE)
+write.csv(newdat, "data/MA_dataset_with_ES_subsets.csv", row.names = FALSE)
 ```
 
 
