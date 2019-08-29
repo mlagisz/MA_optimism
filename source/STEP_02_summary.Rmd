@@ -1,13 +1,13 @@
 ---
 title: "summary"
 author: "ML"
-date: "11/29/2017"
+date: "08/27/2019"
 output: html_document
 ---
 
 # MA of cognitive bias (optimism) in animal studies.
 
-## STEP2 - summarising data
+## STEP 02 - summarising MA dataset
 
 ```{r setup, eval=TRUE}
 sessionInfo()
@@ -19,10 +19,12 @@ options(scipen=100)
 #devtools::install_github("ropensci/rotl", dependencies = TRUE, build_vignette=TRUE)
 #install.packages("rotl")
 pacman::p_load(tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr, rotl, fulltext, metafor, car)
+
+writeLines(capture.output(sessionInfo()), "source/sessionInfo.txt") #save session info into a text file
 ```
 
 ```{r load data, eval=TRUE} 
-dat <- read.csv("data_with_ES_subsets.csv")
+dat <- read.csv("data/MA_dataset_with_ES_subsets.csv")
 dim(dat) #264
 str(dat)
 names(dat)

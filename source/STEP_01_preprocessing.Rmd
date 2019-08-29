@@ -11,8 +11,6 @@ output: html_document
 
 ### Setup R
 ```{r setup}
-writeLines(capture.output(sessionInfo()), "source/sessionInfo.txt") #save session info into a text file
-
 options(scipen=100)
 
 #install.packages("car", "meta", "metafor", "ape", "dplyr", "ggplot2", "scales", "cowplot")
@@ -34,6 +32,9 @@ options(scipen=100)
 
 pacman::p_load(tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr, readxl, janitor) #load packages
 source("functions/functions.R") #load custom functions
+
+#writeLines(capture.output(sessionInfo()), "source/sessionInfo.txt") #save session info into a text file
+writeLines(capture.output(sessionInfo()), paste0("source/sessionInfo_STEP01_", format(Sys.time(), "%d-%b-%Y %H.%M"), ".txt")) #save session info into a text file with timestamp in the file name
 ```
 
 ### Load MA dataset
