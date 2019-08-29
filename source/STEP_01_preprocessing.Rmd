@@ -307,8 +307,12 @@ names(newdat)
 # "ScalePoint_biggest_ES"     - contains the name of a ScalePoints (test cue location) matching the biggest_ES from each curve
 # "ScalePoint_biggest_meandir"- contains the name of a ScalePoints (test cue location) matching the max_ES from each curve
 
-
 #View(newdat)
+tabyl(newdat, ScalePoint)
+tabyl(newdat, ScalePoint_max_ES)
+tabyl(newdat, ScalePoint_biggest_ES)
+tabyl(newdat, ScalePoint_biggest_meandir)
+
 write.csv(newdat, "data/MA_dataset_with_ES_subsets.csv", row.names = FALSE)
 ```
 
