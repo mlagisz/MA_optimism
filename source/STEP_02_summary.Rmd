@@ -7,11 +7,14 @@ output: html_document
 
 # MA of cognitive bias (optimism) in animal studies.
 
-## STEP 02 - summarising MA dataset
+## STEP 02 - checking and summarising MA dataset
 
-```{r setup, eval=TRUE}
+```{r setup, eval=TRUE, include=FALSE}
 sessionInfo()
 options(scipen=100)
+
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+knitr::opts_chunk$set(fig.path="plots/", fig.width=6.5, fig.height=4, fig.align="center")
 
 #install.packages("devtools","fulltxt")
 #library(readxl)
@@ -20,38 +23,41 @@ options(scipen=100)
 #install.packages("rotl")
 pacman::p_load(tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr, rotl, fulltext, metafor, car)
 
-writeLines(capture.output(sessionInfo()), "source/sessionInfo.txt") #save session info into a text file
+#writeLines(capture.output(sessionInfo()), "./log_sessioninfo/sessionInfo.txt") #save session info into a text file
+#writeLines(capture.output(sessionInfo()), paste0("./log_sessioninfo/sessionInfo_STEP02_", format(Sys.time(), "%d-%b-%Y %H.%M"), ".txt")) #save session info into a text file with timestamp in the file name
 ```
 
-```{r load data, eval=TRUE} 
-dat <- read.csv("data/MA_dataset_with_ES_subsets.csv")
-dim(dat) #264
+ * Load data   
+
+```{r load data, eval=TRUE, include=FALSE} 
+dat <- read.csv("../data/MA_dataset_with_ES_subsets.csv")
+dim(dat) #459  76
 str(dat)
 names(dat)
 ```
 
+ * Data checks      
 
-```{r plot d vs Vd all data, eval=TRUE} 
-######## load merged (latency+proportion) data
-plot(dat$d, dat$Vd, col=dat$MeasureType)
+```{r check continuous variables, eval=FALSE, include=FALSE} 
+#names(dat)
+
+par(mfcol=c(1,2),mar=c(4,4,2,1),oma=c(0,0,0,0))
+hist(dat$d)
+hist(dat$Vd)
+
+#plot(dat$d, 1/dat$Vd, col=dat$MeasureType, xlab = "Hedges g", ylab = "1/V Hedges g")
+
+par(mfcol=c(1,1),mar=c(4,4,2,1),oma=c(0,0,0,0))
+hist(as.numeric(dat$Year))
+#dat$Year[which(dat$Year == "Unpublished")] <- "NA" #substitute "Unpublished" with NA
 ```
 
+```{r check categorical variables, eval=FALSE, include=FALSE} 
+unique(dat$ArticleID) #72 studies
 
-```{r check continuous variables, eval=TRUE} 
-names(dat)
-hist(as.numeric(dat$Year)) #some "Unpublished" messing this up
-dat$Year[which(dat$Year == "Unpublished")] <- "NA" #substitute "Unpublished" with NA
-dat$Year2 <- as.numeric(levels(dat$Year))[dat$Year]
-hist(dat$Year2)
-hist(dat$BetterN)  
-hist(dat$WorseN)
-plot(dat$Year2, dat$d)
-```
-
-```{r check categorical variables, eval=TRUE} 
-unique(dat$ArticleID) #66 studies
 #one-way tables
-table(dat$Species_Latin)
+table(dat$ArticleID) #N effect sizes per study
+table(dat$Species_Latin) #N effect sizes per species
 table(dat$Taxa) #mostly mammals and birds
 table(dat$Sex) #mosty females
 table(dat$Age) #mosty adults
@@ -61,26 +67,32 @@ table(dat$AffectManipTiming) #mostly long-term, then before
 table(dat$StudyDesign) #mostly between
 table(dat$CrossoverDesign)
 table(dat$Automated) #usually no (or no info)
-#table(table(dat$Automated, dat$ArticleID)[2,]>0) #number of papers with automation 6
+table(table(dat$Automated, dat$ArticleID)[2,]>0) #number of papers with automation 8
 table(dat$Blind) #usually no (or no info)
-#table(table(dat$Blind, dat$ArticleID)[2,]>0) #number of papers with blinding 12
+table(table(dat$Blind, dat$ArticleID)[2,]>0) #number of papers with blinding 18
 table(dat$FoodDeprived) #usually no
 table(dat$CueTypeCat) #mostly spatial or visual
 table(dat$ComparisonCategory) #mostly Benign-Worse
 table(dat$ReinforcementCat) # mostly R-P, then R-Null
 table(dat$AmbigReinforced) #mostly no
-table(dat$TaskType) # 205 go/no-go, 59 active choice
-table(dat$MeasureType) #138 latency, 126 proportion
+table(dat$TaskType) # mostly go/no-go
+table(dat$MeasureType) #201 latency, 258 proportion
 
 #two-way tables
-addmargins(table(dat$ArticleID, dat$MeasureType)) #a few studies with both latency and proportion
+addmargins(table(dat$ArticleID, dat$MeasureType)) #5 studies with both latency and proportion
 addmargins(table(dat$ArticleID, dat$Sex)) #a few studies with both sexes separated
 addmargins(table(dat$ArticleID, dat$AffectManipCat)) #a few studies with two types of manipulation
 addmargins(table(dat$ArticleID, dat$StudyDesign)) #one study with both within and between subject data
 addmargins(table(dat$ArticleID, dat$ComparisonCategory)) #one study with more than one comparison type
-addmargins(table(dat$Measure, dat$Sex)) #a few studies with both sexes separated
+addmargins(table(dat$Taxa, dat$ArticleID)) #mostly mammals and birds
+sapply(tapply(dat$ArticleID, dat$Taxa, unique), length) #how many papers for each taxon
+sapply(tapply(dat$ArticleID, dat$Taxa, unique), length)["mammal"]
+
 #sapply(tapply(dat$ExperimentID, dat$ArticleID, unique), paste) #a few studies with more than one experiment
+hist(sapply(tapply(dat$ExperimentID, dat$ArticleID, unique), length)) #a few studies with more than one experiment
 #sapply(tapply(dat$GroupID, dat$ArticleID, unique), paste) #a few studies with more than one group of animals
+hist(sapply(tapply(dat$GroupID, dat$ArticleID, unique), length)) #a few studies with more than one group of animals
+
 table(dat$Blind, dat$StudyDesign) 
 table(dat$StudyDesign, dat$Blind) 
 table(dat$Blind, dat$ComparisonCategory) 
@@ -91,10 +103,22 @@ table(dat$MeasureType, dat$Sex)
 table(dat$TaskType, dat$MeasureType)
 ```
 
+```{r data sources by article, eval=FALSE, include=FALSE}
+dat %>% group_by(ArticleID) %>% distinct(DataSource) -> dat_sources
+dat_sources
+View(dat_sources)
+#grep("raw", dat_sources$DataSource, ignore.case=TRUE, value=TRUE) #not from authors
+grep("auth", dat_sources$DataSource, ignore.case=TRUE, value=TRUE)
+length(grep("auth", dat_sources$DataSource, ignore.case=TRUE, value=TRUE))
+dat_sources[grep("auth", dat_sources$DataSource, ignore.case=TRUE, value=FALSE), 2] #list of articleIDs
 
-### simple boxplots
+#NOTE: these are only incuded studies, we also got several data sets for studies that were not included in the final data set, so the numbers mentioned in the MS are higher
+```
 
-```{r boxplots} 
+
+* Simple boxplots
+
+```{r boxplots, eval=FALSE, include=FALSE} 
 par(mar=c(12,4,2,0))
 boxplot(dat$d ~ dat$Species_Latin, las=2, ylab="Hg", varwidth=TRUE)
 par(mar=c(4,4,2,0))
@@ -112,16 +136,15 @@ boxplot(dat$d ~ dat$AmbigReinforced, ylab="Hg", varwidth=TRUE)
 boxplot(dat$d ~ dat$CueTypeCat, ylab="Hg", varwidth=TRUE)
 boxplot(dat$d ~ dat$ComparisonCategory, ylab="Hg", varwidth=TRUE)
 boxplot(dat$d ~ dat$AffectManipTiming, ylab="Hg", varwidth=TRUE)
-boxplot(dat$d ~ dat$Stress, ylab="Hg", varwidth=TRUE)
 boxplot(dat$d ~ dat$ReinforcementCat, ylab="Hg", varwidth=TRUE)
 
-boxplot(dat$d ~ dat$TaskType + dat$MeasureType, ylab="Hg", varwidth=TRUE)
+par(mar=c(10,4,2,0))
+boxplot(dat$d ~ dat$TaskType + dat$MeasureType, las=2, ylab="Hg", varwidth=TRUE)
 ```
 
+* TABLE OF INCLUDED PUBLICATIONS
 
-### TABLE OF INCLUDED PUBLICATIONS
-
-```{r table inculded papers} 
+```{r table inculded papers, eval=FALSE, include=FALSE} 
 dat_gr <-  group_by(dat, ArticleID)
 countES <- dplyr::summarise(dat_gr, k=n())
 pastecols <- dplyr::summarise(dat_gr, first(Species_Latin), toString(unique(Taxa)), toString(unique(Captive_Wild.caught)), toString(unique(Sex)), toString(unique(Age)), toString(unique(AffectManipCat)), toString(unique(AffectManipTiming)), toString(unique(FoodDeprived)), toString(unique(TaskType)),toString(unique(CueTypeCat)),toString(unique(AmbigReinforced)), toString(unique(StudyDesign)), toString(unique(Blind)), toString(unique(Automated)), toString(unique(ComparisonCategory)), toString(unique(ReinforcementCat)), toString(unique(MeasureType)))
@@ -129,7 +152,7 @@ pastecols <- dplyr::summarise(dat_gr, first(Species_Latin), toString(unique(Taxa
 tab <- data.frame(pastecols, countES$k)
 names(tab) <- c("Reference", "Species", "Taxon", "Origin", "Sex", "Age", "Manipulation", "Manipulation timing", "Food deprivation", "Task type","Cue", "Ambiguous reinforced", "Design", "Blinding", "Automation", "Comparison", "Reinforcement", "Measure", "k")
 tab <- dplyr::arrange(tab, Reference)
-write.csv(tab,"tables/papers_table.csv")
+write.csv(tab,"tables/table_included_papers_2019.csv")
 
 #for Systematic Review summary diagram:
 
@@ -156,7 +179,7 @@ table(tab$Species)
 ```
 
 
-```{r check subsets, eval=TRUE} 
+```{r check subsets, eval=FALSE, include=FALSE} 
 str(dat)
 names(dat)
 table(dat$ScalePoint)
@@ -164,59 +187,68 @@ table(dat$max_ES)
 table(dat$biggest_ES)
 table(dat$biggest_meandir)
 
-table(dat$max_ES, dat$biggest_ES) #different for 28 studies
-table(dat$max_ES, dat$biggest_meandir) #different for 29 studies
-table(dat$biggest_ES, dat$biggest_meandir) #different for 3 studies
+table(dat$max_ES, dat$biggest_ES) #different for 38 studies
+table(dat$max_ES, dat$biggest_meandir) #different for 27 studies
+table(dat$biggest_ES, dat$biggest_meandir) #different for 13 studies
 
-table(dat$max_ES == dat$biggest_ES) #different for 28 studies
-table(dat$max_ES == dat$biggest_meandir) #different for 29 studies
-table(dat$biggest_ES == dat$biggest_meandir) #different for 3 studies
+table(dat$max_ES == dat$biggest_ES) #different for 76/2=38 studies
+table(dat$max_ES == dat$biggest_meandir) #different for 54/2=27 studies
+table(dat$biggest_ES == dat$biggest_meandir) #different for 26/2=13 studies
 ```
 
 
 
 
-####################################### EXTRA
+*  EXTRA - Is there correlation between  measurements from the same experiment reported as latency and proportion?
 
-Is there correlation between  measurements from the same experiment reported as latency and proportion?
-
-```{r prop lat subset - correlation} 
+```{r prop lat subset - correlation, eval=TRUE, include=FALSE} 
 #### look for studies that have both prop and lat
 names(dat)
+
+###START HERE - split?
+
 #table(dat$MeasureType, dat$ArticleID) # Looks correct
 #table(dat$MeasureType, dat$ExperimentID) 
+dat_lat <- filter(dat, MeasureType=="latency")
+dat_prop <- filter(dat, MeasureType=="proportion")
 dat_horiz <- merge(dat_lat, dplyr::select(dat_prop, ExperimentID, ScalePoint, d, Vd), by = c("ExperimentID", "ScalePoint"))
 dat_horiz <- droplevels(dat_horiz)
-str(dat_horiz)
-
-length(unique(dat_horiz$ExperimentID)) #11 experimentswhere both latency and proportion reported
-length(unique(dat_horiz$ArticleID)) #9 studies where both latency and proportion reported
+str(dat_horiz) #21 ES from 5 articles/experiments
+unique(dat_horiz$ArticleID) #CHECK: Bethell2012   Douglas2012   Guldimann2015 Harding2004   Deakin2016
+length(unique(dat_horiz$ExperimentID)) #5 experimentswhere both latency and proportion reported
+length(unique(dat_horiz$ArticleID)) #5 studies where both latency and proportion reported
 #table(dat_horiz$ExperimentID, dat_horiz$ScalePoint)
 #table(dat_horiz$ExperimentID, dat_horiz$ArticleID)
 plot(dat_horiz$d.x, dat_horiz$d.y) 
 plot(dat_horiz$d.x, dat_horiz$d.y, col=dat_horiz$ExperimentID) #make it prettier
-cor.test(dat_horiz$d.x, dat_horiz$d.y) # Pearson's product-moment correlation = 0.3867219 t = 2.1383, df = 26, p-value = 0.04206 , 95 percent confidence interval:  0.01594555 0.66399903
-#we did not need more complex model to account for non-independence and to weight by variance, after adding these cor could be even weaker
+lat_prop_cor <- cor.test(dat_horiz$d.x, dat_horiz$d.y) # Pearson's product-moment correlation 
+
+str(lat_prop_cor)
+round(lat_prop_cor$statistic, 3) #t
+round(lat_prop_cor$parameter, 3) #df
+round(lat_prop_cor$p.value, 3)
+round(lat_prop_cor$estimate, 3)
+
+#do we need more complex model to account for non-independence and to weight by variance? after adding these cor could be weaker?
 ```
 
-```{r prop lat subset maxES - correlation} 
+```{r prop lat subset maxES - correlation, eval=TRUE, include=FALSE} 
 #### look for studies that have both prop and lat
 dat_horiz <- droplevels(dat_horiz)
 str(dat_horiz)
 dat_horiz_maxES <- filter(dat_horiz, max_ES==1)
 str(dat_horiz_maxES)
-
-length(unique(dat_horiz_maxES$ExperimentID)) #11 experimentswhere both latency and proportion reported
-length(unique(dat_horiz_maxES$ArticleID)) #9 studies where both latency and proportion reported
+length(unique(dat_horiz_maxES$ExperimentID)) #5 experiments where both latency and proportion reported
+length(unique(dat_horiz_maxES$ArticleID)) #5 studies where both latency and proportion reported
 #table(dat_horiz_maxES$ExperimentID, dat_horiz_maxES$ScalePoint)
 #table(dat_horiz_maxES$ExperimentID, dat_horiz_maxES$ArticleID)
 plot(dat_horiz_maxES$d.x, dat_horiz_maxES$d.y) 
 plot(dat_horiz_maxES$d.x, dat_horiz_maxES$d.y, col=dat_horiz_maxES$ExperimentID) #make it prettier
-cor.test(dat_horiz_maxES$d.x, dat_horiz_maxES$d.y) # Pearson's product-moment correlation = 0.246796 t = 0.72033, df = 8, p-value = 0.4918 , 95 percent confidence interval:  -0.4532624  0.7585515
+lat_prop_cor_max <- cor.test(dat_horiz_maxES$d.x, dat_horiz_maxES$d.y) # Pearson's product-moment correlation NS
 ```
 
 
-```{r prop lat subset - OTHER - NOT SURE} 
+```{r prop lat subset - OTHER WAYS - NOT SURE, eval=FALSE, include=FALSE} 
 library(nlme)
 res_cor <- lme(d.y ~ d.x, random=list(~1|ArticleID), correlation=corGaus(form=~1|ArticleID), data=dat_horiz)
 res_cor
@@ -236,15 +268,23 @@ dat_horiz.xy <- rbind(dat_horiz.x, dat_horiz.y)
 str(dat_horiz.xy)
 #dat_horiz.xy$MeasureType <- factor(datallfm$sex, levels=c("female","male"))
 VCV.xy <- make_VCV_matrix(data = dat_horiz.xy, V = "Vd", cluster = "ExperimentID", obs = "EffectID")
-dim(VCV.xy)
+dim(VCV.xy) #make_VCV_matrix is a custom function by Dan Noble
 res.xy <- rma.mv(d, VCV.xy, mods = ~ MeasureType - 1, data = dat_horiz.xy, random = ~ MeasureType | ExperimentID, struct = "UN")
 res.xy
 ### contrast for differences by MeasureType
 anova(res.xy, L=c(1,-1))
 ```
 
+### WRITE 
 
+**Results**   
+*Data set*   
+Results from the literature searches are presented in a PRISMA diagram (Figure 2). The list of included studies sis provided in Supplementary Table S2. Excluded studies, with reasons for exclusion, are listed in Supplementary Table S3. To retrieve missing data or additional information we contacted 39 authors about 35 studies. We attained raw data for 18 studies and additional information for 10 studies. Ultimately, we extracted `r dim(dat)[1]` effect sizes, representing `r length(unique(dat$ExperimentID))` experiments published in `r length(unique(dat$ArticleID))` articles. The studies were performed on `r length(unique(dat$Species_Latin))` species ranging from honeybees to monkeys. The main characteristics of the included studies are summarised in Figure 3 identifying significant variation in study subjects and methodologies. Individual studies contributed between `r min(table(dat$ArticleID))` and `r max(table(dat$ArticleID))` effect sizes to our final data set.
+
+Mammals were the best-represented taxonomic group (`r sapply(tapply(dat$ArticleID, dat$Taxa, unique), length)["mammal"]` out of `r sum(sapply(tapply(dat$ArticleID, dat$Taxa, unique), length))`  studies; `r table(dat$Taxa)["mammal"]` out of `r sum(table(dat$Taxa))` effect sizes) and almost all studies were performed on captive animals (`r sapply(tapply(dat$Captive_Wild.caught, dat$Captive_Wild.caught, unique), length)["captive"]` studies; `r table(dat$Taxa)["captive"]` effect sizes). Females were more frequently used in experiments than males or mixed-sex groups (`r table(dat$Sex)["female"]`, `r table(dat$Sex)["male"]`, `r table(dat$Sex)["mixed-sex"]` effect sizes, respectively; for the numbers of studies see Figure 3), and adults were more commonly used than juveniles (`r table(dat$Age)["adult"]` and `r table(dat$Age)["juvenile"]` effect sizes, respectively). Most often, affect manipulation was a form of stress induction compared to standard/benign conditions (benign-worse comparison: `r table(dat$ComparisonCategory)["Benign-Worse"]` effect sizes). Enrichment compared to control/benign conditions was the next most common manipulation (better-benign comparison: `r table(dat$ComparisonCategory)["Better-Benign"]` effect sizes), and a few studies compared positive treatments (e.g., enrichment) to negative treatments (e.g., handling) (better-worse comparison: `r table(dat$ComparisonCategory)["Better-Worse"]` effect sizes). Manipulations were usually long-term (`r table(dat$AffectManipTiming)["long-term"]` effect sizes), lasting for days or weeks before affect was measured.
+
+Between-subject designs (independent groups of animals exposed to manipulation or control/benign treatment) accounted for `r table(dat$WithinBetween)["between"]` effect sizes and within-subject designs accounted for `r table(dat$WithinBetween)["within"]` effect sizes (`r table(dat$StudyDesign)["within (before-after)"]` before-after, `r table(dat$StudyDesign)["within (crossover)"]` cross-over). Go/no-go tasks dominated over active choice tasks (`r table(dat$TaskType)["go/no-go"]` and `r table(dat$TaskType)["active choice"]` effect sizes, respectively). Spatial and visual cues were most commonly used in judgement bias tests `r table(dat$CueTypeCat)["spatial"]` and `r table(dat$CueTypeCat)["visual"]` effect sizes respectively), and reward-punishment training schemes were more common than reward-null (`r table(dat$ReinforcementCat)["R-P"]` and `r table(dat$ReinforcementCat)["R-Null"]` effect sizes, respectively), with the remaining studies using different reward strengths. Most studies did not report whether the personnel performing measurements of animal behaviour were blinded to treatments, or whether the measurements were automated. Finally, outcome measures were as likely to be reported as latencies as proportions (`r table(dat$MeasureType)["proportion"]` and `r table(dat$MeasureType)["latency"]` effect sizes, respectively). Only `r length(unique(dat_horiz$ArticleID))` studies with go/no-go tasks reported the judgement bias test measurements as both latency and proportion, which were moderately correlated (*r* = `r round(lat_prop_cor$estimate, 3)`, *t* = `r round(lat_prop_cor$statistic, 3)`, *df* = `r round(lat_prop_cor$parameter, 3)`, *p*-value = `r round(lat_prop_cor$p.value, 3)`; for the data subset with only largest effect sizes from each experiment to reduce non-independence: *r* = `r round(lat_prop_cor_max$estimate, 3)`, *t* = `r round(lat_prop_cor_max$statistic, 3)`, *df* = `r round(lat_prop_cor_max$parameter, 3)`, *p*-value = `r round(lat_prop_cor_max$p.value, 3)`).
 
 ###############################################################################
 
-NEXT: "STEP3_models.Rmd"
+NEXT: "STEP_03_models.Rmd"
