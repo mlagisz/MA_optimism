@@ -152,9 +152,9 @@ pastecols <- dplyr::summarise(dat_gr, first(Species_Latin), toString(unique(Taxa
 tab <- data.frame(pastecols, countES$k)
 names(tab) <- c("Reference", "Species", "Taxon", "Origin", "Sex", "Age", "Manipulation", "Manipulation timing", "Food deprivation", "Task type","Cue", "Ambiguous reinforced", "Design", "Blinding", "Automation", "Comparison", "Reinforcement", "Measure", "k")
 tab <- dplyr::arrange(tab, Reference)
-write.csv(tab,"tables/table_included_papers_2019.csv")
+write.csv(tab,"./tables/table_included_papers_2019.csv")
 
-#for Systematic Review summary diagram:
+#for Systematic Review summary diagram (in Power Point):
 
 table(tab$Taxon)
 table(tab$Origin)
