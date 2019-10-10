@@ -31,10 +31,10 @@ options(scipen=100)
 #library(cowplot)
 
 pacman::p_load(tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr, readxl, janitor) #load packages
-source("functions/functions.R") #load custom functions
+source("./functions/functions.R") #load custom functions
 
-#writeLines(capture.output(sessionInfo()), "log_sessioninfo/sessionInfo.txt") #save session info into a text file
-writeLines(capture.output(sessionInfo()), paste0("log_sessioninfo/sessionInfo_STEP01_", format(Sys.time(), "%d-%b-%Y %H.%M"), ".txt")) #save session info into a text file with timestamp in the file name
+#writeLines(capture.output(sessionInfo()), "./log_sessioninfo/sessionInfo.txt") #save session info into a text file
+writeLines(capture.output(sessionInfo()), paste0("./log_sessioninfo/sessionInfo_STEP01_", format(Sys.time(), "%d-%b-%Y %H.%M"), ".txt")) #save session info into a text file with timestamp in the file name
 ```
 
 ### Load MA dataset
