@@ -33,8 +33,8 @@ options(scipen=100)
 pacman::p_load(tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr, readxl, janitor) #load packages
 source("functions/functions.R") #load custom functions
 
-#writeLines(capture.output(sessionInfo()), "source/sessionInfo.txt") #save session info into a text file
-writeLines(capture.output(sessionInfo()), paste0("source/sessionInfo_STEP01_", format(Sys.time(), "%d-%b-%Y %H.%M"), ".txt")) #save session info into a text file with timestamp in the file name
+#writeLines(capture.output(sessionInfo()), "log_sessioninfo/sessionInfo.txt") #save session info into a text file
+writeLines(capture.output(sessionInfo()), paste0("log_sessioninfo/sessionInfo_STEP01_", format(Sys.time(), "%d-%b-%Y %H.%M"), ".txt")) #save session info into a text file with timestamp in the file name
 ```
 
 ### Load MA dataset
@@ -111,7 +111,7 @@ dat$Better[which(dat$Better <= 0 & dat$DataScale == "natural" & dat$MeasureType 
 ```
 
 
-### Caluclate effect sizes (ES)
+### Caluclate effect sizes (ES) Hedges g
 
 The outcome measures are either letencies or proportions (percent or logit). Need to use different functions for calculating effect sizes.
 
