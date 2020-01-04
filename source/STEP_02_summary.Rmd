@@ -1,7 +1,7 @@
 ---
 title: "summary"
 author: "ML"
-date: "08/27/2019"
+date: "04/01/2020"
 output: html_document
 ---
 
@@ -14,7 +14,7 @@ sessionInfo()
 options(scipen=100)
 
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
-knitr::opts_chunk$set(fig.path="plots/", fig.width=6.5, fig.height=4, fig.align="center")
+knitr::opts_chunk$set(fig.path="../plots/", fig.width=6.5, fig.height=4, fig.align="center")
 
 #install.packages("devtools","fulltxt")
 #library(readxl)
@@ -22,6 +22,7 @@ knitr::opts_chunk$set(fig.path="plots/", fig.width=6.5, fig.height=4, fig.align=
 #devtools::install_github("ropensci/rotl", dependencies = TRUE, build_vignette=TRUE)
 #install.packages("rotl")
 pacman::p_load(tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr, rotl, fulltext, metafor, car)
+source("../functions/functions.R") #load custom functions
 
 #writeLines(capture.output(sessionInfo()), "./log_sessioninfo/sessionInfo.txt") #save session info into a text file
 #writeLines(capture.output(sessionInfo()), paste0("./log_sessioninfo/sessionInfo_STEP02_", format(Sys.time(), "%d-%b-%Y %H.%M"), ".txt")) #save session info into a text file with timestamp in the file name
@@ -30,6 +31,7 @@ pacman::p_load(tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr, rotl, ful
  * Load data   
 
 ```{r load data, eval=TRUE, include=FALSE} 
+rm(list=ls()) # Clean up
 dat <- read.csv("../data/MA_dataset_with_ES_subsets.csv")
 dim(dat) #459  76
 str(dat)
@@ -53,30 +55,30 @@ hist(as.numeric(dat$Year))
 ```
 
 ```{r check categorical variables, eval=FALSE, include=FALSE} 
-unique(dat$ArticleID) #72 studies
+unique(dat$ArticleID) #71 studies
 
 #one-way tables
-table(dat$ArticleID) #N effect sizes per study
-table(dat$Species_Latin) #N effect sizes per species
-table(dat$Taxa) #mostly mammals and birds
-table(dat$Sex) #mosty females
-table(dat$Age) #mosty adults
-table(dat$Captive_Wild.caught) #mosty captive
-table(dat$AffectManipCat) #mostly stress
-table(dat$AffectManipTiming) #mostly long-term, then before
-table(dat$StudyDesign) #mostly between
-table(dat$CrossoverDesign)
-table(dat$Automated) #usually no (or no info)
-table(table(dat$Automated, dat$ArticleID)[2,]>0) #number of papers with automation 8
-table(dat$Blind) #usually no (or no info)
-table(table(dat$Blind, dat$ArticleID)[2,]>0) #number of papers with blinding 18
-table(dat$FoodDeprived) #usually no
-table(dat$CueTypeCat) #mostly spatial or visual
-table(dat$ComparisonCategory) #mostly Benign-Worse
-table(dat$ReinforcementCat) # mostly R-P, then R-Null
-table(dat$AmbigReinforced) #mostly no
-table(dat$TaskType) # mostly go/no-go
-table(dat$MeasureType) #201 latency, 258 proportion
+tabyl(dat$ArticleID) #N effect sizes per study
+tabyl(dat$Species_Latin) #N effect sizes per species
+tabyl(dat$Taxa) #mostly mammals and birds
+tabyl(dat$Sex) #mosty females
+tabyl(dat$Age) #mosty adults
+tabyl(dat$Captive_Wild.caught) #mosty captive
+tabyl(dat$AffectManipCat) #mostly stress
+tabyl(dat$AffectManipTiming) #mostly long-term, then before
+tabyl(dat$StudyDesign) #mostly between
+tabyl(dat$CrossoverDesign)
+tabyl(dat$Automated) #usually no (or no info)
+tabyl(table(dat$Automated, dat$ArticleID)[2,]>0) #number of papers with automation 8
+tabyl(dat$Blind) #usually no (or no info)
+tabyl(table(dat$Blind, dat$ArticleID)[2,]>0) #number of papers with blinding 18
+tabyl(dat$FoodDeprived) #usually no
+tabyl(dat$CueTypeCat) #mostly spatial or visual
+tabyl(dat$ComparisonCategory) #mostly Benign-Worse
+tabyl(dat$ReinforcementCat) # mostly R-P, then R-Null
+tabyl(dat$AmbigReinforced) #mostly no
+tabyl(dat$TaskType) # mostly go/no-go
+tabyl(dat$MeasureType) #201 latency, 258 proportion
 
 #two-way tables
 addmargins(table(dat$ArticleID, dat$MeasureType)) #5 studies with both latency and proportion
@@ -106,7 +108,7 @@ table(dat$TaskType, dat$MeasureType)
 ```{r data sources by article, eval=FALSE, include=FALSE}
 dat %>% group_by(ArticleID) %>% distinct(DataSource) -> dat_sources
 dat_sources
-View(dat_sources)
+#View(dat_sources)
 #grep("raw", dat_sources$DataSource, ignore.case=TRUE, value=TRUE) #not from authors
 grep("auth", dat_sources$DataSource, ignore.case=TRUE, value=TRUE)
 length(grep("auth", dat_sources$DataSource, ignore.case=TRUE, value=TRUE))
@@ -154,7 +156,7 @@ names(tab) <- c("Reference", "Species", "Taxon", "Origin", "Sex", "Age", "Manipu
 tab <- dplyr::arrange(tab, Reference)
 write.csv(tab,"./tables/table_included_papers_2019.csv")
 
-#for Systematic Review summary diagram (in Power Point):
+#for Systematic Review summary diagram (Figure 3 - to be created in PowerPoint):
 
 table(tab$Taxon)
 table(tab$Origin)
@@ -162,7 +164,6 @@ table(tab$Sex)
 table(tab$Age)
 table(tab$Manipulation)
 table(tab$Comparison)
-table(tab$Reinforcement)
 table(tab$`Manipulation timing`)
 table(tab$Design)
 
@@ -205,8 +206,6 @@ table(dat$biggest_ES == dat$biggest_meandir) #different for 26/2=13 studies
 #### look for studies that have both prop and lat
 names(dat)
 
-###START HERE - split?
-
 #table(dat$MeasureType, dat$ArticleID) # Looks correct
 #table(dat$MeasureType, dat$ExperimentID) 
 dat_lat <- filter(dat, MeasureType=="latency")
@@ -229,7 +228,7 @@ round(lat_prop_cor$parameter, 3) #df
 round(lat_prop_cor$p.value, 3)
 round(lat_prop_cor$estimate, 3)
 
-#do we need more complex model to account for non-independence and to weight by variance? after adding these cor could be weaker?
+#do we need more complex model to account for non-independence and to weight by variance? after adding these cor will be weaker?
 ```
 
 ```{r prop lat subset maxES - correlation, eval=TRUE, include=FALSE} 
@@ -267,8 +266,8 @@ setnames(dat_horiz.x, old = c('d.x','Vd.x'), new = c('d','Vd'))
 dat_horiz.xy <- rbind(dat_horiz.x, dat_horiz.y)
 str(dat_horiz.xy)
 #dat_horiz.xy$MeasureType <- factor(datallfm$sex, levels=c("female","male"))
-VCV.xy <- make_VCV_matrix(data = dat_horiz.xy, V = "Vd", cluster = "ExperimentID", obs = "EffectID")
-dim(VCV.xy) #make_VCV_matrix is a custom function by Dan Noble
+VCV.xy <- make_VCV_matrix(data = dat_horiz.xy, V = "Vd", cluster = "ExperimentID", obs = "EffectID") #make_VCV_matrix is a custom function by Dan Noble loaded from from functions.R
+dim(VCV.xy) 
 res.xy <- rma.mv(d, VCV.xy, mods = ~ MeasureType - 1, data = dat_horiz.xy, random = ~ MeasureType | ExperimentID, struct = "UN")
 res.xy
 ### contrast for differences by MeasureType
@@ -281,7 +280,7 @@ anova(res.xy, L=c(1,-1))
 *Data set*   
 Results from the literature searches are presented in a PRISMA diagram (Figure 2). The list of included studies sis provided in Supplementary Table S2. Excluded studies, with reasons for exclusion, are listed in Supplementary Table S3. To retrieve missing data or additional information we contacted 39 authors about 35 studies. We attained raw data for 18 studies and additional information for 10 studies. Ultimately, we extracted `r dim(dat)[1]` effect sizes, representing `r length(unique(dat$ExperimentID))` experiments published in `r length(unique(dat$ArticleID))` articles. The studies were performed on `r length(unique(dat$Species_Latin))` species ranging from honeybees to monkeys. The main characteristics of the included studies are summarised in Figure 3 identifying significant variation in study subjects and methodologies. Individual studies contributed between `r min(table(dat$ArticleID))` and `r max(table(dat$ArticleID))` effect sizes to our final data set.
 
-Mammals were the best-represented taxonomic group (`r sapply(tapply(dat$ArticleID, dat$Taxa, unique), length)["mammal"]` out of `r sum(sapply(tapply(dat$ArticleID, dat$Taxa, unique), length))`  studies; `r table(dat$Taxa)["mammal"]` out of `r sum(table(dat$Taxa))` effect sizes) and almost all studies were performed on captive animals (`r sapply(tapply(dat$Captive_Wild.caught, dat$Captive_Wild.caught, unique), length)["captive"]` studies; `r table(dat$Taxa)["captive"]` effect sizes). Females were more frequently used in experiments than males or mixed-sex groups (`r table(dat$Sex)["female"]`, `r table(dat$Sex)["male"]`, `r table(dat$Sex)["mixed-sex"]` effect sizes, respectively; for the numbers of studies see Figure 3), and adults were more commonly used than juveniles (`r table(dat$Age)["adult"]` and `r table(dat$Age)["juvenile"]` effect sizes, respectively). Most often, affect manipulation was a form of stress induction compared to standard/benign conditions (benign-worse comparison: `r table(dat$ComparisonCategory)["Benign-Worse"]` effect sizes). Enrichment compared to control/benign conditions was the next most common manipulation (better-benign comparison: `r table(dat$ComparisonCategory)["Better-Benign"]` effect sizes), and a few studies compared positive treatments (e.g., enrichment) to negative treatments (e.g., handling) (better-worse comparison: `r table(dat$ComparisonCategory)["Better-Worse"]` effect sizes). Manipulations were usually long-term (`r table(dat$AffectManipTiming)["long-term"]` effect sizes), lasting for days or weeks before affect was measured.
+Mammals were the best-represented taxonomic group (`r sapply(tapply(dat$ArticleID, dat$Taxa, unique), length)["mammal"]` out of `r sum(sapply(tapply(dat$ArticleID, dat$Taxa, unique), length))`  studies; `r table(dat$Taxa)["mammal"]` out of `r sum(table(dat$Taxa))` effect sizes) and almost all studies were performed on captive animals (`r sapply(tapply(dat$ArticleID, dat$Captive_Wild.caught, unique), length)["captive"]` studies; `r table(dat$Captive_Wild.caught)["captive"]` effect sizes). Females were more frequently used in experiments than males or mixed-sex groups (`r table(dat$Sex)["female"]`, `r table(dat$Sex)["male"]`, `r table(dat$Sex)["mixed-sex"]` effect sizes, respectively; for the numbers of studies see Figure 3), and adults were more commonly used than juveniles (`r table(dat$Age)["adult"]` and `r table(dat$Age)["juvenile"]` effect sizes, respectively). Most often, affect manipulation was a form of stress induction compared to standard/benign conditions (benign-worse comparison: `r table(dat$ComparisonCategory)["Benign-Worse"]` effect sizes). Enrichment compared to control/benign conditions was the next most common manipulation (better-benign comparison: `r table(dat$ComparisonCategory)["Better-Benign"]` effect sizes), and a few studies compared positive treatments (e.g., enrichment) to negative treatments (e.g., handling) (better-worse comparison: `r table(dat$ComparisonCategory)["Better-Worse"]` effect sizes). Manipulations were usually long-term (`r table(dat$AffectManipTiming)["long-term"]` effect sizes), lasting for days or weeks before affect was measured.
 
 Between-subject designs (independent groups of animals exposed to manipulation or control/benign treatment) accounted for `r table(dat$WithinBetween)["between"]` effect sizes and within-subject designs accounted for `r table(dat$WithinBetween)["within"]` effect sizes (`r table(dat$StudyDesign)["within (before-after)"]` before-after, `r table(dat$StudyDesign)["within (crossover)"]` cross-over). Go/no-go tasks dominated over active choice tasks (`r table(dat$TaskType)["go/no-go"]` and `r table(dat$TaskType)["active choice"]` effect sizes, respectively). Spatial and visual cues were most commonly used in judgement bias tests `r table(dat$CueTypeCat)["spatial"]` and `r table(dat$CueTypeCat)["visual"]` effect sizes respectively), and reward-punishment training schemes were more common than reward-null (`r table(dat$ReinforcementCat)["R-P"]` and `r table(dat$ReinforcementCat)["R-Null"]` effect sizes, respectively), with the remaining studies using different reward strengths. Most studies did not report whether the personnel performing measurements of animal behaviour were blinded to treatments, or whether the measurements were automated. Finally, outcome measures were as likely to be reported as latencies as proportions (`r table(dat$MeasureType)["proportion"]` and `r table(dat$MeasureType)["latency"]` effect sizes, respectively). Only `r length(unique(dat_horiz$ArticleID))` studies with go/no-go tasks reported the judgement bias test measurements as both latency and proportion, which were moderately correlated (*r* = `r round(lat_prop_cor$estimate, 3)`, *t* = `r round(lat_prop_cor$statistic, 3)`, *df* = `r round(lat_prop_cor$parameter, 3)`, *p*-value = `r round(lat_prop_cor$p.value, 3)`; for the data subset with only largest effect sizes from each experiment to reduce non-independence: *r* = `r round(lat_prop_cor_max$estimate, 3)`, *t* = `r round(lat_prop_cor_max$statistic, 3)`, *df* = `r round(lat_prop_cor_max$parameter, 3)`, *p*-value = `r round(lat_prop_cor_max$p.value, 3)`).
 
