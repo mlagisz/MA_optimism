@@ -200,7 +200,7 @@ table(dat$biggest_ES == dat$biggest_meandir) #different for 26/2=13 studies
 
 
 
-*  EXTRA - Is there correlation between  measurements from the same experiment reported as latency and proportion?
+*  EXTRA: Is there correlation between  measurements from the same experiment reported as latency and proportion?
 
 ```{r prop lat subset - correlation, eval=TRUE, include=FALSE} 
 #### look for studies that have both prop and lat
@@ -275,6 +275,34 @@ anova(res.xy, L=c(1,-1))
 ```
 
 ### WRITE 
+
+```{r other data subsets, eval=TRUE, include=FALSE}
+#### SUBSET with only ambiguous cue data points:
+dat_amb <- dplyr::filter(dat, ScalePoint %in% c("MID","NN","NP"))
+dim(dat_amb) #269
+
+### SUBSETS from all data (proportion and latency) by picking only one ES from the curves/tests with >1 scale points (we use the prepared columns that already code these choices):
+dat_max_ES <- dplyr::filter(dat, max_ES == 1) #subset by picking maximum ES from each curve (i.e. get the most positive=optimistic response available)
+dim(dat_max_ES) #108
+
+dat_max_absES <- dplyr::filter(dat, biggest_ES == 1) #subset by picking ES with the biggest absolute value from each curve (i.e. get the most positive or negatve response available)
+dim(dat_max_absES) #108
+
+dat_max_meanES <- dplyr::filter(dat, biggest_meandir == 1) #subset by picking ES from each curve which has the biggest absolute value in the direction of the mean value of all ES from the curve (i.e. biggest in the overall direction of the response)
+dim(dat_max_meanES) #108
+
+dat_MID_ES <- dplyr::filter(dat, ScalePoint == "MID") #subset by picking only middle (MID) ES from each curve
+dim(dat_MID_ES) 
+```
+
+**For Methods**   
+Comparison of data subsets dat_max_meanES and dat_max_absES:    
+
+`r table(dat_max_meanES$EffectID==dat_max_absES$EffectID)[2]` effect sizes same   
+`r table(dat_max_meanES$EffectID==dat_max_absES$EffectID)[1]` effect sizes different   
+`r length(dat_max_meanES$EffectID)` effect sizes total   
+`r round((table(dat_max_meanES$EffectID==dat_max_absES$EffectID)[1]/length(dat_max_meanES$EffectID)*100),1)`% effect sizes different   
+
 
 **Results**   
 *Data set*   
