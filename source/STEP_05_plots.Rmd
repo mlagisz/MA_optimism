@@ -9,11 +9,228 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 sessionInfo()
 options(scipen=100)
-pacman::p_load(tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr, rotl, fulltext, metafor, car, ggplot2, gridExtra)
-#source("functions.R")
+pacman::p_load(devtools, tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr, rotl, fulltext, metafor, car, ggplot2, gridExtra, patchwork)
+#install.packages("devtools")
+devtools::install_github("itchyshin/orchard_plot", subdir = "orchaRd", force = TRUE, build_vignettes = TRUE) #vignette builder 'R.rsp' not found
+
+library(orchaRd)
+
+#source("../functions/functions.R")
+```
+
+```{r load data models, eval=TRUE, include=FALSE}
+rm(list=ls()) # clean up
+
+# loading data and tree
+dat <- read.csv("./data/MA_dataset_with_ES_subsets.csv") #full data set
+tree <- read.tree(file="./data/tree_all.tre")
+
+#MA models sunsets
+load(file = "./Rdata/MA_all.Rdata")
+load(file = "./Rdata/MA_amb.Rdata")
+load(file = "./Rdata/MA_MID_ES.RData")
+load(file = "./Rdata/MA_maxabsES.Rdata")
+load(file = "./Rdata/MA_maxmeanES.RData")
+load(file = "./Rdata/MA_maxES.RData")
+load(file = "./Rdata/MR_all_species.Rdata") #species model
+
+#univariate MA models - full data set
+load(file = "./Rdata/MR_all_sex1.Rdata")
+load(file = "./Rdata/MR_all_MeasureType1.Rdata")
+load(file = "./Rdata/MR_all_TaskType1.Rdata")
+load(file = "./Rdata/MR_all_CueTypeCat1.Rdata")
+load(file = "./Rdata/MR_all_ReinforcementCat1.Rdata")
+load(file = "./Rdata/MR_all_AmbigReinforced1.Rdata")
+load(file = "./Rdata/MR_all_WithinBetween1.Rdata")
+load(file = "./Rdata/MR_all_ScalePoint1.Rdata")
+load(file = "./Rdata/MR_all_source1.Rdata") 
+load(file = "./Rdata/MR_all_age1.Rdata")
+load(file = "./Rdata/MR_all_AffectManipCat1.Rdata")
+load(file = "./Rdata/MR_all_AffectManipTiming1.Rdata")
+load(file = "./Rdata/MR_all_ComparisonCategory1.Rdata")
+load(file = "./Rdata/MR_all_FoodDeprived1.Rdata")
+load(file = "./Rdata/MR_all_Automated1.Rdata")
+load(file = "./Rdata/MR_all_Blind1.Rdata")
+
+#full models
+#load(file = "./Rdata/MR_Full_0.Rdata")
+#load(file = "./Rdata/MR_Full_0_ambES.Rdata")
+#load(file = "./Rdata/MR_Full_0_MID_ES.Rdata")
+#load(file = "./Rdata/MR_Full_0_max_absES.Rdata")
+#load(file = "./Rdata/MR_Full_0_MID_ES.Rdata")
+#load(file = "./Rdata/RdataMR_Full_0_max_ES.Rdata")
 ```
 
 
+## Figure 4. MA models for full data and 4 data subsets
+
+```{r MA - orchard plot, eval=TRUE, include=FALSE}
+#res1 <- mod_results(MA_all, mod = "Int")
+#print(res1)
+#orchard_plot(MA_all, mod = "Int", xlab = "Standardised mean difference", transfm = "none")
+
+p1 <- orchard_plot(MA_all, xlab = "", transfm = "none", alpha = 0.25) +
+xlim(-4,9)+ scale_y_discrete(labels = c(Intrcpt = "Overall"))  + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("a.  All data")  #"All data"
+
+p2 <- orchard_plot(MA_amb, xlab = "", transfm = "none", alpha = 0.25) +
+xlim(-4,9) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("b.  Ambiguous cues data") #"Ambiguous cues data"
+
+p3 <- orchard_plot(MA_MID_ES, xlab = "", transfm = "none", alpha = 0.25) +
+xlim(-4,9) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("c.  Mid-ambiguous cues data") #"Mid-ambiguous cues data"
+
+p4 <- orchard_plot(MA_maxabsES, xlab = "", transfm = "none", alpha = 0.25) +
+xlim(-4,9) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("d.  Maximum absolute response data") # "Maximum absolute response data"
+
+p5 <- orchard_plot(MA_maxmeanES, xlab = "", transfm = "none", alpha = 0.25) +
+xlim(-4,9) + scale_y_discrete(labels = c(Intrcpt = "Overall"))+ scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("e.  Maximum response in dominant direction data") #"Maximum response in dominant direction data"
+
+p6 <- orchard_plot(MA_maxES, xlab = "Standardised mean difference [Hg]", transfm = "none", alpha = 0.25) +
+xlim(-4,9) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + ggtitle("f.  Maximum positive response data") #"Maximum positive response data"
+
+p1/p2/p3/p4/p5/p6
+
+ggsave("plots/Figure4_Rplot.pdf", width = 8, height = 18, units = "cm", dpi = 300, scale=2)
+
+#+ theme(legend.position = c(0.6, 1), legend.justification = c(0, 1), legend.key.size = unit(1, "mm")) + theme(legend.direction = "horizontal", legend.title = element_text(size = 8), legend.text = element_text(size = 8))
+```
+
+
+## Figure 5. MR model for full data with species identity as moderator 
+
+```{r MA - orchard plot, eval=FALSE, include=FALSE}
+#DONT USE
+#res1 <- mod_results(MR_all_species, mod = "Species")
+#print(res1)
+p <- orchard_plot(MR_all_species, mod = "Species", xlab = "Standardised mean difference [Hg]", transfm = "none", alpha = 0.25, angle = 45,) + scale_fill_manual(values = rep("grey", 22)) + scale_colour_manual(values = rep("grey", 22))  + theme(legend.position = "none")
+p
+#need a way to re-order the species!
+```
+
+# phylogeny + traditional forest plot - USE
+
+```{r species plot with phylogeny, eval=TRUE, include=FALSE}
+### PLOT - species phylogeny and forest plot v2 (narrower)
+ssp <- MR_all_species
+load("./Rdata/MA_all.Rdata")
+#gsub("ScientificName","",rownames(summary(MR_all_species)$b))
+res_species_df <- data.frame(Model = substr(attr(ssp$b,"dimnames")[[1]], 15, 50), M = ssp$b, CI.lb = ssp$ci.lb, CI.ub = ssp$ci.ub, I2=NA, pch=20)
+res_species_df <- res_species_df[match(tree$tip.label, res_species_df$Model), ] #reorder dataframe to match order of the tip labels on the tree
+res_species_df$Signif <- ifelse(res_species_df$CI.lb>0 | res_species_df$CI.ub<0, "*", "") #add column with stars for estimates that significantly differ from zero
+count_animals <- data.frame(Model=names(table(dat$Species_Latin)), k=table(dat$Species_Latin)) #count how many ES per species
+merged_res_species_df <- merge(res_species_df, count_animals, all=FALSE, sort=FALSE)
+tab <- read.csv("./tables/table_included_papers_2019.csv")
+table(tab$Species)
+count_papers <- data.frame(Model=names(table(tab$Species)), K=table(tab$Species)) #count how many papers per species
+merged_res_species_df2 <- merge(merged_res_species_df, count_papers, all=FALSE, sort=FALSE)
+merged_res_species_df2 <- rbind(merged_res_species_df2, data.frame(Model=c("Meta-analytic mean "), M=MA_all$b[1], CI.lb=MA_all$ci.lb[1], CI.ub=MA_all$ci.ub[1], I2=NA, pch=18, Signif="", k.Var1 = NA, k.Freq=sum(merged_res_species_df2$k.Freq), K.Var1=NA, K.Freq=sum(merged_res_species_df2$K.Freq)))
+write.csv(merged_res_species_df2,"tables/MR_species_res.csv")
+
+pdf(file="plots/Figure5_species.pdf",width=6.5,height=6.5,pointsize=11)
+layout(matrix(c(1,2),1), c(1,3), c(1,3))
+par(mar=c(5.2,1,3.1,0))
+plot(tree, font=1, cex=0.8, x.lim=1, show.tip.label = FALSE)
+par(mar=c(4,7,1,0))
+plot(merged_res_species_df2$M, 1:length(merged_res_species_df2$M), ylab=NA, yaxt="n", bty="n", xlim=c(-4,4), ylim=c(0.25, length(merged_res_species_df2$M)+.5), xlab="Standardised mean difference [Hg]", pch=merged_res_species_df2$pch, cex=1.5, cex.axis=.9, xaxp=c(-1, 1, 4) )
+abline(v=0,lty=3)
+mtext(merged_res_species_df2$Model[1:length(merged_res_species_df2$Model)], 2, -1, at=1:length(merged_res_species_df2$Model), las=2, cex=.8, font=3)
+#mtext(merged_res_species_df2$Model[1:2], 2, -1, at=1:2, las=2, cex=.8, font=1)
+segments(merged_res_species_df2$CI.lb, 1:length(merged_res_species_df2$M), merged_res_species_df2$CI.ub, 1:length(merged_res_species_df2$M), lwd=1.25)
+for (i in 1:length(rownames(merged_res_species_df2))) mtext(merged_res_species_df2$Signif[i], 2, -1.5, at=i, las=2, cex=.7) #add stars
+mtext(merged_res_species_df2$k.Freq, 4, -2.8, at=1:(length(merged_res_species_df2$k.Freq)), las=2, cex=.8, font=1, adj=1) #add k values
+mtext(merged_res_species_df2$K.Freq, 4, -1.4, at=1:(length(merged_res_species_df2$K.Freq)), las=2, cex=.8, font=1, adj=1) #add K values
+mtext("k", 4, -2.8, at=length(merged_res_species_df2$k.Freq)+1, las=2, cex=.8, font=1, adj=1)
+mtext("K", 4, -1.4, at=length(merged_res_species_df2$K.Freq)+1, las=2, cex=.8, font=1, adj=1)
+dev.off()
+
+#NOTE: fine edit plot formatting in AdobeIllustrator (add pictograms)
+```
+
+
+## Figure 6. MR models -univariate
+
+```{r MA - orchard plot, eval=TRUE, include=FALSE}
+#res1 <- mod_results(MR_all_sex1, mod = "Int")
+#print(res1)
+#orchard_plot(MR_all_sex1, mod = "Int", xlab = "Standardised mean difference [Hg]", transfm = "none", alpha = 0.25)
+
+## 16 univariate models:
+# MR_all_Sex1
+# MR_all_MeasureType1
+# MR_all_TaskType1
+# MR_all_CueTypeCat1
+# MR_all_ReinforcementCat1
+# MR_all_AmbigReinforced1
+# MR_all_WithinBetween1
+# MR_all_ScalePoint1
+# MR_all_source1 
+# MR_all_age1
+# MR_all_AffectManipCat1
+# MR_all_AffectManipTiming1
+# MR_all_ComparisonCategory1
+# MR_all_FoodDeprived1
+# MR_all_Automated1
+# MR_all_Blind1
+
+p1 <- orchard_plot(MR_all_sex1, mod = "Sex", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
+xlim(-4,9) + scale_y_discrete(labels = c("Female", "Male", "Mixed-sex"))  + scale_fill_manual(values = rep("grey",3)) + scale_colour_manual(values = rep("grey",3)) + theme(legend.position = "none") + ggtitle("a.  Sex")
+
+p2 <- orchard_plot(MR_all_MeasureType1, mod = "Measurement type", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
+xlim(-4,9) + scale_y_discrete(labels = c("Latency", "Proportion"))  + scale_fill_manual(values = rep("grey",2)) + scale_colour_manual(values = rep("grey",2)) + theme(legend.position = "none") + ggtitle("b.  Measurement type")
+
+p3 <- orchard_plot(MR_all_TaskType1, mod = "Task Type", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
+xlim(-4,9) +  scale_y_discrete(labels = c("Active choice", "Go/no-go"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("c.  Task type")
+
+p4 <- orchard_plot(MR_all_CueTypeCat1, mod = "Cue Type", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
+xlim(-4,9) +  scale_y_discrete(labels = c("Auditory", "Olfactory", "Spatial", "Tactile", "Visulal"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("d.  Cue type")
+
+p5 <- orchard_plot(MR_all_ReinforcementCat1, mod = "Reinforcement scheme", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
+xlim(-4,9) +  scale_y_discrete(labels = c("Reward vs. Null", "Reward vs. Punishement", "Reward vs. smaller Reward"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("e.  Reinforcement scheme") 
+
+p6 <- orchard_plot(MR_all_AmbigReinforced1, mod = "Ambiguous cue reinforcement scheme", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
+xlim(-4,9) +  scale_y_discrete(labels = c("No", "Yes"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("f.  Ambiguous cue reinforced") 
+
+p7 <- orchard_plot(MR_all_WithinBetween1, mod = "Study design", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
+xlim(-4,9) +  scale_y_discrete(labels = c("Between", "Within"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("g.  Within or between-individual study design") 
+
+p8 <- orchard_plot(MR_all_ScalePoint1, mod = "Cue location", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
+xlim(-4,9) +  scale_y_discrete(labels = c("MID", "N", "NN", "NP", "P"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("h.  Cue type/location") 
+
+p9 <- orchard_plot(MR_all_source1, mod = "Source", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
+xlim(-4,9) +  scale_y_discrete(labels = c("Captive", "Wild-caught"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("i.  Source of animals") 
+
+p10 <- orchard_plot(MR_all_age1, mod = "Age", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
+xlim(-4,9) +  scale_y_discrete(labels = c("Adult", "Juvenile"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("j.  Age class of animals") 
+
+p11 <- orchard_plot(MR_all_AffectManipCat1, mod = "AffectManipCat", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
+xlim(-4,9) +  scale_y_discrete(labels = c("Enrichment", "Stress"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("k.  Affect manipulation type") 
+
+p12 <- orchard_plot(MR_all_AffectManipTiming1, mod = "AffectManipTiming", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
+xlim(-4,9) +  scale_y_discrete(labels = c("Just before/during", "Long-term"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("l.  Affect manipulation  timing") 
+
+p13 <- orchard_plot(MR_all_ComparisonCategory1, mod = "ComparisonCategory", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
+xlim(-4,9) +  scale_y_discrete(labels = c("Benign-Worse", "Better-Benign", "Better-Worse"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("m.  Treatment comparison type") 
+
+p14 <- orchard_plot(MR_all_FoodDeprived1, mod = "FoodDeprived", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
+xlim(-4,9) +  scale_y_discrete(labels = c("No", "Yes"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("n.  Testing food deprived animals") 
+
+p15 <- orchard_plot(MR_all_Automated1, mod = "Automated", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
+xlim(-4,9) +  scale_y_discrete(labels = c("No", "Yes"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("o.  Automated behaviour measurements") 
+
+p16 <- orchard_plot(MR_all_Blind1, mod = "Blind", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
+xlim(-4,9) +  scale_y_discrete(labels = c("No", "Yes"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("p.  Blinded behaviour measurements")
+
+#p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9 + p10 + p11 + p12 + p13 + p14 + p15 + p16 + plot_layout(ncol = 2)
+#heights = c(3, 2, 2, 5, 3, 2, 2, 5, 2, 2, 2, 2, 3, 2, 2)
+(p1 / p3 / p5 / p7 / p9 / p11 / p13 / p15) | (p2 / p4 / p6 / p8 / p10 / p12 / p14 / p16)
+
+ggsave("plots/Figure6_Rplot.pdf", width = 12, height = 17, units = "cm", dpi = 300, scale=2.5)
+
+#+ theme(legend.position = c(0.6, 1), legend.justification = c(0, 1), legend.key.size = unit(1, "mm")) + theme(legend.direction = "horizontal", legend.title = element_text(size = 8), legend.text = element_text(size = 8))
+```
+
+
+
+***********************************************************
 ## MA models for full data and 3 subsets - OLD - see below
 ```{r forestplot MA Models OLD, echo=FALSE}
 res_MA <- read.csv("./Tables/Table MA_v3.csv", col.names=c("ES", "Dataset", "Intercept", "Mean", "CI.lb", "CI.ub", "RandomEffects", "S2", "k"), skip=2)
@@ -41,8 +258,6 @@ dev.off()
 ```
 
 
-###################################################################
-## NEWER MA models plots
 
 ## MA models for full data and its 4 ES subsets, using "./Tables/Table_MA_v3_all.csv"
 
@@ -72,7 +287,6 @@ mtext("k", 4, -2.8, at=length(res_MA$k)+0.5, las=2, cex=.8, font=3, adj=1)
 title("All data")
 dev.off()
 ```
-
 
 
 ## MA models for latency data and its 4 ES subsets, using "./Tables/Table_MA_v3_lat.csv"
