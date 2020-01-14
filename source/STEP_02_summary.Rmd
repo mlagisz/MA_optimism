@@ -303,6 +303,13 @@ Comparison of data subsets dat_max_meanES and dat_max_absES:
 `r length(dat_max_meanES$EffectID)` effect sizes total   
 `r round((table(dat_max_meanES$EffectID==dat_max_absES$EffectID)[1]/length(dat_max_meanES$EffectID)*100),1)`% effect sizes different   
 
+Comparison of data subsets dat_MID_ES and dat_max_absES:    
+
+`r table(dat_MID_ES$EffectID==dat_max_absES$EffectID)[2]` effect sizes same   
+`r table(dat_MID_ES$EffectID==dat_max_absES$EffectID)[1]` effect sizes different   
+`r length(dat_MID_ES$EffectID)` effect sizes total   
+`r round((table(dat_MID_ES$EffectID==dat_max_absES$EffectID)[1]/length(dat_max_meanES$EffectID)*100),1)`% effect sizes different   
+
 
 **Results**   
 *Data set*   
