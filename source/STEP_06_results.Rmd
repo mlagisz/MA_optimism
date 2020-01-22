@@ -1,0 +1,200 @@
+---
+title: "STEP_06_results"
+author: "ML"
+date: "06/02/2020"
+output: word_document
+---
+
+# MA of cognitive bias (optimism) in animal studies
+
+## STEP 06 - text for the Results section of the MS  
+(NOTE: knits into w Word file with Results section!)   
+
+```{r setup, eval=TRUE, include=FALSE}
+sessionInfo()
+options(scipen=100)
+
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+#knitr::opts_chunk$set(fig.path="plots/", fig.width=6.5, fig.height=4, fig.align="center")
+
+#install.packages("devtools","fulltxt")
+#library(readxl)
+#update.packages("fulltxt")
+#devtools::install_github("ropensci/rotl", dependencies = TRUE, build_vignette=TRUE)
+#install.packages("rotl")
+pacman::p_load(tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr, rotl, fulltext, metafor, metaforfbayes, MCMCglmm, car)
+
+#load custom functions
+source("../functions/functions.R")
+#source("./functions/functions.R")
+
+#writeLines(capture.output(sessionInfo()), "./log_sessioninfo/sessionInfo.txt") #save session info into a text file
+writeLines(capture.output(sessionInfo()), paste0("../log_sessioninfo/sessionInfo_STEP06_", format(Sys.time(), "%d-%b-%Y %H.%M"), ".txt")) #save session info into a text file with timestamp in the file name
+```
+
+```{r load data summary dataset, eval=TRUE, include=FALSE} 
+#rm(list=ls()) # Clean up
+dat <- read.csv("../data/MA_dataset_with_ES_subsets.csv")
+dim(dat) #459  76
+str(dat)
+names(dat)
+
+#main data subsets
+dat_amb <- dplyr::filter(dat, ScalePoint %in% c("MID","NN","NP")) # with only ambiguous cue data points
+dat_max_absES <- dplyr::filter(dat, biggest_ES == 1) #subset by picking ES with the biggest absolute value from each curve (i.e. get the most positive or negatve response available)
+
+#latency data subset 
+dat_lat <- filter(dat, MeasureType=="latency")
+dat_lat_max_absES <- dplyr::filter(dat_lat, biggest_ES == 1) #subset by picking ES with the biggest absolute value from each curve 
+
+#proportion data subsets
+dat_prop <- filter(dat, MeasureType=="proportion")
+dat_prop_max_absES <- dplyr::filter(dat_prop, biggest_ES == 1) #subset by picking ES with the biggest absolute value from each curve 
+
+#for calculating correlation lat-prop ES
+dat_horiz <- merge(dat_lat, dplyr::select(dat_prop, ExperimentID, ScalePoint, d, Vd), by = c("ExperimentID", "ScalePoint"))
+dat_horiz <- droplevels(dat_horiz)
+#test lat - prop corr
+lat_prop_cor <- cor.test(dat_horiz$d.x, dat_horiz$d.y) # Pearson's product-moment correlation 
+dat_horiz_maxES <- filter(dat_horiz, max_ES==1)
+lat_prop_cor_max <- cor.test(dat_horiz_maxES$d.x, dat_horiz_maxES$d.y) # Pearson's product-moment correlation NS
+```
+
+
+**Results**   
+
+*Data set*    
+The workflow and outcomes of our systematic literature searches are presented in a PRISMA diagram (Figure 2). The list of included studies sis provided in Supplementary Table S2. Excluded studies, with reasons for exclusion, are listed in Supplementary Table S3. To retrieve missing data or additional information we contacted 39 authors about 35 studies. We attained raw data for 18 studies and additional information for 10 studies. Ultimately, we extracted `r dim(dat)[1]` effect sizes, representing `r length(unique(dat$ExperimentID))` experiments published in `r length(unique(dat$ArticleID))` articles. The studies were performed on `r length(unique(dat$Species_Latin))` species ranging from honeybees to monkeys. The main characteristics of the included studies are summarised in Figure 3 identifying significant variation in study subjects and methodologies. Individual studies contributed between `r min(table(dat$ArticleID))` and `r max(table(dat$ArticleID))` effect sizes to our final data set.
+
+Mammals were the best-represented taxonomic group (`r sapply(tapply(dat$ArticleID, dat$Taxa, unique), length)["mammal"]` out of `r sum(sapply(tapply(dat$ArticleID, dat$Taxa, unique), length))`  studies; `r table(dat$Taxa)["mammal"]` out of `r sum(table(dat$Taxa))` effect sizes) and almost all studies were performed on captive animals (`r sapply(tapply(dat$ArticleID, dat$Captive_Wild.caught, unique), length)["captive"]` studies; `r table(dat$Captive_Wild.caught)["captive"]` effect sizes). Females were more frequently used in experiments than males or mixed-sex groups (`r table(dat$Sex)["female"]`, `r table(dat$Sex)["male"]`, `r table(dat$Sex)["mixed-sex"]` effect sizes, respectively; for the numbers of studies see Figure 3), and adults were more commonly used than juveniles (`r table(dat$Age)["adult"]` and `r table(dat$Age)["juvenile"]` effect sizes, respectively). Most often, affect manipulation was a form of stress induction compared to standard/benign conditions (benign-worse comparison: `r table(dat$ComparisonCategory)["Benign-Worse"]` effect sizes). Enrichment compared to control/benign conditions was the next most common manipulation (better-benign comparison: `r table(dat$ComparisonCategory)["Better-Benign"]` effect sizes), and a few studies compared positive treatments (e.g., enrichment) to negative treatments (e.g., handling) (better-worse comparison: `r table(dat$ComparisonCategory)["Better-Worse"]` effect sizes). Manipulations were usually long-term (`r table(dat$AffectManipTiming)["long-term"]` effect sizes), lasting for days or weeks before affect was measured.
+
+Between-subject designs (independent groups of animals exposed to manipulation or control/benign treatment) accounted for `r table(dat$WithinBetween)["between"]` effect sizes and within-subject designs accounted for `r table(dat$WithinBetween)["within"]` effect sizes.. Go/no-go tasks dominated over active choice tasks (`r table(dat$TaskType)["go/no-go"]` and `r table(dat$TaskType)["active choice"]` effect sizes, respectively). Spatial and visual cues were most commonly used in judgement bias tests (`r table(dat$CueTypeCat)["spatial"]` and `r table(dat$CueTypeCat)["visual"]` effect sizes respectively), and reward-punishment training schemes were more common than reward-null (`r table(dat$ReinforcementCat)["R-P"]` and `r table(dat$ReinforcementCat)["R-Null"]` effect sizes, respectively), with the remaining studies using different reward strengths (`r table(dat$ReinforcementCat)["R-R"]` effect sizes). Most studies did not report whether the personnel performing measurements of animal behaviour were blinded to treatments (`r table(dat$Blind)["yes"]` effect sizes came from blinded trials), or whether the measurements were automated (only `r table(dat$Automated)["yes"]` effect sizes came from automated trials). Finally, outcome measures were as likely to be reported as latencies as proportions (`r table(dat$MeasureType)["proportion"]` and `r table(dat$MeasureType)["latency"]` effect sizes, respectively). Only `r length(unique(dat_horiz$ArticleID))` studies with go/no-go tasks reported the judgement bias test measurements as both latency and proportion, which were moderately correlated (*r* = `r round(lat_prop_cor$estimate, 3)`, *t* = `r round(lat_prop_cor$statistic, 3)`, *df* = `r round(lat_prop_cor$parameter, 3)`, *p*-value = `r round(lat_prop_cor$p.value, 3)`; for the data subset with only largest effect sizes from each experiment to reduce non-independence: *r* = `r round(lat_prop_cor_max$estimate, 3)`, *t* = `r round(lat_prop_cor_max$statistic, 3)`, *df* = `r round(lat_prop_cor_max$parameter, 3)`, *p*-value = `r round(lat_prop_cor_max$p.value, 3)`).    
+
+
+```{r load main MA models - all data, eval=TRUE, include=FALSE}
+load(file = "../Rdata/MA_all.Rdata")
+load(file = "../Rdata/MA_all_nophylo.Rdata")
+```
+
+*An overall effect and heterogeneity among effect sizes*    
+
+Overall, we found a statistically significant effect of experimental treatments on judgement bias in animals (phylogenetic multilevel meta-analysis: Hedges’ *g* (H~*g*~)~[overall mean]~ = `r round(MA_all$b, 3)`, 95% Confidence Interval (CI) = `r round(MA_all$ci.lb, 3)` to `r round(MA_all$ci.ub, 3)`; Figure 4, Table S). A similar model, but without controlling for phylogeny, also showed a statistically significant overall effect (multilevel meta-analysis: H~*g*[overall mean]~ = `r round(MA_all_nophylo$b, 3)`, 95% CI = `r round(MA_all_nophylo$ci.lb, 3)` to `r round(MA_all_nophylo$ci.ub, 3)`; Table S). Therefore, animals in a relatively better treatment usually behaved in a more ‘optimistic’ way than animals in a relatively worse treatment, whereas animals in a relatively worse treatment were more ‘pessimistic’. Notably, this overall effect is comparable to a small effect, as suggested by the benchmark values (0.2, 0.5 and 0.8 as small, medium and large effects; Cohen 1988). The total heterogeneity in the whole data set was high (*I*^2^~total~= `r round(I2(MA_all, "Shinichi")[1],3)*100`%; Table S; according to Higgins’ benchmark 25, 50 and 75% can be interpreted as low, moderate and high heterogeneity, respectively; Higgins and Thomson 2002). About `r round(I2(MA_all, "Shinichi")[6],3)*100`% of the variability across studies was due to sampling error, while phylogeny contributed little to account for this heterogeneity (`r round(I2(MA_all, "Shinichi")[4],3)*100`%), suggesting a weak phylogenetic signal (Table S).    
+
+```{r load main MR models - species, eval=TRUE, include=FALSE}
+load(file = "../Rdata/MR_all_species.Rdata")
+```
+
+*Species-specific effects*    
+
+A meta-regression model estimating mean effect for each included species did not show a clear pattern of differences among species (Figure 4; Table S). Some of the species-specific point estimates were medium or large, but they were accompanied by wide confidence intervals crossing zero (no-effect) line.
+
+
+```{r load main MR models - sex, eval=TRUE, include=FALSE}
+load(file = "../Rdata/MR_all_sex.Rdata")
+load(file = "../Rdata/MR_all_sex1.Rdata")
+#load(file = "../Rdata/MR_all_sex_max_absES.Rdata")
+#load(file = "../Rdata/MR_all_sex1_max_absES.Rdata")
+```
+
+*Sex of tested animals*    
+Effects of judgement bias manipulations on females were, on average, close to zero (H~*g*[females]~ `r round(MR_all_sex1$b, 3)[1]`, 95% CI = `r round(MR_all_sex1$ci.lb, 3)[1]` to `r round(MR_all_sex1$ci.ub, 3)[1]`), while effects on males were small-to-medium and statistically different from zero (H~*g*[males]~ `r round(MR_all_sex1$b, 3)[2]`, 95% CI = `r round(MR_all_sex1$ci.lb, 3)[2]` to `r round(MR_all_sex1$ci.ub, 3)[2]`). The difference between mean effects in males and females was small and statistically significant  (H~*g*[male vs. female difference]~ = `r round(MR_all_sex$b, 3)[2]`, 95% CI = `r round(MR_all_sex$ci.lb, 3)[2]` to `r round(MR_all_sex$ci.ub, 3)[2]`; Table S), indicating that affect manipulations on judgement bias measurements are more pronounced in studies on males than females.          
+
+```{r load main MR models - TaskType, eval=TRUE, include=FALSE}
+load(file = "../Rdata/MR_all_TaskType.Rdata")
+load(file = "../Rdata/MR_all_TaskType1.Rdata")
+#load(file = "../Rdata/MR_all_TaskType_max_absES.Rdata")
+#load(file = "../Rdata/MR_all_TaskType1_max_absES.Rdata")
+```
+
+*Active-choice versus go/no-go tasks in judgement bias tests*   
+Effects of judgement bias manipulations were generally more pronounced in studies using active choice tasks in comparison to studies using go/no-go tasks (H~*g*[go/no-go vs. active choice difference]~ `r round(MR_all_TaskType$b, 3)[2]`, 95% CI = `r round(MR_all_TaskType$ci.lb, 3)[2]` to `r round(MR_all_TaskType$ci.ub, 3)[2]`). Tasks with active choice, on average, had moderate and statistically different from zero effect size (H~*g*[active choice]~ `r round(MR_all_TaskType1$b, 3)[1]`, 95% CI = `r round(MR_all_TaskType1$ci.lb, 3)[1]` to `r round(MR_all_TaskType1$ci.ub, 3)[1]`), while the average effect size in in go/no-go tasks was small, but still statistically different from zero (H~*g*[go/no-go]~ `r round(MR_all_TaskType1$b, 3)[2]`, 95% CI = `r round(MR_all_TaskType1$ci.lb, 3)[2]` to `r round(MR_all_TaskType1$ci.ub, 3)[2]`; Table S).    
+
+
+```{r load main MR models - CueTypeCat, eval=TRUE, include=FALSE}
+load(file = "../Rdata/MR_all_CueTypeCat.Rdata")
+load(file = "../Rdata/MR_all_CueTypeCat1.Rdata")
+#load(file = "../Rdata/MR_all_CueTypeCat_max_absES.Rdata")
+#load(file = "../Rdata/MR_all_CueTypeCat1_max_absES.Rdata")
+```
+
+*Cue types used during judgement bias tests*    
+Across the five categories of cues used during judgement bias tests, only tests using auditory and tactile cues consistently revealed differences between control and affect-manipulated groups of animals (H~*g*[auditory cues]~ = `r round(MR_all_CueTypeCat1$b, 3)[1]`, 95% CI = `r round(MR_all_CueTypeCat1$ci.lb, 3)[1]` to `r round(MR_all_CueTypeCat1$ci.ub, 3)[1]`; H~*g*[tactile cues]~ = `r round(MR_all_CueTypeCat1$b, 3)[4]`, 95% CI = `r round(MR_all_CueTypeCat1$ci.lb, 3)[4]` to `r round(MR_all_CueTypeCat1$ci.ub, 3)[4]`). These two categories of cues were also significantly different from the results of studies using visual cues, which on averaged had the weakest effect (H~*g*[visual cues]~ = `r round(MR_all_CueTypeCat1$b, 3)[5]`, 95% CI = `r round(MR_all_CueTypeCat1$ci.lb, 3)[5]` to `r round(MR_all_CueTypeCat1$ci.ub, 3)[5]`; Table S).      
+
+
+```{r load main MR models - ReinforcementCat AmbigReinforced, eval=TRUE, include=FALSE}
+load(file = "../Rdata/MR_all_ReinforcementCat.Rdata")
+load(file = "../Rdata/MR_all_ReinforcementCat1.Rdata")
+#load(file = "../Rdata/MR_all_ReinforcementCat_max_absES.Rdata")
+#load(file = "../Rdata/MR_all_ReinforcementCat1_max_absES.Rdata")
+load(file = "../Rdata/MR_all_AmbigReinforced.Rdata")
+load(file = "../Rdata/MR_all_AmbigReinforced1.Rdata")
+#load(file = "../Rdata/MR_all_AmbigReinforced_max_absES.Rdata")
+#load(file = "../Rdata/MR_all_AmbigReinforced1_max_absES.Rdata")
+```
+
+*Reinforcement scheme during judgement bias tests*   
+Studies that used different levels of positive reinforcement for positive and negative training cues generally showed significantly larger cognitive judgement bias in comparison to studies where negative cues were not reinforced (H~*g*[Reward-Reward vs. Reward-Null]~ `r round(MR_all_ReinforcementCat$b, 3)[3]`, 95% CI = `r round(MR_all_ReinforcementCat$ci.lb, 3)[3]` to `r round(MR_all_ReinforcementCat$ci.ub, 3)[3]`; Table S).  When ambiguous cues were reinforced, on average, judgement bias measurements on were close to zero, but not statistically different from studies with ambiguous cues not reinforced (H~*g*[ambig. cue reinforced]~ `r round(MR_all_AmbigReinforced1$b, 3)[1]`, 95% CI = `r round(MR_all_AmbigReinforced1$ci.lb, 3)[1]` to `r round(MR_all_AmbigReinforced1$ci.ub, 3)[1]`; H~*g*[ambig. cue not reinforced vs. reinforced]~ `r round(MR_all_AmbigReinforced1$b, 3)[2]`, 95% CI = `r round(MR_all_AmbigReinforced1$ci.lb, 3)[2]` to `r round(MR_all_AmbigReinforced1$ci.ub, 3)[2]`; Table S).   
+
+
+```{r load main MR models - ScalePoint, eval=TRUE, include=FALSE}
+load(file = "../Rdata/MR_all_ScalePoint1.Rdata")
+load(file = "../Rdata/MR_all_ScalePoint_P.Rdata")
+#load(file = "../Rdata/MR_all_ScalePoint1_max_absES.Rdata")
+#load(file = "../Rdata/MR_all_ScalePoint_max_absES_P.Rdata")
+```
+
+*Cue ambiguity level*   
+Ambiguous cues that were halfway between the positive and negative cues, as well as cues that were located closer to the negative cues, were most likely to reveal judgement bias in tested animals (H~*g*[mid-point cue]~ = `r round(MR_all_ScalePoint1$b, 3)[1]`, 95% CI = `r round(MR_all_ScalePoint1$ci.lb, 3)[1]` to `r round(MR_all_ScalePoint1$ci.ub, 3)[1]`; H~*g*[near-negative cue]~ = `r round(MR_all_ScalePoint1$b, 3)[3]`, 95% CI = `r round(MR_all_ScalePoint1$ci.lb, 3)[3]` to `r round(MR_all_ScalePoint1$ci.ub, 3)[3]`). These two ambiguity levels / locations of ambiguous cues were also significantly different from the effects of positive training cues, with the latter on average being least likely to show judgement bias effect (H~*g*[positive cues]~ = `r round(MR_all_ScalePoint1$b, 3)[5]`, 95% CI = `r round(MR_all_ScalePoint1$ci.lb, 3)[5]` to `r round(MR_all_ScalePoint1$ci.ub, 3)[5]`).    
+
+*Other moderators in univariate models*      
+The moderators that did not appear to significantly influence the magnitude of judgement bias effects were: source of animals (captive vs. wild-caught), their age, type of affect manipulation (stress vs. enrichment), timing of affect manipulation (short versus long-term), whether manipulation was compared to benign or worse reference condition, type of study design (within-individual vs. between-individuals), food deprivation during judgement bias tests, measurement type of behavioural response (latency vs. proportion), automation and blinding of measurements of animal responses or whether (Table S).   
+
+
+```{r load full MR models, eval=TRUE, include=FALSE}
+load(file = "../Rdata/MR_Full_0.Rdata")
+```
+
+*Multivariate (full) meta-regression models and model selection*     
+
+The full meta-regression model included four moderators that were significant in univariate models (after confirming they were not  co-linear with each other): sex of the animals, task type (go/no-go vs. active choice), type of the cues used in the test, and type of reinforcement for positive and negative training cues. In the multivariate meta-regression, none of the considered moderator was significant (Table S). These moderators can jointly explain only about 10% of variation in the data (*R*^2^ = `r round(R2(MR_Full_0)[1],3)`). Model selection analysis indicated that type of the taskand type of reinforcement used could be the most influential moderators, followed by the sex of animals (Table S).    
+
+```{r load publication bias models, eval=TRUE, include=FALSE}
+load(file = "../Rdata/PB_model.Rdata")
+res_regtest <- regtest(PB_model, model="lm")
+
+load(file = "../Rdata/MR_all_Year.Rdata")
+```
+
+*Publication bias*     
+We conducted 3 kinds of publication bias analyses: 1) contour-enhanced funnel plots of residuals, 2) a variant of Egger's regression, and 3) a regression-based time-lag bias test. Visual inspection of enhanced-contour funnel plots of residuals did not reveal data distribution skewness indicative of publication bias (Figure S). Further, the intercept of Egger's multivariate regression, controlling for potentially important moderators from univariate models, was not significantly different from zero (*t* =  `r round(res_regtest$zval,3)`, df = `r round(res_regtest$dfs,3)` , *p* = `r round(res_regtest$pval,3)`) , confirming lack of publication bias in the full data set. Finally, we found no evidence for time-lag bias, as the slope of linear regression between publication year and effect size was not significantly different from zero (Slope~[Year]~ `r round(MR_all_Year$b[2],3)` , 95% CI = `r round(MR_all_Year$ci.lb[2],3)` to `r round(MR_all_Year$ci.ub[2],3)`, *p* = `r round(MR_all_Year$pval[2],3)`).     
+ 
+*Sensitivity analyses (robustness of the results)*    
+
+```{r load bayesian models, eval=TRUE, include=FALSE}
+load(file = "../Rdata/bayesian_MA1.1.RData")
+load(file = "../Rdata/bayesian_MR1.1.Rdata")
+```
+
+The estimates from Bayesian models run on full data set gave qualitatively identical results to the REML models in the main data analyses. Namely, the overall effect was small and statistically significant (H~*g*[overall mean]~ = `r round(summary(bayesian_MA1.1)$solutions[1], 3)`, 95% CI = `r round(summary(bayesian_MA1.1)$solutions[2], 3)` to `r round(summary(bayesian_MA1.1)$solutions[3], 3)`; *I*^2^~total~ = `r round(posterior.mode(100*(bayesian_MA1.1$VCV[,"ScalePoint"] + bayesian_MA1.1$VCV[,"ArticleID"] + bayesian_MA1.1$VCV[,"ExperimentID"] + bayesian_MA1.1$VCV[,"EffectID"] ) / (bayesian_MA1.1$VCV[,"ScalePoint"] + bayesian_MA1.1$VCV[,"ArticleID"] + bayesian_MA1.1$VCV[,"ExperimentID"] + bayesian_MA1.1$VCV[,"EffectID"]  + bayesian_MA1.1$VCV[,"units"] + sum(1/dat$Vd*(length(1/dat$Vd)-1))/(sum(1/dat$Vd)^2-sum(1/dat$Vd^2)) ) ), 1)`%). In the multivariate meta-regression, only sex of the test sibject significantly influenced cognitive bias test outcomes (H~*g*[male vs. female difference]~ = `r round(summary(bayesian_MR1.1)$solutions[2,1], 3)`, 95% CI = `r round(summary(bayesian_MR1.1)$solutions[2,2], 3)` to `r round(summary(bayesian_MR1.1)$solutions[2,3], 3)`; Table S ).    
+
+```{r load subsets models, eval=TRUE, include=FALSE}
+dat_amb <- dplyr::filter(dat, ScalePoint %in% c("MID","NN","NP")) #subset by picking any ambiguous cues
+dat_MID_ES <- dplyr::filter(dat, ScalePoint == "MID") #subset by picking only middle (MID) ES from each curve
+dat_max_absES <- dplyr::filter(dat, biggest_ES == 1) #subset by picking ES with the biggest absolute value from each curve (i.e. get the most positive or negatve response available)
+dat_max_meanES <- dplyr::filter(dat, biggest_meandir == 1) #subset by picking ES from each curve which has the biggest absolute value in the direction of the mean value of all ES from the curve (i.e. biggest in the overall direction of the response)
+dat_max_ES <- dplyr::filter(dat, max_ES == 1) #subset by picking maximum ES from each curve (i.e. get the most positive=optimistic response available)
+
+load(file = "../Rdata/MA_amb.Rdata")
+load(file = "../Rdata/MR_Full_0_ambES.Rdata")
+load(file = "../Rdata/MA_MID_ES.RData")
+load(file = "../Rdata/MR_Full_0_MID_ES.Rdata")
+load(file = "../Rdata/MA_maxabsES.Rdata")
+load(file = "../Rdata/MR_Full_0_max_absES.Rdata")
+load(file = "../Rdata/MA_maxmeanES.RData")
+load(file = "../Rdata/MR_Full_0_MID_ES.Rdata")
+load(file = "../Rdata/MA_maxES.RData")
+load(file = "../Rdata/MR_Full_0_max_ES.Rdata")
+```
+
+Additionally, meta-analytic models were run on five data subsets, representing different ways of looking at the results from response curves with multiple cues: 1) including only data from ambiguous cues (`r table(dat_amb$ScalePoint)[4]`  `r names(table(dat_amb$ScalePoint)[4])`, `r table(dat_amb$ScalePoint)[1]`  `r names(table(dat_amb$ScalePoint)[1])`, `r table(dat_amb$ScalePoint)[3]`  `r names(table(dat_amb$ScalePoint)[3])`, effect sizes for cue locations included in this data subset), 2)  including only data from mid-point ambiguous cues (`r table(dat_MID_ES$ScalePoint)[1]`  `r names(table(dat_MID_ES$ScalePoint)[1])` effect sizes ), 3) including only data for maximum response, in absolute terms (`r table(dat_max_absES$ScalePoint)[5]`  `r names(table(dat_max_absES$ScalePoint)[5])`, `r table(dat_max_absES$ScalePoint)[4]`  `r names(table(dat_max_absES$ScalePoint)[4])`, `r table(dat_max_absES$ScalePoint)[1]`  `r names(table(dat_max_absES$ScalePoint)[1])`, `r table(dat_max_absES$ScalePoint)[3]`  `r names(table(dat_max_absES$ScalePoint)[3])`, `r table(dat_max_absES$ScalePoint)[2]`  `r names(table(dat_max_absES$ScalePoint)[2])`, effect sizes), 4) including only data for maximum response in the overall direction of response (`r table(dat_max_meanES$ScalePoint)[5]`  `r names(table(dat_max_meanES$ScalePoint)[5])`, `r table(dat_max_meanES$ScalePoint)[4]`  `r names(table(dat_max_meanES$ScalePoint)[4])`, `r table(dat_max_meanES$ScalePoint)[1]`  `r names(table(dat_max_meanES$ScalePoint)[1])`, `r table(dat_max_meanES$ScalePoint)[3]`  `r names(table(dat_max_meanES$ScalePoint)[3])`, `r table(dat_max_meanES$ScalePoint)[2]`  `r names(table(dat_max_meanES$ScalePoint)[2])`, effect sizes), 5) including only data for maximum response in positive direction (`r table(dat_max_ES$ScalePoint)[5]`  `r names(table(dat_max_ES$ScalePoint)[5])`, `r table(dat_max_ES$ScalePoint)[4]`  `r names(table(dat_max_ES$ScalePoint)[4])`, `r table(dat_max_ES$ScalePoint)[1]`  `r names(table(dat_max_ES$ScalePoint)[1])`, `r table(dat_max_ES$ScalePoint)[3]`  `r names(table(dat_max_ES$ScalePoint)[3])`, `r table(dat_max_ES$ScalePoint)[2]`  `r names(table(dat_max_ES$ScalePoint)[2])`, effect sizes). As expected, all these data subsets tended to have larger overall effect sizes than the full data set, especially when the most positive response from each curve was picked as an indicative result from a trial (Figure X, Table S). Multivariate meta-regression models did not reveal consistent pattern of influential moderators  (Table S).     
+
