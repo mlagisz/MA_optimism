@@ -11,7 +11,7 @@ sessionInfo()
 options(scipen=100)
 pacman::p_load(devtools, tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr, rotl, fulltext, metafor, car, ggplot2, gridExtra, patchwork)
 #install.packages("devtools")
-devtools::install_github("itchyshin/orchard_plot", subdir = "orchaRd", force = TRUE, build_vignettes = TRUE) #vignette builder 'R.rsp' not found
+#devtools::install_github("itchyshin/orchard_plot", subdir = "orchaRd", force = TRUE, build_vignettes = TRUE) #vignette builder 'R.rsp' not found
 
 library(orchaRd)
 
@@ -62,7 +62,7 @@ load(file = "./Rdata/MR_all_Blind1.Rdata")
 ```
 
 
-## Figure 4. MA models for full data and 4 data subsets
+### Figure 4. MA models for full data and 4 data subsets
 
 ```{r MA - orchard plot, eval=TRUE, include=FALSE}
 #res1 <- mod_results(MA_all, mod = "Int")
@@ -95,7 +95,7 @@ ggsave("plots/Figure4_Rplot.pdf", width = 8, height = 18, units = "cm", dpi = 30
 ```
 
 
-## Figure 5. MR model for full data with species identity as moderator 
+### Figure 5. MR model for full data with species identity as moderator 
 
 ```{r MA - orchard plot, eval=FALSE, include=FALSE}
 #DONT USE
@@ -108,7 +108,7 @@ p
 
 # phylogeny + traditional forest plot - USE
 
-```{r species plot with phylogeny, eval=TRUE, include=FALSE}
+```{r species plot with phylogeny, eval=TRUE, include=TRUE}
 ### PLOT - species phylogeny and forest plot v2 (narrower)
 ssp <- MR_all_species
 load("./Rdata/MA_all.Rdata")
@@ -146,7 +146,7 @@ dev.off()
 ```
 
 
-## Figure 6. MR models -univariate
+### Figure 6. MR models - univariate
 
 ```{r MA - orchard plot, eval=TRUE, include=FALSE}
 #res1 <- mod_results(MR_all_sex1, mod = "Int")
@@ -229,8 +229,50 @@ ggsave("plots/Figure6_Rplot.pdf", width = 12, height = 17, units = "cm", dpi = 3
 ```
 
 
+### Figure S3
+Funnel plots
 
-***********************************************************
+
+```{r Figure Funnels old, eval=FALSE, include = FALSe}
+#Funnel plots for the estimated effect sizes for meta-analytic (intercept-only) models for the difference between better and worse treatments (*Hg*). 
+#Positive values of *Hg* can be interpreted as animals in relatively better treatment group being more "optimistic"than animals in relatively worse treatment group. 
+#Panel **A** is based on raw effect sizes and their precision (inversed square root of standard errors). Panel **B** is based on the residual values from the full meta-regression models, containing all moderators, and their precision.  
+
+#rm(list=ls())
+load(file="./Rdata/MR_Full_0.Rdata")
+
+
+#dev.off()
+
+pdf(file="plots/Figure_S3_funnels.pdf",width=8,height=4,family="sans",pointsize=10)
+par(mfcol=c(1,2),mar=c(5,4,2,1.75),oma=c(1,2,1,0))
+
+#raw data
+plot(1/sqrt(dat$Vd) ~ dat$d, pch=16, xlim=c(-8,8), ylim=c(0,6),  xlab="Effect size [Hg]", ylab=expression("Precision  "(1/SE)),  main="", type="n") #raw
+points(1/sqrt(dat$Vd) ~ dat$d, col=rgb(0, 0, 0, alpha=0.3), pch=16)
+abline(v=0,lty=1)
+abline(v=0.19,lty=3)
+mtext("A", 3, 0, at=-11.3, cex=1.4, font=2)
+
+#regressed residuals from the full model
+
+funnel(MR_Full_0, yaxis = "seinv", level=c(90, 95, 99), shade=c("white", "gray55", "gray75"), refline=0, legend=FALSE, xlim=c(-8,8), ylim=c(0.5,1.5), steps=3, xlab="Regressed residuals")
+#plot(prec~es, xlim=c(-8,8), ylim=c(0,10), pch=16, xlab="Regressed residuals",	ylab=expression("Precision  "(1/SE)),  main="", type="n") #es values are from Eggers regression
+#points(prec ~ es, col=rgb(0, 0, 0, alpha=0.3), pch=16)
+#abline(v=0,lty=3)
+mtext("B", 3, 0,at=-11.3, cex=1.4, font=2)
+
+dev.off()
+```
+
+
+
+
+
+**********************************************************************************************************************
+
+*********************************************************** OLD
+
 ## MA models for full data and 3 subsets - OLD - see below
 ```{r forestplot MA Models OLD, echo=FALSE}
 res_MA <- read.csv("./Tables/Table MA_v3.csv", col.names=c("ES", "Dataset", "Intercept", "Mean", "CI.lb", "CI.ub", "RandomEffects", "S2", "k"), skip=2)
@@ -463,7 +505,7 @@ dev.off()
 ```
 
 
-```{r forestplot Full Model, echo=FALSE}
+```{r single forestplot Full Model, echo=FALSE}
 res_full <- read.csv("./Tables/Table S7.csv", col.names=c("names", "Levels.and.contrasts","Mean", "CI.lb", "CI.ub", "k"), skip=2)
 str(res_full)
 res_full$Signif <- ifelse(res_full$CI.lb>0 | res_full$CI.ub<0, "*", "") #add column with stars for estimates that significantly differ from zero
@@ -489,11 +531,13 @@ dev.off()
 ```
 
 ### Figure Funnels  
-Funnel plots for the estimated effect sizes for meta-analytic (intercept-only) models for the difference between better and worse treatments (*Hg*). 
-Positive values of *Hg* can be interpreted as animals in relatively better treatment group being more "optimistic"than animals in relatively worse treatment group. 
-Panel **A** is based on raw effect sizes and their precision (inversed square root of standard errors). Panel **B** is based on the residual values from the full meta-regression models, containing all moderators, and their precision.  
 
-```{r Figure Funnels}
+
+```{r Figure Funnels old, eval=FALSE, include = FALSe}
+#Funnel plots for the estimated effect sizes for meta-analytic (intercept-only) models for the difference between better and worse treatments (*Hg*). 
+#Positive values of *Hg* can be interpreted as animals in relatively better treatment group being more "optimistic"than animals in relatively worse treatment group. 
+#Panel **A** is based on raw effect sizes and their precision (inversed square root of standard errors). Panel **B** is based on the residual values from the full meta-regression models, containing all moderators, and their precision.  
+
 #rm(list=ls())
 load("Rdata/MA_all.Rdata")
 load(file="Rdata/residuals_Prec.RData") #loads es and Prec for residuals
