@@ -186,14 +186,13 @@ p5 <- orchard_plot(MR_all_ReinforcementCat1, mod = "Reinforcement scheme", xlab 
 xlim(-4,9) +  scale_y_discrete(labels = c("Reward vs. Null", "Reward vs. Punishement", "Reward vs. smaller Reward"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("d.  Reinforcement scheme") 
 
 p8 <- orchard_plot(MR_all_ScalePoint1ord, mod = "Cue location", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
-xlim(-4,9) +  scale_y_discrete(labels = c("N", "NN", "MID", "NP", "P"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("e.  Cue type/location") 
-
-factor(name, labels = name)
-
-p8 <- orchard_plot(MR_all_ScalePoint1ord, mod = "Cue location", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
-xlim(-4,9) + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("e.  Cue type/location") 
+xlim(-4,9) +  scale_y_discrete(labels = c("N", "NN", "MID", "NP", "P"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("e.  Cue type/location") #ordering does not work!
 
 
+#tests on ordering the factor
+#p8 <- orchard_plot(MR_all_ScalePoint1ord, mod = "Cue location", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
+#xlim(-4,9) + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("e.  Cue type/location") 
+#p8$data$name <- factor(p8$data$name, labels = p8$data$name)
 
 #heights = c(3, 2, 2, 5, 3, 2, 2, 5, 2, 2, 2, 2, 3, 2, 2)
 p1 / p3 / p4 / p5 / p8
