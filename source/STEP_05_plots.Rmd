@@ -12,7 +12,8 @@ options(scipen=100)
 pacman::p_load(devtools, tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr, rotl, fulltext, metafor, car, ggplot2, gridExtra, patchwork)
 #install.packages("devtools")
 #devtools::install_github("itchyshin/orchard_plot", subdir = "orchaRd", force = TRUE, build_vignettes = TRUE) #vignette builder 'R.rsp' not found
-
+#install.packages("R.rsp")
+#install.packages("prettyunits")
 library(orchaRd)
 
 #source("../functions/functions.R")
@@ -69,27 +70,27 @@ load(file = "./Rdata/MR_all_Blind1.Rdata")
 #print(res1)
 #orchard_plot(MA_all, mod = "Int", xlab = "Standardised mean difference", transfm = "none")
 
-p1 <- orchard_plot(MA_all, xlab = "", transfm = "none", alpha = 0.25) +
+p1 <- orchard_plot(MA_all, xlab = "", transfm = "none", alpha = 0.3) +
 xlim(-4,9)+ scale_y_discrete(labels = c(Intrcpt = "Overall"))  + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("a.  All data")  #"All data"
 
-p2 <- orchard_plot(MA_amb, xlab = "", transfm = "none", alpha = 0.25) +
+p2 <- orchard_plot(MA_amb, xlab = "", transfm = "none", alpha = 0.3) +
 xlim(-4,9) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("b.  Ambiguous cues data") #"Ambiguous cues data"
 
-p3 <- orchard_plot(MA_MID_ES, xlab = "", transfm = "none", alpha = 0.25) +
+p3 <- orchard_plot(MA_MID_ES, xlab = "", transfm = "none", alpha = 0.3) +
 xlim(-4,9) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("c.  Mid-ambiguous cues data") #"Mid-ambiguous cues data"
 
-p4 <- orchard_plot(MA_maxabsES, xlab = "", transfm = "none", alpha = 0.25) +
+p4 <- orchard_plot(MA_maxabsES, xlab = "", transfm = "none", alpha = 0.3) +
 xlim(-4,9) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("d.  Maximum absolute response data") # "Maximum absolute response data"
 
-p5 <- orchard_plot(MA_maxmeanES, xlab = "", transfm = "none", alpha = 0.25) +
-xlim(-4,9) + scale_y_discrete(labels = c(Intrcpt = "Overall"))+ scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("e.  Maximum response in dominant direction data") #"Maximum response in dominant direction data"
+p5 <- orchard_plot(MA_maxmeanES, xlab = "", transfm = "none", alpha = 0.3) +
+xlim(-4,9) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("e.  Maximum response in dominant direction data") #"Maximum response in dominant direction data"
 
-p6 <- orchard_plot(MA_maxES, xlab = "Standardised mean difference [Hg]", transfm = "none", alpha = 0.25) +
-xlim(-4,9) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + ggtitle("f.  Maximum positive response data") #"Maximum positive response data"
+#p6 <- orchard_plot(MA_maxES, xlab = "Standardised mean difference [Hg]", transfm = "none", alpha = 0.25) +
+#xlim(-4,9) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + ggtitle("f.  Maximum positive response data") #"Maximum positive response data"
 
-p1/p2/p3/p4/p5/p6
+p1/p2/p3/p4/p5 #/p6
 
-ggsave("plots/Figure4_Rplot.pdf", width = 8, height = 18, units = "cm", dpi = 300, scale=2)
+ggsave("plots/Figure4_Rplot.pdf", width = 16, height = 16, units = "cm", dpi = 300, scale=2)
 
 #+ theme(legend.position = c(0.6, 1), legend.justification = c(0, 1), legend.key.size = unit(1, "mm")) + theme(legend.direction = "horizontal", legend.title = element_text(size = 8), legend.text = element_text(size = 8))
 ```
