@@ -43,7 +43,7 @@ load(file = "./Rdata/MR_all_CueTypeCat1.Rdata")
 load(file = "./Rdata/MR_all_ReinforcementCat1.Rdata")
 load(file = "./Rdata/MR_all_AmbigReinforced1.Rdata")
 load(file = "./Rdata/MR_all_WithinBetween1.Rdata")
-load(file = "./Rdata/MR_all_ScalePoint1ord.Rdata")
+load(file = "./Rdata/MR_all_ScalePoint1.Rdata")
 load(file = "./Rdata/MR_all_source1.Rdata") 
 load(file = "./Rdata/MR_all_age1.Rdata")
 load(file = "./Rdata/MR_all_AffectManipCat1.Rdata")
@@ -98,7 +98,7 @@ ggsave("plots/Figure4_Rplot.pdf", width = 16, height = 16, units = "cm", dpi = 3
 
 ### Figure 5. MR model for full data with species identity as moderator 
 
-```{r MA - orchard plot, eval=FALSE, include=FALSE}
+```{r MR - orchard plot s[ecies], eval=FALSE, include=FALSE}
 #DONT USE
 #res1 <- mod_results(MR_all_species, mod = "Species")
 #print(res1)
@@ -149,29 +149,7 @@ dev.off()
 
 ### Figure 6. MR models - univariate models for moderators that were statistically significant 
 
-```{r MA - orchard plot, eval=TRUE, include=FALSE}
-#res1 <- mod_results(MR_all_sex1, mod = "Int")
-#print(res1)
-#orchard_plot(MR_all_sex1, mod = "Int", xlab = "Standardised mean difference [Hg]", transfm = "none", alpha = 0.25)
-
-## 16 univariate models:
-# MR_all_Sex1
-# MR_all_MeasureType1
-# MR_all_TaskType1
-# MR_all_CueTypeCat1
-# MR_all_ReinforcementCat1
-# MR_all_AmbigReinforced1
-# MR_all_WithinBetween1
-# MR_all_ScalePoint1
-# MR_all_source1 
-# MR_all_age1
-# MR_all_AffectManipCat1
-# MR_all_AffectManipTiming1
-# MR_all_ComparisonCategory1
-# MR_all_FoodDeprived1
-# MR_all_Automated1
-# MR_all_Blind1
-
+```{r MR - orchard plot signif moderators, eval=TRUE, include=FALSE}
 
 p1 <- orchard_plot(MR_all_sex1, mod = "Sex", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
 xlim(-4,9) + scale_y_discrete(labels = c("Female", "Male", "Mixed-sex"))  + scale_fill_manual(values = rep("grey",3)) + scale_colour_manual(values = rep("grey",3)) + theme(legend.position = "none") + ggtitle("a.  Sex")
@@ -185,16 +163,14 @@ xlim(-4,9) +  scale_y_discrete(labels = c("Auditory", "Olfactory", "Spatial", "T
 p5 <- orchard_plot(MR_all_ReinforcementCat1, mod = "Reinforcement scheme", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
 xlim(-4,9) +  scale_y_discrete(labels = c("Reward vs. Null", "Reward vs. Punishement", "Reward vs. smaller Reward"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("d.  Reinforcement scheme") 
 
-p8 <- orchard_plot(MR_all_ScalePoint1ord, mod = "Cue location", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
-xlim(-4,9) +  scale_y_discrete(labels = c("N", "NN", "MID", "NP", "P"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("e.  Cue type/location") #ordering does not work!
+#p8 <- orchard_plot(MR_all_ScalePoint1, mod = "Cue location", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
+#xlim(-4,9) +  scale_y_discrete(labels = c("N", "NN", "MID", "NP", "P"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("e.  Cue type/location") #ordering does not work!
 
+#load(file = "./Rdata/MR_all_ScalePoint1ord.Rdata")
+load(file = "./Rdata/MR_all_ScalePoint1ord2.Rdata")
+p8 <- orchard_plot(MR_all_ScalePoint1ord2, mod = "Cue location", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
+xlim(-4,9) + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("e.  Cue type/location") 
 
-#tests on ordering the factor
-#p8 <- orchard_plot(MR_all_ScalePoint1ord, mod = "Cue location", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
-#xlim(-4,9) + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("e.  Cue type/location") 
-#p8$data$name <- factor(p8$data$name, labels = p8$data$name)
-
-#heights = c(3, 2, 2, 5, 3, 2, 2, 5, 2, 2, 2, 2, 3, 2, 2)
 p1 / p3 / p4 / p5 / p8
 
 ggsave("plots/Figure6_Rplot.pdf", width = 16, height = 16, units = "cm", dpi = 300, scale=2)
@@ -205,28 +181,7 @@ ggsave("plots/Figure6_Rplot.pdf", width = 16, height = 16, units = "cm", dpi = 3
 
 ### Figure S1. MR models - univariate models for moderator that were statistically non-significant 
 
-```{r MA - orchard plot, eval=TRUE, include=FALSE}
-#res1 <- mod_results(MR_all_sex1, mod = "Int")
-#print(res1)
-#orchard_plot(MR_all_sex1, mod = "Int", xlab = "Standardised mean difference [Hg]", transfm = "none", alpha = 0.25)
-
-## 16 univariate models:
-# MR_all_Sex1
-# MR_all_MeasureType1
-# MR_all_TaskType1
-# MR_all_CueTypeCat1
-# MR_all_ReinforcementCat1
-# MR_all_AmbigReinforced1
-# MR_all_WithinBetween1
-# MR_all_ScalePoint1
-# MR_all_source1 
-# MR_all_age1
-# MR_all_AffectManipCat1
-# MR_all_AffectManipTiming1
-# MR_all_ComparisonCategory1
-# MR_all_FoodDeprived1
-# MR_all_Automated1
-# MR_all_Blind1
+```{r MR - orchard plot nonsignif moderators, eval=TRUE, include=FALSE}
 
 p2 <- orchard_plot(MR_all_MeasureType1, mod = "Measurement type", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
 xlim(-4,9) + scale_y_discrete(labels = c("Latency", "Proportion"))  + scale_fill_manual(values = rep("grey",2)) + scale_colour_manual(values = rep("grey",2)) + theme(legend.position = "none") + ggtitle("a.  Measurement type")
