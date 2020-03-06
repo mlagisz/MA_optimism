@@ -457,14 +457,6 @@ save(MR_all_AmbigReinforced, file = "Rdata/MR_all_AmbigReinforced.Rdata")
 ```{r MR all data - ScalePoint}
 ScalePoint_ord <- ordered(dat$ScalePoint, levels = c("P", "NP", "MID", "NN", "N"))
 
-MR_all_ScalePoint1ord <- rma.mv(yi=d, V=VCV, 
-                     mod = ~ScalePoint_ord -1, 
-                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
-                     R = list(Species_Latin = CorMatrix_all), 
-                     data = dat, method="REML") 
-summary(MR_all_ScalePoint1ord) # no signif intc 
-save(MR_all_ScalePoint1ord, file = "Rdata/MR_all_ScalePoint1ord.Rdata")
-
 MR_all_ScalePoint1 <- rma.mv(yi=d, V=VCV, 
                      mod = ~ScalePoint -1, 
                      random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
@@ -512,6 +504,31 @@ MR_all_ScalePoint_N <- rma.mv(yi=d, V=VCV,
                      data = dat, method="REML") 
 summary(MR_all_ScalePoint_N) # no signif diff
 save(MR_all_ScalePoint_N, file = "Rdata/MR_all_ScalePoint_N.Rdata")
+
+
+#ordered model 1 - for creating tables
+MR_all_ScalePoint1ord <- rma.mv(yi=d, V=VCV, 
+                     mod = ~ScalePoint_ord -1, 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     data = dat, method="REML") 
+summary(MR_all_ScalePoint1ord) # no signif intc 
+save(MR_all_ScalePoint1ord, file = "Rdata/MR_all_ScalePoint1ord.Rdata")
+
+
+#ordered model 2 - for creating plot (ordered orchard plot) - temporary workaround
+dat2 <- dat
+dat2$ScalePoint_ord <- dat2$ScalePoint
+levels(dat2$ScalePoint_ord) <- c("3_MID", "5_N", "4_NN", "2_NP", "1_P")
+
+MR_all_ScalePoint1ord2 <- rma.mv(yi=d, V=VCV, 
+                     mod = ~ScalePoint_ord -1, 
+                     random=list(~1|Species_Latin, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+                     R = list(Species_Latin = CorMatrix_all), 
+                     data = dat2, method="REML") 
+summary(MR_all_ScalePoint1ord2) # no signif intc 
+save(MR_all_ScalePoint1ord2, file = "Rdata/MR_all_ScalePoint1ord2.Rdata")
+
 ```
 
 #####  Source (Captive_Wild.caught)
