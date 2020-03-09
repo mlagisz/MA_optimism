@@ -163,11 +163,11 @@ xlim(-4,9) +  scale_y_discrete(labels = c("Auditory", "Olfactory", "Spatial", "T
 p5 <- orchard_plot(MR_all_ReinforcementCat1, mod = "Reinforcement scheme", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
 xlim(-4,9) +  scale_y_discrete(labels = c("Reward vs. Null", "Reward vs. Punishement", "Reward vs. smaller Reward"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("d.  Reinforcement scheme") 
 
-#p8 <- orchard_plot(MR_all_ScalePoint1, mod = "Cue location", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
-#xlim(-4,9) +  scale_y_discrete(labels = c("N", "NN", "MID", "NP", "P"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("e.  Cue type/location") #ordering does not work!
-
 #load(file = "./Rdata/MR_all_ScalePoint1ord.Rdata")
-load(file = "./Rdata/MR_all_ScalePoint1ord2.Rdata")
+#p8 <- orchard_plot(MR_all_ScalePoint1ord, mod = "Cue location", xlab = "", transfm = "none", alpha = 0.25, angle = 0) + xlim(-4,9) +  scale_y_discrete(labels = c("N", "NN", "MID", "NP", "P"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("e.  Cue type/location") #ordering does not work! (only labels get changed, but in wrong order)
+#p8 <- orchard_plot(MR_all_ScalePoint1ord, mod = "Cue location", xlab = "", transfm = "none", alpha = 0.25, angle = 0) + xlim(-4,9) +  scale_y_discrete()  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("e.  Cue type/location") #ordering does not work!
+
+load(file = "./Rdata/MR_all_ScalePoint1ord2.Rdata") #temporary workaround for ordering the levels - the labels need to be cleaned in AI
 p8 <- orchard_plot(MR_all_ScalePoint1ord2, mod = "Cue location", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
 xlim(-4,9) + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("e.  Cue type/location") 
 
