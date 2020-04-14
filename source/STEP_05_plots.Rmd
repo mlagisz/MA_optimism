@@ -70,27 +70,26 @@ load(file = "./Rdata/MR_all_Blind1.Rdata")
 #print(res1)
 #orchard_plot(MA_all, mod = "Int", xlab = "Standardised mean difference", transfm = "none")
 
-p1 <- orchard_plot(MA_all, xlab = "", transfm = "none", alpha = 0.3) +
-xlim(-4,9)+ scale_y_discrete(labels = c(Intrcpt = "Overall"))  + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("a.  All data")  #"All data"
+p1 <- orchard_plot(MA_all, xlab = "", transfm = "none", alpha = 0.3) + scale_x_continuous(breaks = seq(-4, 9, by = 1)) + scale_y_discrete(labels = c(Intrcpt = "Overall"))  + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("a.  All data")  #"All data"
 
 p2 <- orchard_plot(MA_amb, xlab = "", transfm = "none", alpha = 0.3) +
-xlim(-4,9) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("b.  Ambiguous cues data") #"Ambiguous cues data"
+scale_x_continuous(breaks = seq(-4, 9, by = 1)) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("b.  Ambiguous cues data") #"Ambiguous cues data"
 
 p3 <- orchard_plot(MA_MID_ES, xlab = "", transfm = "none", alpha = 0.3) +
-xlim(-4,9) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("c.  Mid-ambiguous cues data") #"Mid-ambiguous cues data"
+scale_x_continuous(breaks = seq(-4, 9, by = 1)) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("c.  Mid-ambiguous cues data") #"Mid-ambiguous cues data"
 
 p4 <- orchard_plot(MA_maxabsES, xlab = "", transfm = "none", alpha = 0.3) +
-xlim(-4,9) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("d.  Maximum absolute response data") # "Maximum absolute response data"
+scale_x_continuous(breaks = seq(-4, 9, by = 1)) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("d.  Maximum absolute response data") # "Maximum absolute response data"
 
 p5 <- orchard_plot(MA_maxmeanES, xlab = "", transfm = "none", alpha = 0.3) +
-xlim(-4,9) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("e.  Maximum response in dominant direction data") #"Maximum response in dominant direction data"
+scale_x_continuous(breaks = seq(-4, 9, by = 1)) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("e.  Maximum response in dominant direction data") + labs(x = "Effect size [Hedges' g]") #"Maximum response in dominant direction data"
 
 #p6 <- orchard_plot(MA_maxES, xlab = "Standardised mean difference [Hg]", transfm = "none", alpha = 0.25) +
-#xlim(-4,9) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + ggtitle("f.  Maximum positive response data") #"Maximum positive response data"
+#scale_x_continuous(breaks = seq(-4, 9, by = 1)) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + ggtitle("f.  Maximum positive response data") #"Maximum positive response data"
 
 p1/p2/p3/p4/p5 #/p6
 
-ggsave("plots/Figure4_Rplot.pdf", width = 16, height = 16, units = "cm", dpi = 300, scale=2)
+ggsave("plots/Figure4_Rplot_v2.pdf", width = 16, height = 16, units = "cm", dpi = 300, scale=1.4)
 
 #+ theme(legend.position = c(0.6, 1), legend.justification = c(0, 1), legend.key.size = unit(1, "mm")) + theme(legend.direction = "horizontal", legend.title = element_text(size = 8), legend.text = element_text(size = 8))
 ```
@@ -152,88 +151,104 @@ dev.off()
 ```{r MR - orchard plot signif moderators, eval=TRUE, include=FALSE}
 
 p1 <- orchard_plot(MR_all_sex1, mod = "Sex", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
-xlim(-4,9) + scale_y_discrete(labels = c("Female", "Male", "Mixed-sex"))  + scale_fill_manual(values = rep("grey",3)) + scale_colour_manual(values = rep("grey",3)) + theme(legend.position = "none") + ggtitle("a.  Sex")
+scale_x_continuous(breaks = seq(-4, 9, by = 1)) + scale_y_discrete(labels = c("Female", "Male", "Mixed-sex"))  + scale_fill_manual(values = rep("grey",3)) + scale_colour_manual(values = rep("grey",3)) + theme(legend.position = "none") + ggtitle("a.  Sex")
 
 p3 <- orchard_plot(MR_all_TaskType1, mod = "Task Type", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
-xlim(-4,9) +  scale_y_discrete(labels = c("Active choice", "Go/no-go"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("b.  Task type")
+scale_x_continuous(breaks = seq(-4, 9, by = 1)) +  scale_y_discrete(labels = c("Active choice", "Go/no-go"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("b.  Task type")
 
 p4 <- orchard_plot(MR_all_CueTypeCat1, mod = "Cue Type", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
-xlim(-4,9) +  scale_y_discrete(labels = c("Auditory", "Olfactory", "Spatial", "Tactile", "Visulal"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("c.  Cue type")
+scale_x_continuous(breaks = seq(-4, 9, by = 1)) +  scale_y_discrete(labels = c("Auditory", "Olfactory", "Spatial", "Tactile", "Visulal"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("c.  Cue type")
 
 p5 <- orchard_plot(MR_all_ReinforcementCat1, mod = "Reinforcement scheme", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
-xlim(-4,9) +  scale_y_discrete(labels = c("Reward vs. Null", "Reward vs. Punishement", "Reward vs. smaller Reward"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("d.  Reinforcement scheme") 
+scale_x_continuous(breaks = seq(-4, 9, by = 1)) +  scale_y_discrete(labels = c("Reward vs. Null", "Reward vs. Punishement", "Reward vs. smaller Reward"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("d.  Reinforcement scheme") 
 
 #load(file = "./Rdata/MR_all_ScalePoint1ord.Rdata")
-#p8 <- orchard_plot(MR_all_ScalePoint1ord, mod = "Cue location", xlab = "", transfm = "none", alpha = 0.25, angle = 0) + xlim(-4,9) +  scale_y_discrete(labels = c("N", "NN", "MID", "NP", "P"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("e.  Cue type/location") #ordering does not work! (only labels get changed, but in wrong order)
-#p8 <- orchard_plot(MR_all_ScalePoint1ord, mod = "Cue location", xlab = "", transfm = "none", alpha = 0.25, angle = 0) + xlim(-4,9) +  scale_y_discrete()  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("e.  Cue type/location") #ordering does not work!
+#p8 <- orchard_plot(MR_all_ScalePoint1ord, mod = "Cue location", xlab = "", transfm = "none", alpha = 0.25, angle = 0) + scale_x_continuous(breaks = seq(-4, 9, by = 1)) +  scale_y_discrete(labels = c("N", "NN", "MID", "NP", "P"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("e.  Cue type/location") #ordering does not work! (only labels get changed, but in wrong order)
+#p8 <- orchard_plot(MR_all_ScalePoint1ord, mod = "Cue location", xlab = "", transfm = "none", alpha = 0.25, angle = 0) + scale_x_continuous(breaks = seq(-4, 9, by = 1)) +  scale_y_discrete()  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("e.  Cue type/location") #ordering does not work!
 
 load(file = "./Rdata/MR_all_ScalePoint1ord2.Rdata") #temporary workaround for ordering the levels - the labels need to be cleaned in AI
 p8 <- orchard_plot(MR_all_ScalePoint1ord2, mod = "Cue location", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
-xlim(-4,9) + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("e.  Cue type/location") 
+scale_x_continuous(breaks = seq(-4, 9, by = 1)) + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("e.  Cue type/location") + labs(x = "Effect size [Hedges' g]") + scale_y_discrete(labels = c("Cue P", "Cue NP", "Cue MID", "Cue NN", "Cue N")) 
 
 p1 / p3 / p4 / p5 / p8
 
-ggsave("plots/Figure6_Rplot.pdf", width = 16, height = 16, units = "cm", dpi = 300, scale=2)
+ggsave("plots/Figure6_Rplot_v2.pdf", width = 16, height = 20, units = "cm", dpi = 300, scale=1.4)
 
 #+ theme(legend.position = c(0.6, 1), legend.justification = c(0, 1), legend.key.size = unit(1, "mm")) + theme(legend.direction = "horizontal", legend.title = element_text(size = 8), legend.text = element_text(size = 8))
 ```
 
 
-### Figure S1. MR models - univariate models for moderator that were statistically non-significant 
+### Figure S3. MR models - univariate models for moderator that were statistically non-significant 
 
-```{r MR - orchard plot nonsignif moderators, eval=TRUE, include=FALSE}
+part 1
+
+```{r MR - orchard plot nonsignif moderators part 1, eval=TRUE, include=FALSE}
 
 p2 <- orchard_plot(MR_all_MeasureType1, mod = "Measurement type", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
-xlim(-4,9) + scale_y_discrete(labels = c("Latency", "Proportion"))  + scale_fill_manual(values = rep("grey",2)) + scale_colour_manual(values = rep("grey",2)) + theme(legend.position = "none") + ggtitle("a.  Measurement type")
+scale_x_continuous(breaks = seq(-4, 9, by = 1)) + scale_y_discrete(labels = c("Latency", "Proportion"))  + scale_fill_manual(values = rep("grey",2)) + scale_colour_manual(values = rep("grey",2)) + theme(legend.position = "none") + ggtitle("a.  Measurement type")
 
 p6 <- orchard_plot(MR_all_AmbigReinforced1, mod = "Ambiguous cue reinforcement scheme", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
-xlim(-4,9) +  scale_y_discrete(labels = c("No", "Yes"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("b.  Ambiguous cue reinforced") 
+scale_x_continuous(breaks = seq(-4, 9, by = 1)) +  scale_y_discrete(labels = c("No", "Yes"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("b.  Ambiguous cue reinforced") 
 
 p7 <- orchard_plot(MR_all_WithinBetween1, mod = "Study design", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
-xlim(-4,9) +  scale_y_discrete(labels = c("Between", "Within"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("c.  Within or between-individual study design") 
+scale_x_continuous(breaks = seq(-4, 9, by = 1)) +  scale_y_discrete(labels = c("Between", "Within"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("c.  Within or between-individual study design") 
 
 p9 <- orchard_plot(MR_all_source1, mod = "Source", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
-xlim(-4,9) +  scale_y_discrete(labels = c("Captive", "Wild-caught"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("d.  Source of animals") 
+scale_x_continuous(breaks = seq(-4, 9, by = 1)) +  scale_y_discrete(labels = c("Captive", "Wild-caught"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("d.  Source of animals") 
 
 p10 <- orchard_plot(MR_all_age1, mod = "Age", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
-xlim(-4,9) +  scale_y_discrete(labels = c("Adult", "Juvenile"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("e.  Age class of animals") 
+scale_x_continuous(breaks = seq(-4, 9, by = 1)) +  scale_y_discrete(labels = c("Adult", "Juvenile"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("e.  Age class of animals") 
 
 p11 <- orchard_plot(MR_all_AffectManipCat1, mod = "AffectManipCat", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
-xlim(-4,9) +  scale_y_discrete(labels = c("Enrichment", "Stress"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("f.  Affect manipulation type") 
+scale_x_continuous(breaks = seq(-4, 9, by = 1)) +  scale_y_discrete(labels = c("Enrichment", "Stress"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("f.  Affect manipulation type") + labs(x = "Effect size [Hedges' g]")
+
+#heights = c(3, 2, 2, 5, 3, 2, 2, 5, 2, 2, 2, 2, 3, 2, 2)
+p2 / p6 / p7 /p9 / p10 / p11 #/ p12/ p13 / p14 / p15 / p16
+
+ggsave("plots/FigureS3_Rplot_part1.pdf", width = 16, height = 20, units = "cm", dpi = 300, scale=1.4)
+
+#+ theme(legend.position = c(0.6, 1), legend.justification = c(0, 1), legend.key.size = unit(1, "mm")) + theme(legend.direction = "horizontal", legend.title = element_text(size = 8), legend.text = element_text(size = 8))
+
+```
+
+part 2
+
+```{r MR - orchard plot nonsignif moderators part 2, eval=TRUE, include=FALSE}
 
 p12 <- orchard_plot(MR_all_AffectManipTiming1, mod = "AffectManipTiming", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
-xlim(-4,9) +  scale_y_discrete(labels = c("Just before/during", "Long-term"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("g.  Affect manipulation  timing") 
+scale_x_continuous(breaks = seq(-4, 9, by = 1)) +  scale_y_discrete(labels = c("Just before/during", "Long-term"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("g.  Affect manipulation  timing") 
 
 p13 <- orchard_plot(MR_all_ComparisonCategory1, mod = "ComparisonCategory", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
-xlim(-4,9) +  scale_y_discrete(labels = c("Benign-Worse", "Better-Benign", "Better-Worse"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("h.  Treatment comparison type") 
+scale_x_continuous(breaks = seq(-4, 9, by = 1)) +  scale_y_discrete(labels = c("Benign-Worse", "Better-Benign", "Better-Worse"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("h.  Treatment comparison type") 
 
 p14 <- orchard_plot(MR_all_FoodDeprived1, mod = "FoodDeprived", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
-xlim(-4,9) +  scale_y_discrete(labels = c("No", "Yes"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("i.  Testing food deprived animals") 
+scale_x_continuous(breaks = seq(-4, 9, by = 1)) +  scale_y_discrete(labels = c("No", "Yes"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("i.  Testing food deprived animals") 
 
 p15 <- orchard_plot(MR_all_Automated1, mod = "Automated", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
-xlim(-4,9) +  scale_y_discrete(labels = c("No", "Yes"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("j.  Automated behaviour measurements") 
+scale_x_continuous(breaks = seq(-4, 9, by = 1)) +  scale_y_discrete(labels = c("No", "Yes"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("j.  Automated behaviour measurements") 
 
 p16 <- orchard_plot(MR_all_Blind1, mod = "Blind", xlab = "", transfm = "none", alpha = 0.25, angle = 0) +
-xlim(-4,9) +  scale_y_discrete(labels = c("No", "Yes"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("k.  Blinded behaviour measurements")
+scale_x_continuous(breaks = seq(-4, 9, by = 1)) +  scale_y_discrete(labels = c("No", "Yes"))  + scale_fill_manual(values = rep("grey",5)) + scale_colour_manual(values = rep("grey",5)) + theme(legend.position = "none") + ggtitle("k.  Blinded behaviour measurements") + labs(x = "Effect size [Hedges' g]")
 
 #p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9 + p10 + p11 + p12 + p13 + p14 + p15 + p16 + plot_layout(ncol = 2)
 #heights = c(3, 2, 2, 5, 3, 2, 2, 5, 2, 2, 2, 2, 3, 2, 2)
-p2 /p6 / p7 /p9 / p10 / p11 / p12/ p13 / p14 / p15 / p16
+#p2 /p6 / p7 /p9 / p10 / p11 / 
+p12/ p13 / p14 / p15 / p16
 
-ggsave("plots/FigureS1_Rplot.pdf", width = 16, height = 21, units = "cm", dpi = 300, scale=2.5)
+ggsave("plots/FigureS3_Rplot_part2.pdf", width = 16, height = 20, units = "cm", dpi = 300, scale=1.4)
 
 #+ theme(legend.position = c(0.6, 1), legend.justification = c(0, 1), legend.key.size = unit(1, "mm")) + theme(legend.direction = "horizontal", legend.title = element_text(size = 8), legend.text = element_text(size = 8))
 ```
 
 
-### Figure S3
+### Figure S4
 Funnel plots
 
 
 ```{r Figure Funnels old, eval=FALSE, include = FALSe}
-#Funnel plots for the estimated effect sizes for meta-analytic (intercept-only) models for the difference between better and worse treatments (*Hg*). 
+#Funnel plots for the estimated effect sizes for meta-analytic (intercept-only) models for the difference between better and worse treatments (*Hedges' g*). 
 #Positive values of *Hg* can be interpreted as animals in relatively better treatment group being more "optimistic"than animals in relatively worse treatment group. 
-#Panel **A** is based on raw effect sizes and their precision (inversed square root of standard errors). Panel **B** is based on the residual values from the full meta-regression models, containing all moderators, and their precision.  
+#Panel **a** is based on raw effect sizes and their precision (inversed square root of standard errors). Panel **b** is based on the residual values from the full meta-regression models, containing all moderators, and their precision.  
 
 #rm(list=ls())
 load(file="./Rdata/MR_Full_0.Rdata")
@@ -241,15 +256,15 @@ load(file="./Rdata/MR_Full_0.Rdata")
 
 #dev.off()
 
-pdf(file="plots/Figure_S3_funnels.pdf",width=8,height=4,family="sans",pointsize=10)
+pdf(file="plots/Figure_S4_funnels.pdf",width=8,height=4,family="sans",pointsize=10)
 par(mfcol=c(1,2),mar=c(5,4,2,1.75),oma=c(1,2,1,0))
 
 #raw data
-plot(1/sqrt(dat$Vd) ~ dat$d, pch=16, xlim=c(-8,8), ylim=c(0,6),  xlab="Effect size [Hg]", ylab=expression("Precision  "(1/SE)),  main="", type="n") #raw
+plot(1/sqrt(dat$Vd) ~ dat$d, pch=16, xlim=c(-8,8), ylim=c(0,6),  xlab="Effect size [Hedges' g]", ylab=expression("Precision  "(1/SE)),  main="", type="n") #raw
 points(1/sqrt(dat$Vd) ~ dat$d, col=rgb(0, 0, 0, alpha=0.3), pch=16)
 abline(v=0,lty=1)
 abline(v=0.19,lty=3)
-mtext("A", 3, 0, at=-11.3, cex=1.4, font=2)
+mtext("a.", 3, 0, at=-11.3, cex=1.4, font=1)
 
 #regressed residuals from the full model
 
@@ -257,7 +272,7 @@ funnel(MR_Full_0, yaxis = "seinv", level=c(90, 95, 99), shade=c("white", "gray55
 #plot(prec~es, xlim=c(-8,8), ylim=c(0,10), pch=16, xlab="Regressed residuals",	ylab=expression("Precision  "(1/SE)),  main="", type="n") #es values are from Eggers regression
 #points(prec ~ es, col=rgb(0, 0, 0, alpha=0.3), pch=16)
 #abline(v=0,lty=3)
-mtext("B", 3, 0,at=-11.3, cex=1.4, font=2)
+mtext("b.", 3, 0,at=-11.3, cex=1.4, font=1)
 
 dev.off()
 ```
