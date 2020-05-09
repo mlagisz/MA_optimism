@@ -8,9 +8,11 @@ output: html_document
 # MA of cognitive bias (optimism) in animal studies.
 
 ## STEP3 - MA modelling
+[do not knit]    
 
-(originally script: "Meta-Analaysis_merged_ML2.R")
-This script runs main and additional models that are later used to create plots (STEP_04), tables (STEP_05) and results (STEP_06).
+(originally script: "Meta-Analaysis_merged_ML2.R")    
+
+This script runs main and additional models that are later used to create plots (STEP_04), tables (STEP_05) and results (STEP_06).    
 
 
 ```{r setup, eval=TRUE, include=FALSE}
@@ -28,7 +30,7 @@ rm(list=ls()) # Clean up
 dat <- read.csv("./data/MA_dataset_with_ES_subsets.csv") #for kntting
 #dat <- read.csv("data/MA_dataset_with_ES_subsets.csv")
 dim(dat) #459 76
-str(dat) 
+#str(dat) 
 names(dat)
 
 table(dat$ScalePoint) #we now have 5 scale points: MID   N  NN  NP   P
@@ -194,7 +196,7 @@ AIC.rma(meta1null, meta1phy, meta1sp, meta1exp, meta1expsp, meta1expVCV, meta1ph
 
 ######## random-effect model (no VCV matrix, no phylogeny)
 MA_all_random <- rma.mv(yi=d, V=Vd, 
-                     random=list(~1|Species_Latin, ~1|ScalePoint, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID, ~1|Group_ID), 
+                     random=list(~1|Species_Latin, ~1|ScalePoint, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID), 
                      data = dat, method="REML") 
 summary(MA_all_random) 
 I2(MA_all_random, method = "Shinichi") 
@@ -228,9 +230,7 @@ MA_all <- rma.mv(yi=d, V=VCV,
 summary(MA_all)    
 I2(MA_all, method = "Shinichi")
 #I2(MA_all, method = "Wolfgang") #this is default method for I2, gives very similar estimates
-
 save(MA_all, file = "Rdata/MA_all.Rdata")
-
 
 
 ######## random-effect model with VCV and no phylogeny and no species, removed non-contibuting random effects
@@ -528,7 +528,6 @@ MR_all_ScalePoint1ord2 <- rma.mv(yi=d, V=VCV,
                      data = dat2, method="REML") 
 summary(MR_all_ScalePoint1ord2) # no signif intc 
 save(MR_all_ScalePoint1ord2, file = "Rdata/MR_all_ScalePoint1ord2.Rdata")
-
 ```
 
 #####  Source (Captive_Wild.caught)
@@ -590,7 +589,6 @@ MR_all_AffectManipCat <- rma.mv(yi=d, V=VCV,
 summary(MR_all_AffectManipCat) # no signif diff enrichment/stress
 save(MR_all_AffectManipCat, file = "Rdata/MR_all_AffectManipCat.Rdata")
 ```
-
 
 #####  AffectManipTiming
 
@@ -859,9 +857,9 @@ save(sel.table, file = "Rdata/meta_AICc_seltable.Rdata")
 # importance of each predictor
 importance(meta_AICc)
 #Relative variable importance: 
-#                      ReinforcementCat TaskType Sex  CueTypeCat
-# Sum of weights:      0.49             0.46     0.35 0.23      
-# N containing models:    8                8        8    8  
+#                     TaskType ReinforcementCat Sex  CueTypeCat
+# Sum of weights:      0.49     0.39             0.32 0.18      
+# N containing models:    8        8                8    8   
 write.csv(importance(meta_AICc),'Rdata/importance_fullmodels.csv')
 #read.csv(file='./Rdata/importance_fullmodels.csv')
 
@@ -869,8 +867,8 @@ write.csv(importance(meta_AICc),'Rdata/importance_fullmodels.csv')
 summary(get.models(meta_AICc, 1)[[1]])
 # Model Results:        estimate      se    tval    pval    ci.lb   ci.ub 
 # intrcpt                0.0117  0.1042  0.1119  0.9109  -0.1931  0.2164    
-# ReinforcementCatR-P    0.2084  0.1220  1.7081  0.0883  -0.0314  0.4481  . 
-# ReinforcementCatR-R    0.4817  0.1956  2.4621  0.0142   0.0972  0.8662  * 
+# intrcpt             0.4407  0.1319   3.3424  0.0009   0.1816   0.6998  *** 
+# TaskTypego/no-go   -0.2882  0.1431  -2.0138  0.0446  -0.5695  -0.0070    * 
 ```
 
 
@@ -3510,10 +3508,11 @@ dim(dat_max_ES) #108
 MR_Full_0_max_ES <- rma.mv(yi=d, V=VCV_max_ES, 
 #                     mod = ~Sex + Age + Captive_Wild.caught + AffectManipCat + AffectManipTiming + ComparisonCategory + CueTypeCat + FoodDeprived + TaskType + WithinBetween + Automated + Blind  + ReinforcementCat + AmbigReinforced + ScalePoint, 
                      mod = ~Sex + TaskType + CueTypeCat + ReinforcementCat, 
-                     random=list(~1|Species_Latin, ~1|ScalePoint, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID),
+#                     random=list(~1|Species_Latin, ~1|ScalePoint, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID), #not converging
+                    random=list(~1|Species_Latin, ~1|ScalePoint, ~1|ArticleID, ~1|EffectID),
                      R = list(Species_Latin = CorMatrix_all), 
                      data = dat_max_ES, method="REML") 
-summary(MR_Full_0_max_ES) #olfactory-audio signif
+summary(MR_Full_0_max_ES) #olfactory signif
 R2(MR_Full_0_max_ES)
 save(MR_Full_0_max_ES, file = "Rdata/MR_Full_0_max_ES.Rdata")
 ```
@@ -3559,7 +3558,7 @@ res_regtest <- regtest(PB_model, model="lm") #t = 0.1708, df = 457, p = 0.8645
 # use: res_regtest$zval res_regtest$dfs res_regtest$pval
 
 res_ranktest <- ranktest(PB_model) #endall's tau = 0.0575 p = NA, for MR_Full_0 tau = 0.0299, p = NA
- $ pval
+res_ranktest$pval
 
 save(PB_model, file = "Rdata/PB_model.Rdata")
 ```
