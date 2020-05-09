@@ -8,10 +8,11 @@ output: html_document
 # MA of cognitive bias (optimism) in animal studies.
 
 ## STEP_01 - preprocessing data
+[do not knit]
 
 ### Setup R
-```{r setup}
-options(scipen=100)
+```{r setup, eval=TRUE, include=FALSE}
+#options(scipen=100)
 
 #install.packages("car", "meta", "metafor", "ape", "dplyr", "ggplot2", "scales", "cowplot")
 #install.packages("devtools","fulltxt")
@@ -34,12 +35,12 @@ pacman::p_load(tidyverse, magrittr, fulltext, rotl, ape, dplyr, tidyr, readxl, j
 source("./functions/functions.R") #load custom functions
 
 #writeLines(capture.output(sessionInfo()), "./log_sessioninfo/sessionInfo.txt") #save session info into a text file
-writeLines(capture.output(sessionInfo()), paste0("./log_sessioninfo/sessionInfo_STEP01_", format(Sys.time(), "%d-%b-%Y %H.%M"), ".txt")) #save session info into a text file with timestamp in the file name
+#writeLines(capture.output(sessionInfo()), paste0("./log_sessioninfo/sessionInfo_STEP01_", format(Sys.time(), "%d-%b-%Y %H.%M"), ".txt")) #save session info into a text file with timestamp in the file name
 ```
 
 ### Load MA dataset
                                         
-```{r load MA extractions dataset, eval=TRUE}                                          
+```{r load MA extractions dataset, eval=TRUE, include=FALSE}                                          
 #load data from Excel file:
 dat <- read_excel("./data/MA_dataset_2019_updated.xlsx", sheet = 1, range="A1:BH520")
 dim(dat) #519 60
@@ -64,7 +65,7 @@ dat <- droplevels(dat) #get rid of redundant factor levels
 
 ### Initial data checks
 
-```{r data check, eval=TRUE}  
+```{r data check, eval=TRUE, include=FALSE}  
 #study designs
 dat %>% tabyl(WithinBetween) #mostly between
 dat %>% tabyl(StudyDesign, WithinBetween)
@@ -115,7 +116,7 @@ dat$Better[which(dat$Better <= 0 & dat$DataScale == "natural" & dat$MeasureType 
 
 The outcome measures are either letencies or proportions (percent or logit). Need to use different functions for calculating effect sizes.
 
-```{r calculate ES, eval=TRUE}  
+```{r calculate ES, eval=TRUE, include=FALSE}  
  dat %>% tabyl(MeasureType, DataScale) # 201 "latency" (natural), 248 "proportion", and 10 "logit proportion"
 
 #subset the original dataframe by outcome measure type and recalculate means and variances to the same scale using custom functions for specific data types and scales
@@ -189,7 +190,7 @@ write.csv(dat2, "data/MA_dataset_with_ES.csv", row.names = FALSE)
 
 Prepare phyogenetic tree for the included species  
 
-```{r  tree, eval=TRUE}
+```{r  tree, eval=TRUE, include=FALSE}
 #"The function tnrs_match_names returns a data frame that lists the Open Tree identifiers as
 #well as other information to help users ensure that the taxa matched are the correct ones"
 
@@ -231,7 +232,7 @@ write.tree(tree_bl,file="data/tree_all.tre")
 
 ############################## NEW adding variables for creating subsets
 
-```{r subsets, eval=TRUE}
+```{r subsets, eval=TRUE, include=FALSE}
 #dat2 <- read.csv("data/MA_dataset_with_ES.csv")
 
 #table(dat2$ExperimentID)
