@@ -70,19 +70,19 @@ load(file = "./Rdata/MR_all_Blind1.Rdata")
 #print(res1)
 #orchard_plot(MA_all, mod = "Int", xlab = "Standardised mean difference", transfm = "none")
 
-p1 <- orchard_plot(MA_all, xlab = "", transfm = "none", alpha = 0.3) + scale_x_continuous(breaks = seq(-4, 9, by = 1)) + scale_y_discrete(labels = c(Intrcpt = "Overall"))  + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("a.  All data")  #"All data"
+p1 <- orchard_plot(MA_all, xlab = "", transfm = "none", alpha = 0.3) + scale_x_continuous(breaks = seq(-4, 9, by = 1), lim = c(-4, 9)) + scale_y_discrete(labels = c(Intrcpt = "Overall"))  + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("a.  All data")  #"All data"
 
 p2 <- orchard_plot(MA_amb, xlab = "", transfm = "none", alpha = 0.3) +
-scale_x_continuous(breaks = seq(-4, 9, by = 1)) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("b.  Ambiguous cues data") #"Ambiguous cues data"
+scale_x_continuous(breaks = seq(-4, 9, by = 1), lim = c(-4, 9)) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("b.  Ambiguous cues data") #"Ambiguous cues data"
 
 p3 <- orchard_plot(MA_MID_ES, xlab = "", transfm = "none", alpha = 0.3) +
-scale_x_continuous(breaks = seq(-4, 9, by = 1)) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("c.  Mid-ambiguous cues data") #"Mid-ambiguous cues data"
+scale_x_continuous(breaks = seq(-4, 9, by = 1), lim = c(-4, 9)) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("c.  Mid-ambiguous cues data") #"Mid-ambiguous cues data"
 
 p4 <- orchard_plot(MA_maxabsES, xlab = "", transfm = "none", alpha = 0.3) +
-scale_x_continuous(breaks = seq(-4, 9, by = 1)) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("d.  Maximum absolute response data") # "Maximum absolute response data"
+scale_x_continuous(breaks = seq(-4, 9, by = 1), lim = c(-4, 9)) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("d.  Maximum absolute response data") # "Maximum absolute response data"
 
 p5 <- orchard_plot(MA_maxmeanES, xlab = "", transfm = "none", alpha = 0.3) +
-scale_x_continuous(breaks = seq(-4, 9, by = 1)) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("e.  Maximum response in dominant direction data") + labs(x = "Effect size [Hedges' g]") #"Maximum response in dominant direction data"
+scale_x_continuous(breaks = seq(-4, 9, by = 1), lim = c(-4, 9)) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + theme(legend.position = "none") + ggtitle("e.  Maximum response in dominant direction data") + labs(x = "Effect size [Hedges' g]") #"Maximum response in dominant direction data"
 
 #p6 <- orchard_plot(MA_maxES, xlab = "Standardised mean difference [Hg]", transfm = "none", alpha = 0.25) +
 #scale_x_continuous(breaks = seq(-4, 9, by = 1)) + scale_y_discrete(labels = c(Intrcpt = "Overall")) + scale_fill_manual(values = "grey") + scale_colour_manual(values = "grey") + ggtitle("f.  Maximum positive response data") #"Maximum positive response data"
@@ -130,7 +130,7 @@ layout(matrix(c(1,2),1), c(1,3), c(1,3))
 par(mar=c(5.2,1,3.1,0))
 plot(tree, font=1, cex=0.8, x.lim=1, show.tip.label = FALSE)
 par(mar=c(4,7,1,0))
-plot(merged_res_species_df2$M, 1:length(merged_res_species_df2$M), ylab=NA, yaxt="n", bty="n", xlim=c(-4,4), ylim=c(0.25, length(merged_res_species_df2$M)+.5), xlab="Standardised mean difference [Hg]", pch=merged_res_species_df2$pch, cex=1.5, cex.axis=.9, xaxp=c(-1, 1, 4) )
+plot(merged_res_species_df2$M, 1:length(merged_res_species_df2$M), ylab=NA, yaxt="n", bty="n", xlim=c(-4,4), ylim=c(0.25, length(merged_res_species_df2$M) + 0.5), xlab="Effect size [Hedges' g]", pch=merged_res_species_df2$pch, cex=1.5, cex.axis=.9, xaxp=c(-1, 1, 4) )
 abline(v=0,lty=3)
 mtext(merged_res_species_df2$Model[1:length(merged_res_species_df2$Model)], 2, -1, at=1:length(merged_res_species_df2$Model), las=2, cex=.8, font=3)
 #mtext(merged_res_species_df2$Model[1:2], 2, -1, at=1:2, las=2, cex=.8, font=1)
@@ -256,7 +256,7 @@ load(file="./Rdata/MR_Full_0.Rdata")
 
 #dev.off()
 
-pdf(file="plots/Figure_S4_funnels.pdf",width=8,height=4,family="sans",pointsize=10)
+pdf(file="plots/FigureS4_funnels.pdf",width=8,height=4,family="sans",pointsize=10)
 par(mfcol=c(1,2),mar=c(5,4,2,1.75),oma=c(1,2,1,0))
 
 #raw data

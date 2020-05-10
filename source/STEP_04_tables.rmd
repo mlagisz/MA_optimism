@@ -1,10 +1,16 @@
 ---
-title: "optimism - tables"
+title: "MA optimism - tables"
 author: "ML"
 date: "7/1/2018"
 output: word_document: 
     reference_docx: "si.style.docx"
 ---
+
+# MA of cognitive bias (optimism) in animal studies.
+
+## STEP4 - making results tables
+[do not knit]    
+
 
 ```{r setup, include=F, eval = T}
 knitr::opts_chunk$set(echo = F, warning = F, eval = F)
@@ -13,6 +19,9 @@ options(scipen=100)
 
 # loading packages
 pacman::p_load(metafor, dplyr, readxl, MCMCglmm, knitr, mice)
+
+# load custom functions
+source("./functions/functions.R") #functions specific to optimism project (data transformations) and I2 function
 ```
 
 ```{r load data, eval=TRUE, include=FALSE} 
@@ -856,7 +865,7 @@ t10$R2[pos] <- c(
 posR2 <- c(1, 8, 15, 22, 29, 36) #row positions
 t10$`R2`[posR2] <- round(c(R2(MR_all_ReinforcementCat)[1], R2(MR_amb_ReinforcementCat)[1], R2(MR_MID_ReinforcementCat)[1], R2(MR_maxabsES_ReinforcementCat)[1], R2(MR_maxmeanES_ReinforcementCat)[1], R2(MR_maxES_ReinforcementCat)[1]),3)
 
-write.csv(t10, file = "./Tables/Table_S10_MR_ReinforcementCatt.csv", row.names = F, na = "")    
+write.csv(t10, file = "./Tables/Table_S10_MR_ReinforcementCat.csv", row.names = F, na = "")    
 ```
 
 
@@ -2104,13 +2113,13 @@ model selection results - all data
 #list.files("./Rdata/")
 # loading data
 load(file = "./Rdata/meta_AICc_seltable.Rdata")
-#sel.table
+sel.table
 
 # loading table
 t24 <- read_excel("./Tables/Results_Tables_v3.xlsx", sheet = 21)
 
 # saving row position for species estimates
-pos <- c(1:6)
+pos <- c(1:nrow(sel.table))
 
 t24$`Model`[pos] <- sel.table$Model 
 t24$`K`[pos] <- sel.table$K 

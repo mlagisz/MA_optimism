@@ -822,7 +822,9 @@ mr_full <- rma.mv(yi=d, V=VCV,
                        method="ML",
                        data = dat)
 summary(mr_full)
+save(mr_full, file = "Rdata/mr_full.Rdata")
 #R2(mr_full)
+
 # testing call of new function
 getCall(mr_full)
 # update the new function to run in MuMIn
@@ -835,6 +837,7 @@ save(metaAICc, file = "Rdata/meta_AICc.Rdata")
 #load(file = "Rdata/meta_AICc.Rdata")
 par(mar = c(3,5,6,4))
 plot(meta_AICc, labAsExpr = TRUE)
+
 sub_meta_AICc <- subset(meta_AICc, delta < 2)
 sub_meta_AICc
 
@@ -849,7 +852,8 @@ sel.table[,4:5]<- round(sel.table[,4:5],3)
 names(sel.table)[1] = "K" 
 sel.table$Model <- rownames(sel.table) 
 #for(i in 1:nrow(sel.table)) sel.table$Model[i] <- as.character(formula(paste(sel.table$Model[i])))[3] #invalid formula
-sel.table$Model <- c("Reinforcement Category","Task type","Reinforcement Category + Task type","Sex + Task type","Reinforcement Category + Sex","Sex") #manually setting model formulas
+sub_meta_AICc #
+sel.table$Model <- c("Task type","Reinforcement Category","Sex + Task type", "Reinforcement Category + Task type","Intercept-only (no moderators)") #manually setting model formulas
 sel.table <- sel.table[,c(6,1,2,3,4,5)] #reorder rows
 sel.table
 save(sel.table, file = "Rdata/meta_AICc_seltable.Rdata")
