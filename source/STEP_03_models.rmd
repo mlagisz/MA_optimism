@@ -949,6 +949,7 @@ set.seed(111)
 bayesian_MR1.1 <- MCMCglmm(ES ~ Sex + TaskType  + CueTypeCat + ReinforcementCat, random = ~ ScalePoint + ArticleID + ExperimentID + EffectID, family="gaussian", ginverse = list(EffectID=invVC), data=dat, verbose=T, nitt=110000, thin=100, burnin=10000, pr=T, prior=prior2)
 summary(bayesian_MR1.1)
 save(bayesian_MR1.1, file = "Rdata/bayesian_MR1.1.Rdata")
+#load(file = "Rdata/bayesian_MR1.1.Rdata")
 
 set.seed(112)
 bayesian_MR1.2 <- MCMCglmm(ES ~ Sex + TaskType  + CueTypeCat + ReinforcementCat, random = ~ ScalePoint + ArticleID + ExperimentID + EffectID, family="gaussian", ginverse = list(EffectID=invVC), data=dat, verbose=T, nitt=110000, thin=100, burnin=10000, pr=T, prior=prior2)
@@ -3558,11 +3559,12 @@ summary(PB_model)
 #funnel(PB_model, yaxi="seinv")
 
 # Egger's regression test and ranktest for funnel plot asymmetry: 
-res_regtest <- regtest(PB_model, model="lm") #t = 0.1708, df = 457, p = 0.8645
+res_regtest <- regtest(PB_model, model="lm") 
+res_regtest #t = 0.0174, df = 457, p = 0.9861
 # use: res_regtest$zval res_regtest$dfs res_regtest$pval
 
-res_ranktest <- ranktest(PB_model) #endall's tau = 0.0575 p = NA, for MR_Full_0 tau = 0.0299, p = NA
-res_ranktest$pval
+#res_ranktest <- ranktest(PB_model) 
+#res_ranktest$pval #0.24046
 
 save(PB_model, file = "Rdata/PB_model.Rdata")
 ```
@@ -3572,7 +3574,7 @@ save(PB_model, file = "Rdata/PB_model.Rdata")
 ```{r publ bias tests trim and fill Egger, eval=FALSE, include=FALSE }
 ######## random-effect MA model:
 res_MA <- rma.mv(yi=d, V=Vd, random=list(~1|ScalePoint, ~1|ArticleID, ~1|ExperimentID, ~1|EffectID), data=dat, method="REML") 
-summary(res_MA) ### estimate  0.2239  CI  0.0913  0.3564  *** 
+summary(res_MA)
 
 Residuals <- residuals(res_MA) # try MR_Full_0
 Precision <- sqrt(1/res_MA$vi) #try MR_Full_0
@@ -3582,26 +3584,25 @@ summary(PB_model)
 funnel(PB_model, yaxi="seinv")
 # Trim and fill
 TF <- trimfill(PB_model)
-TF #Estimated number of missing studies on the left side: 51 (SE = 13.7423)
 funnel(TF, yaxi="seinv")
 
-# Egger's regression test
-regtest(PB_model, model="lm") #test for funnel plot asymmetry: t = 0.5683, df = 457, p = 0.5701, for MR_Full_0 t = 0.1708, df = 457, p = 0.8645
-ranktest(PB_model) #endall's tau = 0.0575 p = NA, for MR_Full_0 tau = 0.0299, p = NA
+# # Egger's regression test
+# regtest(PB_model, model="lm") #test for funnel plot asymmetry: t = 0.0174, df = 457, p = 0.9861
+# ranktest(PB_model) #Kendall's tau = 0.0367, p = 0.2405
 
-# do not use:
-#pdf(file="plots/Fig_funnels_preliminary.pdf",width=7,height=3,pointsize=14)
-par(mfrow=c(1,2))
-par(mar=c(4,4,4,1))
-plot(dat$d, sqrt(1/dat$Vd), xlim=c(-10,10), ylim=c(0,7), xlab = "effect size [Hd]", ylab="Precision [1/SE]", frame.plot=FALSE, main="A")
-abline(v=0,lty=3)
-abline(v=0.168,lty=1)
-funnel(TF, xlim=c(-3,3), xlab = "effect size [Hd]", ylab="Standard Error [SE]",
-       back="white", shade="lightgray", bg="red", main="B")
-abline(v=0,lty=3)
-plot(Residuals, Precision, xlim=c(-10,10), ylim=c(0,7), xlab = "Residuals", ylab="Precision [1/SE]", frame.plot=FALSE, main="C")
-abline(v=0,lty=3)
-#dev.off()
+# # do not use:
+# #pdf(file="plots/Fig_funnels_preliminary.pdf",width=7,height=3,pointsize=14)
+# par(mfrow=c(1,2))
+# par(mar=c(4,4,4,1))
+# plot(dat$d, sqrt(1/dat$Vd), xlim=c(-10,10), ylim=c(0,7), xlab = "effect size [Hd]", ylab="Precision [1/SE]", frame.plot=FALSE, main="A")
+# abline(v=0,lty=3)
+# abline(v=0.168,lty=1)
+# funnel(TF, xlim=c(-3,3), xlab = "effect size [Hd]", ylab="Standard Error [SE]",
+#        back="white", shade="lightgray", bg="red", main="B")
+# abline(v=0,lty=3)
+# plot(Residuals, Precision, xlim=c(-10,10), ylim=c(0,7), xlab = "Residuals", ylab="Precision [1/SE]", frame.plot=FALSE, main="C")
+# abline(v=0,lty=3)
+# #dev.off()
 ```
 
 
@@ -3617,6 +3618,7 @@ MR_all_Year <- rma.mv(yi=d, V=VCV,
                      data = dat, method="REML") 
 summary(MR_all_Year) # no signif slope
 save(MR_all_Year, file = "./Rdata/MR_all_Year.Rdata")
+#load(file = "./Rdata/MR_all_Year.Rdata")
 
 # getting marginal R2
 #r2_MR_all_Year <- R2(MR_all_Year)
