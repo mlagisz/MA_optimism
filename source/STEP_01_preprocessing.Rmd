@@ -42,7 +42,7 @@ source("./functions/functions.R") #load custom functions
                                         
 ```{r load MA extractions dataset, eval=TRUE, include=FALSE}                                          
 #load data from Excel file:
-dat <- read_excel("./data/MA_dataset_2019_updated.xlsx", sheet = 1, range="A1:BH520")
+dat <- read.csv("./data/MA_dataset_2019_updated.csv")
 dim(dat) #519 60
 names(dat)
 tail(dat)
@@ -50,12 +50,12 @@ str(dat)
 
 #exclude data points marked as "Y" in the Exclude column: 
 dat %>% tabyl(Exclude) #60 rows to be removed (usually missing values at cues or wrong experimental design)
-dat %>% filter(is.na(Exclude)) -> dat
+dat %>% filter(Exclude != "Y") -> dat
 dim(dat) #459 60
 dat %>% dplyr::select(-c(Exclude)) -> dat#get rid of empty column
 
 #check for missing data:
-unlist(lapply(dat, function(x) sum(is.na(x)))) #see how many NA per numerical column, no missing means or SD or SE or N
+#unlist(lapply(dat, function(x) sum(is.na(x)))) #see how many NA per numerical column, no missing means or SD or SE or N
 
 get_dupes(dat, EffectID) #there are 5 pairs of duplicated EffectID, fix
 dat$EffectID <- as.factor(paste("ES", 1:nrow(dat), sep="_")) #fix column with ES ID (unique ID for effect sizes)
